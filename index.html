@@ -1,12 +1,14 @@
-﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Finanças Pessoais | Mauro</title>
     
-    <!-- 🎨 FAVICON — Porquinho em SVG inline. Funciona em todos os navegadores modernos. -->
-        <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- 🎨 FAVICON — Porquinho ROXO em SVG inline -->
+    <link rel="icon" type="image/svg+xml" sizes="any" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15 26 85 68'%3E%3Cellipse cx='55' cy='58' rx='36' ry='26' fill='%237C3AED'/%3E%3Cpath d='M 68 34 Q 72 24 80 32 L 72 44 Z' fill='%237C3AED'/%3E%3Cellipse cx='26' cy='60' rx='9' ry='7' fill='%237C3AED'/%3E%3Ccircle cx='23' cy='59' r='1.5' fill='white'/%3E%3Ccircle cx='29' cy='59' r='1.5' fill='white'/%3E%3Ccircle cx='47' cy='48' r='2.5' fill='white'/%3E%3Crect x='35' y='78' width='8' height='14' rx='3' fill='%237C3AED'/%3E%3Crect x='62' y='78' width='8' height='14' rx='3' fill='%237C3AED'/%3E%3Cpath d='M 91 52 Q 98 46 96 54 Q 94 60 87 57' stroke='%237C3AED' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Crect x='50' y='32' width='18' height='3' rx='1.5' fill='white'/%3E%3C/svg%3E">
+    
+    <!-- 📱 PWA / iOS Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Finanças">
@@ -9750,64 +9752,9 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             const ajusteExtra = visiveis.filter(d => d.isAjuste && alvoComposicao(d) === 'Extra')
                 .reduce((s, d) => s + (isRec(d) ? valorFloat(d.valor) : -valorFloat(d.valor)), 0);
             
-            // 🎯 Override de Salário DESATIVADO — a edição dos cards
-            //    projetados foi removida da UI (lápis excluídos). Qualquer
-            //    override gravado por versões antigas é IGNORADO aqui.
-            //    O card sempre mostra o cálculo automático.
-            const chaveOverride = window.chaveMes(dataFiltro);
-            const overrideSal = null;
-            const temOverrideSal = false;
-
-            // 🎯 Override em 2 formatos:
-            //  - Objeto { valor, data, valorAnterior } → schema NOVO: acumula movimentações após a data.
-            //  - Número (legado) → schema ANTIGO: congela completamente.
-            let saldoSalario;
-            let overrideDetalhes = null;
-            if (temOverrideSal && typeof overrideSal === 'object' && overrideSal.valor !== undefined) {
-                // 🎯 OVERRIDE ABSOLUTO: o valor fixado é EXATAMENTE o que aparece no card.
-                // Não somamos movimentações posteriores — o usuário pediu para fixar.
-                // O botão "Restaurar" remove o override e devolve ao cálculo automático.
-                const valorOverride = parseFloat(overrideSal.valor);
-                saldoSalario = valorOverride;
-                overrideDetalhes = {
-                    valor: valorOverride,
-                    data: overrideSal.data || '',
-                    valorAnterior: (overrideSal.valorAnterior !== undefined && overrideSal.valorAnterior !== null) ? parseFloat(overrideSal.valorAnterior) : null,
-                    recApos: 0,
-                    despApos: 0,
-                    ajusteApos: 0
-                };
-            } else if (temOverrideSal) {
-                // ═══════════════════════════════════════════════════════
-                // 🎯 OVERRIDE EM FORMATO ANTIGO (número puro)
-                // ═══════════════════════════════════════════════════════
-                // Antes: `overrideDetalhes` ficava `null` neste caminho,
-                // então o modal não detectava override e mostrava o
-                // breakdown (base+rec−desp = 1.887,47) ao lado de um
-                // Total que era o valor fixado (3.134,07). Números que
-                // não fechavam entre si.
-                //
-                // Agora: normalizamos para o mesmo formato objeto usado
-                // pelos overrides novos. O modal passa a detectar e
-                // exibe "Valor Fixado: R$ 3.134,07" em vez do breakdown
-                // incoerente.
-                const valorOverrideNum = parseFloat(overrideSal);
-                saldoSalario = valorOverrideNum + ajusteSalario;
-                overrideDetalhes = {
-                    valor: valorOverrideNum + ajusteSalario,
-                    data: '',
-                    valorAnterior: null,
-                    recApos: 0,
-                    despApos: 0,
-                    ajusteApos: ajusteSalario,
-                    _legado: true
-                };
-            } else {
-                // 🎯 Salário = base + receitas/gastos/ajustes do bucket Salário APENAS.
-                // Não absorve o bucket Extra — isso garante que um ajuste no "Saldo
-                // Total" (que cai em Extra) não mexa no card do Salário.
-                saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
-            }
+            // 🎯 Override de Salário desativado. O card sempre mostra o cálculo automático.
+            const saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
+            const overrideDetalhes = null;
 
             const saldoVale = baseVale + receitaVale - gastoVale + ajusteVale;
             // 🎯 O Saldo Total é SEMPRE a soma dos dois buckets — em
@@ -9954,51 +9901,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             esconderSeZerado('barraConsumoSalario', gastoSalario, dispSal);
             esconderSeZerado('barraConsumoVale', gastoVale, dispVale);
 
-            // ===== INFO DO MÊS ANTERIOR: removida por decisão de produto =====
-            const acumSalAnterior = 0;
-            const acumValeAnterior = 0;
-            
-            const escreverInfoAnterior = (idEl, parentEl, valor) => {
-                if (!parentEl) return;
-                let el = document.getElementById(idEl);
-                if (!el) {
-                    el = document.createElement('p');
-                    el.id = idEl;
-                    el.className = 'text-[10.5px] font-bold mt-1.5 truncate tracking-wide';
-                    parentEl.appendChild(el);
-                }
-                if (Math.abs(valor) > 0.005) {
-                    el.classList.remove('hidden');
-                    let sinal = valor > 0 ? '+' : '';
-                    let cor = valor > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400';
-                    el.innerHTML = `<span class="text-slate-400 dark:text-gray-500">Mês ant:</span> <span class="${cor}">${sinal} ${formatMoeda(valor)}</span>`;
-                } else {
-                    el.classList.add('hidden');
-                }
-            };
-            
-            const cardSalEl = document.getElementById('cardSaldoSalario');
-            const cardValeEl = document.getElementById('cardSaldoVale');
-            escreverInfoAnterior('infoAcumuladoSalario', cardSalEl ? cardSalEl.parentNode : null, acumSalAnterior);
-            escreverInfoAnterior('infoAcumuladoVale', cardValeEl ? cardValeEl.parentNode : null, acumValeAnterior);
 
-            // Lógica do Texto de "Saldo do Mês Anterior"
-            let elInfo = document.getElementById('infoAcumuladoCard');
-            if (!elInfo) {
-                elInfo = document.createElement('p');
-                elInfo.id = 'infoAcumuladoCard';
-                elInfo.className = 'text-[10.5px] font-bold mt-1.5 truncate tracking-wide';
-                elGeral.parentNode.appendChild(elInfo);
-            }
-
-            if (Math.abs(acumuladoAnterior) > 0.005) {
-                elInfo.classList.remove('hidden');
-                let sinal = acumuladoAnterior > 0 ? '+' : '';
-                let cor = acumuladoAnterior > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400';
-                elInfo.innerHTML = `<span class="text-slate-400 dark:text-gray-500">Mês ant:</span> <span class="${cor}">${sinal} ${formatMoeda(acumuladoAnterior)}</span>`;
-            } else {
-                elInfo.classList.add('hidden');
-            }
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -14490,17 +14393,11 @@ const inputDesc = document.getElementById('descricao');
             const receitaVale = visiveis.filter(d => isRec(d) && !d.isAjuste && alvoComposicao(d) === 'Vale').reduce((s, d) => s + valorFloat(d.valor), 0);
             const ajusteVale = visiveis.filter(d => d.isAjuste && alvoComposicao(d) === 'Vale').reduce((s, d) => s + (isRec(d) ? valorFloat(d.valor) : -valorFloat(d.valor)), 0);
 
-            // 4) Override de Salário
-            const overrideSal = saldoBaseMensalGlobal[chave]?.overrideSalario;
-            const temOverrideSal = (overrideSal !== undefined && overrideSal !== null);
-            let saldoSalario;
-            if (temOverrideSal && typeof overrideSal === 'object' && overrideSal.valor !== undefined) {
-                saldoSalario = parseFloat(overrideSal.valor);
-            } else if (temOverrideSal) {
-                saldoSalario = parseFloat(overrideSal) + ajusteSalario;
-            } else {
-                saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
-            }
+            // 🎯 Override desativado — espelha o comportamento de `atualizarCardsSaldo`.
+            //    Card e Assistente sempre mostram o mesmo número.
+            const saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
+            const temOverrideSal = false;
+            const overrideSal = null;
             const saldoVale = baseVale + receitaVale - gastoVale + ajusteVale;
             const saldoTotal = saldoSalario + saldoVale;
 
