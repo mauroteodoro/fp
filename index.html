@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Finanças Pessoais | Mauro</title>
     
-    <!-- 🎨 FAVICON — Porquinho monocromático (estilo DeepSeek) -->
-    <!-- 🐷 Silhueta sólida no roxo-marca (#4D6BFE), SEM fundo.
-         O `viewBox` foi apertado para "15 26 85 68" — um recorte justo
-         do corpo do porco (com ~2 unidades de folga nas bordas).
-         O desenho original ocupava só 81% × 64% do canvas 100×100;
-         agora ocupa ~95% em ambos os eixos, ficando visivelmente maior
-         sem alterar um traço. Detalhes brancos (olho, narinas, ranhura)
-         mantêm a identidade em qualquer tamanho. Tudo em SVG inline. -->
+    <!-- 🎨 FAVICON — Porquinho em SVG inline. Funciona em todos os navegadores modernos. -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='15 26 85 68'%3E%3Cellipse cx='55' cy='58' rx='36' ry='26' fill='%234D6BFE'/%3E%3Cpath d='M 68 34 Q 72 24 80 32 L 72 44 Z' fill='%234D6BFE'/%3E%3Cellipse cx='26' cy='60' rx='9' ry='7' fill='%234D6BFE'/%3E%3Ccircle cx='23' cy='59' r='1.5' fill='white'/%3E%3Ccircle cx='29' cy='59' r='1.5' fill='white'/%3E%3Ccircle cx='47' cy='48' r='2.5' fill='white'/%3E%3Crect x='35' y='78' width='8' height='14' rx='3' fill='%234D6BFE'/%3E%3Crect x='62' y='78' width='8' height='14' rx='3' fill='%234D6BFE'/%3E%3Cpath d='M 91 52 Q 98 46 96 54 Q 94 60 87 57' stroke='%234D6BFE' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Crect x='50' y='32' width='18' height='3' rx='1.5' fill='white'/%3E%3C/svg%3E">
     
     <!-- 📱 PWA / iOS Meta Tags -->
@@ -24,7 +17,9 @@
          index.html. O iOS ignora SVG neste meta-tag e, sem um PNG
          válido, cai no fallback de "letra inicial do site" (o "F"
          azul que aparecia antes). -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=99">
+    <!-- 🍎 Apple Touch Icon — DESATIVADO. Reative quando o apple-touch-icon.png
+         estiver publicado no servidor junto com o deploy:
+         <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"> -->
     <meta name="theme-color" content="#0061F2">
     <meta name="format-detection" content="telephone=no,email=no,address=no">
     <meta name="mobile-web-app-capable" content="yes">
