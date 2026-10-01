@@ -3576,6 +3576,16 @@ select:focus, select:focus-visible {
              `window.Chart` e NÃO interfere no módulo. Se o CDN falhar,
              só a aba Gráficos fica inoperante — o resto do app segue. -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        // 🚀 Registra o Service Worker para acelerar aberturas futuras
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .catch((err) => console.warn('SW falhou:', err));
+            });
+        }
+    </script>
+    <script type="module">
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -8157,7 +8167,8 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                     // Cor baseada no pct (verde/âmbar/vermelho). A classe
                     // é definida, mas não contém mais `transition` (a CSS
                     // do topo foi alterada para não ter transition).
-                    barra.className = cache.classe;
+                    barra.className = 'h-full rounded-full';
+                    if (cache.bgImage) barra.style.backgroundImage = cache.bgImage;
                     // Ponto de partida: 0%.
                     barra.style.width = '0%';
                     void barra.offsetWidth;
@@ -9828,40 +9839,38 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 if (!barra) return;
                 const pctEl = document.getElementById(idBarra === 'barraConsumoSalario' ? 'pctConsumoSalario' : 'pctConsumoVale');
 
+                // 🎯 Aplicação DIRETA do gradiente via style inline.
+                // Sem Tailwind, sem CDN, sem timing. O gradiente está
+                // no próprio elemento — sempre funciona.
                 if (disponivel <= 0) {
                     _largurasBarrasCache[idBarra] = {
                         pct: 0,
-                        // 🎯 SEM `transition-all duration-500` — mesma razão
-                        //    do bloco PJ. A WAAPI controla a largura inteira;
-                        //    CSS transition aqui é ruído que pode re-disparar
-                        //    em mobile e duplicar a animação.
-                        classe: 'h-full bg-slate-300 dark:bg-[#1a2639] rounded-full'
+                        classe: 'h-full rounded-full',
+                        bgImage: ''
                     };
-                    barra.className = _largurasBarrasCache[idBarra].classe;
+                    barra.className = 'h-full rounded-full';
+                    barra.style.backgroundColor = 'rgb(203 213 225)'; // slate-300
+                    barra.style.backgroundImage = '';
                     if (!saldosOcultos) barra.style.width = '0%';
                     if (pctEl) pctEl.textContent = '0%';
                     return;
                 }
 
                 const pct = Math.min(100, (gasto / disponivel) * 100);
-                // 🎯 SEM `transition-all duration-500` — mesma razão.
-                //    Os 3 estados (verde/âmbar/vermelho) mantêm só o gradiente
-                //    e o arredondamento; a animação fica inteira com a WAAPI.
-                let classe;
-                if (pct >= 90) classe = 'h-full bg-gradient-to-r from-[#E11D48] to-[#BE123C] rounded-full';
-                else if (pct >= 70) classe = 'h-full bg-gradient-to-r from-[#D97706] to-[#B45309] rounded-full';
-                else classe = 'h-full bg-gradient-to-r from-[#059669] to-[#047857] rounded-full';
+                let bgImage;
+                if (pct >= 90) {
+                    bgImage = 'linear-gradient(to right, #E11D48, #BE123C)';
+                } else if (pct >= 70) {
+                    bgImage = 'linear-gradient(to right, #D97706, #B45309)';
+                } else {
+                    bgImage = 'linear-gradient(to right, #059669, #047857)';
+                }
 
-                // 🎯 Sempre cacheia o valor REAL — mesmo com valores ocultos.
-                //    Isso garante que, ao restaurar, a barra suba para o
-                //    ponto certo (mesmo que o usuário tenha trocado de mês
-                //    ou recebido lançamentos enquanto estava oculto).
-                _largurasBarrasCache[idBarra] = { pct, classe };
-                barra.className = classe;
+                _largurasBarrasCache[idBarra] = { pct, classe: 'h-full rounded-full', bgImage };
+                barra.className = 'h-full rounded-full';
+                barra.style.backgroundColor = 'transparent';
+                barra.style.backgroundImage = bgImage;
 
-                // 🎯 Só escreve `width` se os valores estão visíveis. Com
-                //    `saldosOcultos = true`, a barra permanece em 0% mesmo
-                //    que o cálculo tenha rodado.
                 if (!saldosOcultos) barra.style.width = pct + '%';
                 if (pctEl) pctEl.textContent = Math.round(pct) + '%';
             };
