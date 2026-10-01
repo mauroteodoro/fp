@@ -3867,7 +3867,7 @@ select:focus, select:focus-visible {
             // como `logodownload.org` bloqueiam o hotlink quando a página
             // está em `file://` ou domínio não autorizado — retornando 403
             // e fazendo o ícone cair no fallback do Google Favicon (pixelado).
-            const imgTag = `<img src="${imgSource}" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=${b.domain}&sz=128';" alt="${b.nome}" class="w-full h-full object-contain${classeInversao}">`;
+            const imgTag = `<img src="${imgSource}" referrerpolicy="no-referrer" onload="this.style.opacity='1'" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=${b.domain}&sz=128';" alt="${b.nome}" style="opacity:0; transition: opacity 0.25s ease;" class="w-full h-full object-contain${classeInversao}">`;
 
             // 4. 🎯 Bancos com FUNDO BRANCO EMBUTIDO no PNG (ex: Mercado Pago).
             //    O wrapper ganha um fundo sólido (`bgFixo`) + cantos arredondados,
@@ -4710,6 +4710,9 @@ select:focus, select:focus-visible {
         }
 
         window.abrirTela = function(tela) {
+            // 🎯 Rola para o topo sempre que trocar de aba
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             // 1. Reseta o visual de TODOS os botões do menu lateral
             ['btnMenuResumo', 'btnMenuExtrato', 'btnMenuContas', 'btnMenuRelatorios', 'btnMenuGraficos', 'btnTabProjecao', 'btnMenuAssistente'].forEach(b => {
                 marcarBtnMenuInativo(document.getElementById(b));
@@ -12615,33 +12618,23 @@ window.checkRateio = function() {
             // dando tempo do browser pintar a posição final antes de
             // reativar o snap (senão ele pode "puxar" 1-2px de volta).
             let _animAtual = null;
+            let _snapRestoreTimer = null;
+            let _snapScrollendListener = null;
+
+            const _limparNavegacaoPendente = () => {
+                if (_animAtual) { cancelAnimationFrame(_animAtual); _animAtual = null; }
+                if (_snapRestoreTimer) { clearTimeout(_snapRestoreTimer); _snapRestoreTimer = null; }
+                if (_snapScrollendListener) {
+                    container.removeEventListener('scrollend', _snapScrollendListener);
+                    _snapScrollendListener = null;
+                }
+            };
+
             const irParaCard = (idx) => {
                 const cards = container.querySelectorAll('[data-conta-id]');
                 const card = cards[idx];
                 if (!card) return;
 
-                // ═══════════════════════════════════════════════════════
-                // 🎯 MEDIÇÃO PRECISA — alvo exatamente no snap point do CSS
-                // ═══════════════════════════════════════════════════════
-                // O snap do CSS posiciona cada card em:
-                //     card.offsetLeft − scrollPaddingLeft
-                //
-                // Meu cálculo anterior esquecia esse desconto, então a
-                // animação terminava ~24px deslocada do snap point real.
-                // Quando o snap reativava, o navegador puxava de volta —
-                // a "tremida" que o usuário via no fim de cada clique.
-                //
-                // Duas correções somadas:
-                //   1. Subtrair `scroll-padding-left` do alvo → coincide
-                //      com o snap point que o próprio CSS quer.
-                //   2. `Math.round` no resultado → evita desvio de
-                //      sub-pixel. Snap sempre opera em inteiros; meio
-                //      pixel já bastava pro navegador "ajustar 1px" no
-                //      fim e tremelicar.
-                //
-                // `getComputedStyle(...).paddingLeft` lê o padding REAL
-                // em runtime (24px hoje, mas resiste se algum dia o
-                // design mudar via media query ou tema).
                 const scrollPadLeft = parseFloat(getComputedStyle(container).paddingLeft) || 0;
                 const containerRect = container.getBoundingClientRect();
                 const cardRect = card.getBoundingClientRect();
@@ -12653,40 +12646,51 @@ window.checkRateio = function() {
                 const distance = targetScroll - startScroll;
                 if (Math.abs(distance) < 1) return;
 
-                if (_animAtual) cancelAnimationFrame(_animAtual);
-
-                // Desliga o snap durante a animação programática.
-                // `setProperty` com `!important` vence o `!important` do
-                // stylesheet — um `style.scrollSnapType = 'none'` comum
-                // NÃO venceria, porque a regra do CSS tem `!important`
-                // e a especificidade inline deixa de valer.
+                _limparNavegacaoPendente();
                 container.style.setProperty('scroll-snap-type', 'none', 'important');
 
-                const duration = 450;
-                const startTime = performance.now();
-                const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-
-                const animate = (currentTime) => {
-                    const elapsed = currentTime - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    container.scrollLeft = startScroll + distance * easeOutCubic(progress);
-                    if (progress < 1) {
-                        _animAtual = requestAnimationFrame(animate);
-                    } else {
-                        _animAtual = null;
-                        // 🎯 CRAVA a posição final exata ANTES de restaurar
-                        //    o snap. Sem isso, o último frame da animação
-                        //    pode cair em N.999... e o navegador ajusta
-                        //    1px ao re-snapar — a tremida de novo.
-                        //    Com o valor fixado no inteiro correto, o snap
-                        //    reativa e não tem nada pra corrigir.
-                        container.scrollLeft = targetScroll;
-                        setTimeout(() => {
-                            container.style.removeProperty('scroll-snap-type');
-                        }, 40);
-                    }
+                const restaurarSnap = () => {
+                    _limparNavegacaoPendente();
+                    container.scrollLeft = targetScroll;
+                    requestAnimationFrame(() => {
+                        container.style.removeProperty('scroll-snap-type');
+                    });
                 };
-                _animAtual = requestAnimationFrame(animate);
+
+                // 🎯 NATIVE SMOOTH SCROLL — GPU-acelerado no iOS/Android.
+                // Mesmo motor do "arrastar com o dedo", por isso fica tão
+                // suave quanto. O browser cuida do easing, do vsync e da
+                // composição na GPU — zero trabalho da main thread.
+                if ('scrollBehavior' in document.documentElement.style) {
+                    // `scrollend` avisa quando o scroll REALMENTE terminou
+                    // (iOS 16.4+, Chrome 114+). Restaura o snap no momento
+                    // exato — sem timer chutado.
+                    if ('onscrollend' in window) {
+                        _snapScrollendListener = restaurarSnap;
+                        container.addEventListener('scrollend', _snapScrollendListener, { once: true });
+                    }
+                    // Fallback por timeout — protege navegadores sem
+                    // `scrollend` e cobre scrolls longos (distâncias grandes).
+                    _snapRestoreTimer = setTimeout(restaurarSnap, 600);
+                    container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+                } else {
+                    // ─── Fallback legado: RAF para Safari < 15.4 ───
+                    const duration = 450;
+                    const startTime = performance.now();
+                    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+                    const animate = (currentTime) => {
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        container.scrollLeft = startScroll + distance * easeOutCubic(progress);
+                        if (progress < 1) {
+                            _animAtual = requestAnimationFrame(animate);
+                        } else {
+                            _animAtual = null;
+                            restaurarSnap();
+                        }
+                    };
+                    _animAtual = requestAnimationFrame(animate);
+                }
             };
 
             // ═══════════════════════════════════════════════════════════
