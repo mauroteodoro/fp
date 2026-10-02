@@ -3305,7 +3305,7 @@ select:focus, select:focus-visible {
                     </div>
 
                     <!-- Filtro: Natureza -->
-                    <div class="relative lg:col-span-2 z-[140]">
+                    <div class="relative lg:col-span-4 z-[140]">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Natureza</label>
                         <input type="hidden" id="filtroRelTipo" value="Todos">
                         <button type="button" id="btnFiltroTipo" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
@@ -3314,15 +3314,36 @@ select:focus, select:focus-visible {
                         </button>
                         <div id="menuFiltroTipo" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
                             <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm">
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors" onclick="selecionarFiltroTipo('Todos', 'Todas')">Todas</li>
+                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors font-bold text-center" onclick="selecionarFiltroTipo('Todos', 'Todas')">Todas</li>
                                 <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Receita', 'Receitas (+)')"><span class="text-green-500 font-bold">+</span> Receitas (+)</li>
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Despesa', 'Despesas (-)')"><span class="text-red-500 font-bold">-</span> Despesas (-)</li>
+                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Despesa', 'Despesas (-)')"><span class="text-red-500 font-bold">-</span> Despesas (-)</li>
+                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Transferencia', 'Transferências')">
+                                    <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                    Transferências
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Filtro: Status -->
+                    <div class="relative lg:col-span-4 z-[135]">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Status</label>
+                        <input type="hidden" id="filtroRelStatus" value="Todos">
+                        <button type="button" id="btnFiltroStatus" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
+                            <span id="lblFiltroStatus" class="truncate font-medium">Todos os status</span>
+                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div id="menuFiltroStatus" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
+                            <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm">
+                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors font-bold text-center" onclick="selecionarFiltroStatus('Todos', 'Todos os status')">Todos os status</li>
+                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors flex items-center gap-2" onclick="selecionarFiltroStatus('Efetivada', 'Efetivadas')"><span class="text-green-500 font-bold">✓</span> Efetivadas</li>
+                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors flex items-center gap-2" onclick="selecionarFiltroStatus('Pendente', 'Pendentes')"><span class="text-amber-500 font-bold">⏱</span> Pendentes</li>
                             </ul>
                         </div>
                     </div>
 
                     <!-- Filtro: Conta -->
-                    <div class="relative lg:col-span-2 z-[130]">
+                    <div class="relative lg:col-span-4 z-[130]">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Conta</label>
                         <input type="hidden" id="filtroRelConta" value="Todas">
                         <button type="button" id="btnFiltroConta" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
@@ -3335,7 +3356,7 @@ select:focus, select:focus-visible {
                     </div>
 
                     <!-- Filtro: Categoria -->
-                    <div class="relative lg:col-span-2 z-[120]">
+                    <div class="relative lg:col-span-4 z-[120]">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Categoria</label>
                         <input type="hidden" id="filtroRelCategoria" value="Todas">
                         <button type="button" id="btnFiltroCategoria" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
@@ -3348,7 +3369,7 @@ select:focus, select:focus-visible {
                     </div>
 
                     <!-- Filtro: Origem -->
-                    <div class="relative lg:col-span-2 z-[110]">
+                    <div class="relative lg:col-span-4 z-[110]">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Origem</label>
                         <input type="hidden" id="filtroRelOrigem" value="Todas">
                         <button type="button" id="btnFiltroOrigem" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
@@ -3691,6 +3712,7 @@ select:focus, select:focus-visible {
             { m: 'menuFiltroConta', b: 'btnFiltroConta' },
             { m: 'menuFiltroCategoria', b: 'btnFiltroCategoria' },
             { m: 'menuFiltroOrigem', b: 'btnFiltroOrigem' },
+            { m: 'menuFiltroStatus', b: 'btnFiltroStatus' },
             { m: 'menuTransfContaOrigem', b: 'btnTransfContaOrigem' },
             { m: 'menuTransfContaDestino', b: 'btnTransfContaDestino' }
         ];
@@ -6235,6 +6257,12 @@ select:focus, select:focus-visible {
             document.getElementById('menuFiltroTipo').classList.add('hidden');
         }
 
+        window.selecionarFiltroStatus = function(val, text) {
+            document.getElementById('filtroRelStatus').value = val;
+            document.getElementById('lblFiltroStatus').textContent = text;
+            document.getElementById('menuFiltroStatus').classList.add('hidden');
+        }
+
         // ===== FILTRO DE ORIGEM (Relatórios) =====
         // Replica EXATAMENTE a normalização de origem que o Extrato já exibe.
         // Assim, filtrar por "Salário" mostra as mesmas linhas que o Extrato
@@ -6301,6 +6329,7 @@ select:focus, select:focus-visible {
             const dataIniVal = document.getElementById('filtroRelDataIni').value; 
             const dataFimVal = document.getElementById('filtroRelDataFim').value; 
             const tipoVal = document.getElementById('filtroRelTipo').value;
+            const statusVal = document.getElementById('filtroRelStatus')?.value || 'Todos';
             const contaVal = document.getElementById('filtroRelConta').value;
             const catVal = document.getElementById('filtroRelCategoria').value;
             const origemVal = document.getElementById('filtroRelOrigem')?.value || 'Todas';
@@ -6313,27 +6342,44 @@ select:focus, select:focus-visible {
             
             let filtrados = bancoDeDados.filter(d => {
                 if (d.ocultoExtrato) return false;
-                // 🎯 Próprio continua fora (não é receita/despesa real).
-                //    Terceiro entra (é dinheiro entrando/saindo de verdade).
-                if (d.isTransferencia && !d.isTerceiro) return false;
-                
-                // 🎯 Sempre pelo VENCIMENTO (parcelado, à vista e recorrente).
+
+                // ═══════════════════════════════════════════════════════════
+                // 🎯 FILTRO DE NATUREZA — 4 modos:
+                //    • Transferencia → SÓ transferências (próprias + terceiro)
+                //    • Todas / Receita / Despesa → exclui transferências
+                //      PRÓPRIAS (dinheiro trocando de bolso); terceiro
+                //      permanece (é receita/despesa real).
+                // ═══════════════════════════════════════════════════════════
+                const ehTransferencia = !!d.isTransferencia;
+                if (tipoVal === 'Transferencia') {
+                    if (!ehTransferencia) return false;
+                } else {
+                    if (ehTransferencia && !d.isTerceiro) return false;
+                }
+
+                // 🎯 Filtro de Status (Efetivada = pago; Pendente = !pago)
+                if (statusVal === 'Efetivada' && !d.pago) return false;
+                if (statusVal === 'Pendente' && d.pago) return false;
+
+                // Data de referência (sempre o vencimento)
                 let dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
                 if (!dataRef || dataRef === '--/--/----') dataRef = d.dataLancamento;
-                
-                // Filtro Exato do Calendário
                 if (dataRef) {
                     let pDt = dataRef.split('/');
                     if (pDt.length === 3) {
-                        let dtRefNum = parseInt(pDt[2] + pDt[1] + pDt[0]); // Transforma DD/MM/AAAA em AAAAMMDD
+                        let dtRefNum = parseInt(pDt[2] + pDt[1] + pDt[0]);
                         if (dtRefNum < dtIniNum || dtRefNum > dtFimNum) return false;
                     }
                 }
 
-                // Natureza, Conta, Categoria
-                let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
-                if (tipoVal === 'Receita' && !isR) return false;
-                if (tipoVal === 'Despesa' && isR) return false;
+                // Natureza Receita/Despesa — não se aplica ao modo Transferências
+                if (tipoVal !== 'Transferencia') {
+                    let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
+                    if (tipoVal === 'Receita' && !isR) return false;
+                    if (tipoVal === 'Despesa' && isR) return false;
+                }
+
+                // Conta, Categoria, Origem
                 if (contaVal !== 'Todas' && (d.contaId || 'c_padrao') !== contaVal) return false;
                 if (catVal !== 'Todas' && d.categoria !== catVal) return false;
                 if (origemVal !== 'Todas' && window.obterOrigemItem(d) !== origemVal) return false;
@@ -6356,6 +6402,9 @@ select:focus, select:focus-visible {
                 });
 
                 filtrados.forEach(d => {
+                    // 🎯 Própria transferência não entra nos totais (dinheiro
+                    //    round-trip). Terceiro entra: é receita/despesa real.
+                    if (d.isTransferencia && !d.isTerceiro) return;
                     let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
                     let val = parseFloat(d.valor);
                     if (isR) totais.rec += val; else totais.desp += val;
@@ -6378,7 +6427,10 @@ select:focus, select:focus-visible {
                                 ${getSVGIcon(iconeSvgStr, 'w-4 h-4')}
                             </div>
                             <div class="truncate">
-                                <p class="text-sm font-bold text-slate-800 truncate">${d.descricaoOriginal || d.descricao}</p>
+                                <p class="text-sm font-bold text-slate-800 truncate flex items-center gap-1.5">
+                                    ${d.isTransferencia ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider shrink-0">Transf.</span>' : ''}
+                                    <span class="truncate">${d.descricaoOriginal || d.descricao}</span>
+                                </p>
                                 <p class="text-[10px] text-slate-400 uppercase tracking-wider truncate mt-0.5">${d.vencimento || d.dataLancamento} • ${contaNome}</p>
                             </div>
                         </div>
@@ -6449,6 +6501,7 @@ select:focus, select:focus-visible {
 
             // ─── Item "Terceiro" no topo ───────────────────────────────
             const liTerceiro = document.createElement('li');
+            liTerceiro.dataset.terceiroItem = 'true';
             liTerceiro.className = "cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-[#1e2a40]";
             liTerceiro.innerHTML = `
                 <div class="w-6 h-6 shrink-0 flex items-center justify-center text-[#4D6BFE]">
@@ -6557,6 +6610,22 @@ select:focus, select:focus-visible {
         // null = modo "criar nova".
         let transferenciaSendoEditada = null;
 
+        // 🎯 Regra: Terceiro nunca pode estar nos dois lados ao mesmo tempo.
+        //    Esconde a opção "Terceiro" no dropdown oposto. Chamada após
+        //    qualquer render/click nos dropdowns do modal de transferência.
+        window.aplicarRegraTerceiroUnico = function() {
+            const origemId = document.getElementById('transfContaOrigem')?.value || '';
+            const destinoId = document.getElementById('transfContaDestino')?.value || '';
+            const origemEhTerceiro = (origemId === window.TRANSF_TERCEIRO);
+            const destinoEhTerceiro = (destinoId === window.TRANSF_TERCEIRO);
+
+            const liTerceiroDestino = document.querySelector('#listaTransfContaDestino [data-terceiro-item="true"]');
+            if (liTerceiroDestino) liTerceiroDestino.classList.toggle('hidden', origemEhTerceiro);
+
+            const liTerceiroOrigem = document.querySelector('#listaTransfContaOrigem [data-terceiro-item="true"]');
+            if (liTerceiroOrigem) liTerceiroOrigem.classList.toggle('hidden', destinoEhTerceiro);
+        };
+
         window.abrirModalTransferencia = function(idUnico) {
             transferenciaSendoEditada = null;
 
@@ -6643,6 +6712,9 @@ select:focus, select:focus-visible {
             const btnSalvar = document.getElementById('btnConfirmarTransferencia');
             if (btnSalvar) btnSalvar.textContent = transferenciaSendoEditada ? 'Salvar alterações' : 'Transferir';
 
+            // 🎯 Aplica a regra "Terceiro em um lado só" após os renders iniciais
+            window.aplicarRegraTerceiroUnico();
+
             window.abrirModalGenerico('modalTransferencia');
         };
 
@@ -6713,13 +6785,21 @@ select:focus, select:focus-visible {
         document.getElementById('listaTransfContaOrigem')?.addEventListener('click', () => {
             setTimeout(() => {
                 const origemId = document.getElementById('transfContaOrigem').value;
-                // 🎯 Só exclui a origem do destino se ela for uma conta real
-                //    (não faz sentido excluir "Terceiro" — é uma sentinela).
                 const excluir = (origemId && origemId !== window.TRANSF_TERCEIRO) ? origemId : null;
                 if (excluir && document.getElementById('transfContaDestino').value === origemId) {
                     document.getElementById('transfContaDestino').value = '';
                 }
                 window.renderDropdownTransferencia('listaTransfContaDestino', 'transfContaDestino', 'lblTransfContaDestino', 'menuTransfContaDestino', excluir);
+                // 🎯 Após re-renderizar o destino, reaplica a regra
+                window.aplicarRegraTerceiroUnico();
+            }, 10);
+        });
+
+        // 🎯 Listener NOVO: quando o usuário escolhe Terceiro no destino,
+        //    a origem precisa esconder a opção Terceiro.
+        document.getElementById('listaTransfContaDestino')?.addEventListener('click', () => {
+            setTimeout(() => {
+                window.aplicarRegraTerceiroUnico();
             }, 10);
         });
 
@@ -9175,7 +9255,9 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                     // 🎯 Card "Despesas do Mês" conta TODAS as despesas (pendentes + efetivadas).
                     // A efetivação é critério apenas das CONTAS.
                     // Receitas no card só somam se o usuário ativou 'Compor Resumo do Mês'.
-                    if(!isR && !despesa.isAjuste && !despesa.isTransferencia) totalDespesasDoMes += valorFloat(despesa.valor);
+                    // 🎯 Terceiro saída é despesa REAL (dinheiro sai do seu mundo).
+                    //    Próprio continua fora (é só dinheiro trocando de bolso).
+                    if(!isR && !despesa.isAjuste && (!despesa.isTransferencia || despesa.isTerceiro)) totalDespesasDoMes += valorFloat(despesa.valor);
                     if(isR && !despesa.isAjuste && !despesa.ocultoExtrato && despesa.compoeResumo) totalReceitasDoMes += valorFloat(despesa.valor);
                 }); 
 
@@ -9257,7 +9339,8 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
 
                 // Totais baseados no filtro ativo (para o rodapé do Extrato)
                 arrayTransacoes.forEach(t => {
-                    if (t.ocultoExtrato || t.isAjuste || t.isTransferencia) return;
+                    if (t.ocultoExtrato || t.isAjuste) return;
+                    if (t.isTransferencia && !t.isTerceiro) return;
                     const isR = (t.tipo === 'Receita' || t.natureza === 'Receita');
                     if (isR) totalRecFiltro += t.valorTotalNoMes;
                     else totalDespFiltro += t.valorTotalNoMes;
@@ -13501,6 +13584,7 @@ const inputDesc = document.getElementById('descricao');
         document.getElementById('btnFiltroConta')?.addEventListener('click', (e) => window.abrirMenuExclusivo('menuFiltroConta', e));
         document.getElementById('btnFiltroCategoria')?.addEventListener('click', (e) => window.abrirMenuExclusivo('menuFiltroCategoria', e));
         document.getElementById('btnFiltroOrigem')?.addEventListener('click', (e) => window.abrirMenuExclusivo('menuFiltroOrigem', e));
+        document.getElementById('btnFiltroStatus')?.addEventListener('click', (e) => window.abrirMenuExclusivo('menuFiltroStatus', e));
         
         // Atualiza o preview do parcelamento em tempo real
         ['valor', 'qtdParcelas', 'parcAtual'].forEach(id => {
@@ -14924,7 +15008,9 @@ const inputDesc = document.getElementById('descricao');
             const itens = [];
 
             bancoDeDados.forEach(d => {
-                if (d.isTransferencia || d.isAjuste || d.ocultoExtrato) return;
+                if (d.isAjuste || d.ocultoExtrato) return;
+                // 🎯 Próprio continua fora (não é "gasto" real); terceiro entra.
+                if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (isR) return;
 
@@ -15112,7 +15198,9 @@ const inputDesc = document.getElementById('descricao');
             const alvoNum = ano * 100 + (mes + 1);
 
             bancoDeDados.forEach(d => {
-                if (d.isTransferencia || d.isAjuste) return;
+                if (d.isAjuste) return;
+                // 🎯 Terceiro conta; próprio fica fora.
+                if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (isR) return;
 
@@ -15172,7 +15260,9 @@ const inputDesc = document.getElementById('descricao');
             const alvoNum = ano * 100 + (mes + 1);
 
             bancoDeDados.forEach(d => {
-                if (d.isTransferencia || d.isAjuste) return;
+                if (d.isAjuste) return;
+                // 🎯 Terceiro conta; próprio fica fora.
+                if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (isR) return;
                 if (d.categoria !== catNome) return;
@@ -15218,7 +15308,9 @@ const inputDesc = document.getElementById('descricao');
             const alvoNum = ano * 100 + (mes + 1);
 
             bancoDeDados.forEach(d => {
-                if (d.isTransferencia || d.isAjuste) return;
+                if (d.isAjuste) return;
+                // 🎯 Terceiro conta; próprio fica fora.
+                if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (!isR) return;
 
