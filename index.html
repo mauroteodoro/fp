@@ -2058,9 +2058,9 @@ select:focus, select:focus-visible {
                         </div>
                     </div>
 
-                    <div class="flex justify-center" style="margin-top: -10px; margin-bottom: -10px;">
-                        <div class="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#1a2639] flex items-center justify-center text-slate-400 dark:text-gray-500 shadow-sm">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    <div class="flex justify-center -my-2 relative z-10">
+                        <div class="w-8 h-8 rounded-full bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] flex items-center justify-center text-slate-400 dark:text-gray-500 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                         </div>
                     </div>
 
@@ -2108,6 +2108,16 @@ select:focus, select:focus-visible {
                         </button>
 
                         <div id="panelMaisOpcoesTransf" class="hidden pt-2 pb-4 space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Origem no Ciclo</label>
+                                <input type="hidden" id="transfOrigemManual" value="Auto">
+                                <div class="inline-flex gap-0.5 bg-slate-50 dark:bg-[#0b1120] p-0.5 rounded-lg border border-slate-200 dark:border-[#1e2a40]">
+                                    <button type="button" data-origem-prefix="transf" data-origem-valor="Auto" onclick="selecionarOrigem('Auto', 'transfOrigemManual', 'transf')" class="px-3 h-[30px] text-[11px] font-bold rounded-md transition-all bg-slate-900 text-white shadow-sm">Auto</button>
+                                    <button type="button" data-origem-prefix="transf" data-origem-valor="Vale" onclick="selecionarOrigem('Vale', 'transfOrigemManual', 'transf')" class="px-3 h-[30px] text-[11px] font-bold rounded-md transition-all text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200">Vale</button>
+                                    <button type="button" data-origem-prefix="transf" data-origem-valor="Salário" onclick="selecionarOrigem('Salário', 'transfOrigemManual', 'transf')" class="px-3 h-[30px] text-[11px] font-bold rounded-md transition-all text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200">Salário</button>
+                                </div>
+                                <p class="text-[10px] text-slate-400 dark:text-gray-500 mt-1.5 leading-snug">Define de qual ciclo (Salário ou Vale) essa transferência desconta no Resumo.</p>
+                            </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Data de Lançamento</label>
                                 <div class="relative w-full">
@@ -6476,6 +6486,8 @@ select:focus, select:focus-visible {
             const chkEf = document.getElementById('chkTransfEfetivada');
             if (chkEf) chkEf.checked = true;
             atualizarLabelTransfEfetivada();
+            // 🎯 Reseta a Origem no Ciclo para "Auto" em novas transferências
+            window.selecionarOrigem('Auto', 'transfOrigemManual', 'transf');
             document.getElementById('panelMaisOpcoesTransf')?.classList.add('hidden');
             document.querySelectorAll('.seta-transf').forEach(s => s.classList.remove('rotate-180'));
 
@@ -6507,6 +6519,13 @@ select:focus, select:focus-visible {
                     document.getElementById('transfDataEfetivacao').value = lanc.dataEfetivacao || '';
                     if (chkEf) chkEf.checked = !!lanc.pago;
                     atualizarLabelTransfEfetivada();
+
+                    // 🎯 Carrega a Origem no Ciclo salva (se houver). Valores
+                    // antigos como "Transferência" caem em "Auto".
+                    const origemSalva = (lanc.origem === 'Vale' || lanc.origem === 'Salário')
+                        ? lanc.origem
+                        : 'Auto';
+                    window.selecionarOrigem(origemSalva, 'transfOrigemManual', 'transf');
                 }
             }
 
@@ -6647,6 +6666,12 @@ select:focus, select:focus-visible {
             const estaPaga = !!document.getElementById('chkTransfEfetivada')?.checked;
 
             // Lançamento de SAÍDA (origem) — visível no extrato
+            // 🎯 Origem no ciclo: "Auto" classifica pela data, senão força o bucket
+            const origemEscolhida = document.getElementById('transfOrigemManual')?.value || 'Auto';
+            const origemFinal = (origemEscolhida === 'Vale' || origemEscolhida === 'Salário')
+                ? origemEscolhida
+                : determinarOrigem(dataVenc, 'Despesa', null);
+
             const lancSaida = {
                 id: idOrigem,
                 transacaoId: idOrigem,
@@ -6664,7 +6689,7 @@ select:focus, select:focus-visible {
                 valor: valor.toFixed(2),
                 tipo: 'Despesa',
                 natureza: 'Despesa',
-                origem: 'Transferência',
+                origem: origemFinal,
                 vencimentoOriginal: dataVenc,
                 vencimento: dataVenc,
                 observacao: obs,
@@ -16569,10 +16594,10 @@ const inputDesc = document.getElementById('descricao');
                         ` : ''}
                         <div class="space-y-1">
                             ${amostra.map(m => `
-                                <div class="flex justify-between gap-2 text-[11.5px] items-baseline">
-                                    <span class="text-slate-500 dark:text-gray-400 min-w-[72px]">${nomeMeses[m.mes].substring(0,3)}/${String(m.ano).substring(2)}</span>
-                                    <span class="font-bold text-[#4D6BFE] flex-1 text-right">${formatMoeda(m.alocacao)}</span>
-                                    <span class="text-[10px] text-slate-400 dark:text-gray-500 min-w-[80px] text-right">sobra ${formatMoeda(m.sobra)}</span>
+                                <div class="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[11.5px] items-baseline">
+                                    <span class="text-slate-500 dark:text-gray-400 min-w-[72px] shrink-0">${nomeMeses[m.mes].substring(0,3)}/${String(m.ano).substring(2)}</span>
+                                    <span class="font-bold text-[#4D6BFE] flex-1 text-right shrink-0 whitespace-nowrap">${formatMoeda(m.alocacao)}</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-gray-500 w-full sm:w-auto sm:min-w-[80px] text-right shrink-0 whitespace-nowrap">sobra ${formatMoeda(m.sobra)}</span>
                                 </div>
                             `).join('')}
                             ${ativos.length > amostra.length ? `<p class="text-[10px] text-slate-400 italic mt-1">+ ${ativos.length - amostra.length} mês${ativos.length - amostra.length === 1 ? '' : 'es'} até a meta</p>` : ''}
