@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -2058,6 +2058,12 @@ select:focus, select:focus-visible {
                         </div>
                     </div>
 
+                    <!-- 🎯 Box que aparece quando a Origem for "Terceiro" -->
+                    <div id="boxTransfOrigemTerceiro" class="hidden pt-1">
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">De quem vem? (Nome do terceiro)</label>
+                        <input type="text" id="transfOrigemTerceiroNome" autocomplete="off" placeholder="Ex: João Silva, Empresa XPTO..." class="w-full border border-slate-200 dark:border-[#1e2a40] bg-slate-50 dark:bg-[#0b1120] rounded-xl focus:bg-white dark:focus:bg-[#0b1120] focus:outline-none focus:ring-0 focus:border-slate-900 dark:focus:ring-cyan-500 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all text-sm h-[48px] px-3">
+                    </div>
+
                     <div class="flex justify-center -my-2 relative z-10">
                         <div class="w-8 h-8 rounded-full bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] flex items-center justify-center text-slate-400 dark:text-gray-500 shadow-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
@@ -2074,6 +2080,12 @@ select:focus, select:focus-visible {
                         <div id="menuTransfContaDestino" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]" style="top: 100%;">
                             <ul class="max-h-48 overflow-y-auto hover-scrollbar text-sm" id="listaTransfContaDestino"></ul>
                         </div>
+                    </div>
+
+                    <!-- 🎯 Box que aparece quando o Destino for "Terceiro" -->
+                    <div id="boxTransfDestinoTerceiro" class="hidden pt-1">
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Para quem vai? (Nome do terceiro)</label>
+                        <input type="text" id="transfDestinoTerceiroNome" autocomplete="off" placeholder="Ex: Maria Souza, Loja ABC..." class="w-full border border-slate-200 dark:border-[#1e2a40] bg-slate-50 dark:bg-[#0b1120] rounded-xl focus:bg-white dark:focus:bg-[#0b1120] focus:outline-none focus:ring-0 focus:border-slate-900 dark:focus:ring-cyan-500 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all text-sm h-[48px] px-3">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -6300,7 +6312,10 @@ select:focus, select:focus-visible {
             let totais = { rec: 0, desp: 0 };
             
             let filtrados = bancoDeDados.filter(d => {
-                if (d.ocultoExtrato || d.isTransferencia) return false;
+                if (d.ocultoExtrato) return false;
+                // 🎯 Próprio continua fora (não é receita/despesa real).
+                //    Terceiro entra (é dinheiro entrando/saindo de verdade).
+                if (d.isTransferencia && !d.isTerceiro) return false;
                 
                 // 🎯 Sempre pelo VENCIMENTO (parcelado, à vista e recorrente).
                 let dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
@@ -6416,15 +6431,61 @@ select:focus, select:focus-visible {
         // ligados por um "transferenciaId". A saída aparece no extrato; a entrada
         // fica oculta (ocultoExtrato: true) — mas ambas movem o saldo das contas.
         // Nenhuma das duas conta nos cards de Resumo nem no Relatório (isTransferencia).
+        // 🎯 Sentinela usada nos dropdowns de transferência para indicar "Terceiro"
+        window.TRANSF_TERCEIRO = '__TERCEIRO__';
+
         window.renderDropdownTransferencia = function(listId, inputId, lblId, menuId, excludeId) {
             const list = document.getElementById(listId);
             const input = document.getElementById(inputId);
             const lbl = document.getElementById(lblId);
             if (!list || !input || !lbl) return;
 
-            list.innerHTML = '';
-            let primeiraDisponivel = null;
+            // 🎯 Descobre qual box de terceiro pertence a este dropdown
+            const ehOrigem = (listId === 'listaTransfContaOrigem');
+            const boxTerceiroId = ehOrigem ? 'boxTransfOrigemTerceiro' : 'boxTransfDestinoTerceiro';
+            const nomeTerceiroId = ehOrigem ? 'transfOrigemTerceiroNome' : 'transfDestinoTerceiroNome';
 
+            list.innerHTML = '';
+
+            // ─── Item "Terceiro" no topo ───────────────────────────────
+            const liTerceiro = document.createElement('li');
+            liTerceiro.className = "cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-[#1e2a40]";
+            liTerceiro.innerHTML = `
+                <div class="w-6 h-6 shrink-0 flex items-center justify-center text-[#4D6BFE]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M19 8v6M22 11h-6"/>
+                    </svg>
+                </div>
+                <span class="font-medium text-slate-700 dark:text-gray-200 truncate">Terceiro <span class="text-[10px] text-slate-400 font-normal">(pessoa ou empresa)</span></span>
+            `;
+            liTerceiro.addEventListener('click', () => {
+                input.value = window.TRANSF_TERCEIRO;
+                lbl.innerHTML = `
+                    <div class="flex items-center gap-2.5 truncate">
+                        <div class="w-5 h-5 shrink-0 flex items-center justify-center text-[#4D6BFE]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M19 8v6M22 11h-6"/>
+                            </svg>
+                        </div>
+                        <span class="truncate mt-0.5">Terceiro</span>
+                    </div>
+                `;
+                document.getElementById(menuId).classList.add('hidden');
+                // 🎯 Abre o box de descrição e foca
+                const box = document.getElementById(boxTerceiroId);
+                if (box) {
+                    box.classList.remove('hidden');
+                    setTimeout(() => document.getElementById(nomeTerceiroId)?.focus(), 80);
+                }
+            });
+            list.appendChild(liTerceiro);
+
+            // ─── Contas do usuário ─────────────────────────────────────
+            let primeiraDisponivel = null;
             contasGlobais.forEach(c => {
                 if (excludeId && c.id === excludeId) return;
                 if (!primeiraDisponivel) primeiraDisponivel = c;
@@ -6445,11 +6506,35 @@ select:focus, select:focus-visible {
                         </div>
                     `;
                     document.getElementById(menuId).classList.add('hidden');
+                    // 🎯 Fecha o box de terceiro se estava aberto e limpa o nome
+                    const box = document.getElementById(boxTerceiroId);
+                    if (box) box.classList.add('hidden');
+                    const inpNome = document.getElementById(nomeTerceiroId);
+                    if (inpNome) inpNome.value = '';
                 });
                 list.appendChild(li);
             });
 
-            // Se o input atual não está entre os disponíveis (ex: virou a origem excluída), redefine
+            // 🎯 Se o input atual é a sentinela de Terceiro, mantém o label
+            //    sem sobrescrever (foi o usuário que escolheu).
+            if (input.value === window.TRANSF_TERCEIRO) {
+                lbl.innerHTML = `
+                    <div class="flex items-center gap-2.5 truncate">
+                        <div class="w-5 h-5 shrink-0 flex items-center justify-center text-[#4D6BFE]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M19 8v6M22 11h-6"/>
+                            </svg>
+                        </div>
+                        <span class="truncate mt-0.5">Terceiro</span>
+                    </div>
+                `;
+                document.getElementById(boxTerceiroId)?.classList.remove('hidden');
+                return;
+            }
+
+            // Se o input atual não está entre os disponíveis, redefine para o primeiro
             const idsDisponiveis = contasGlobais.filter(c => !excludeId || c.id !== excludeId).map(c => c.id);
             if (!input.value || !idsDisponiveis.includes(input.value)) {
                 if (primeiraDisponivel) {
@@ -6483,6 +6568,11 @@ select:focus, select:focus-visible {
             document.getElementById('transfData').value = getHojeFormatado();
             document.getElementById('transfDataLancamento').value = getHojeFormatado();
             document.getElementById('transfDataEfetivacao').value = '';
+            // 🎯 Reset dos boxes de terceiro
+            document.getElementById('transfOrigemTerceiroNome').value = '';
+            document.getElementById('transfDestinoTerceiroNome').value = '';
+            document.getElementById('boxTransfOrigemTerceiro')?.classList.add('hidden');
+            document.getElementById('boxTransfDestinoTerceiro')?.classList.add('hidden');
             const chkEf = document.getElementById('chkTransfEfetivada');
             if (chkEf) chkEf.checked = true;
             atualizarLabelTransfEfetivada();
@@ -6498,30 +6588,41 @@ select:focus, select:focus-visible {
                     const par = bancoDeDados.find(d => d.transferenciaId === lanc.transferenciaId && d.id !== lanc.id);
                     transferenciaSendoEditada = { saida: lanc, entrada: par || null };
 
-                    // Descobre qual é a origem e qual é o destino
+                    // 🎯 Descobre origem/destino — cobre 3 casos:
+                    //   1. Transferência entre contas próprias (par existe, ambos reais)
+                    //   2. Saída para terceiro (só saída, isTerceiro: true)
+                    //   3. Entrada de terceiro (só entrada, isTerceiro: true)
                     let origemReal, destinoReal;
-                    if (lanc.direcao === 'saida') { origemReal = lanc.contaId; destinoReal = par ? par.contaId : ''; }
-                    else { origemReal = par ? par.contaId : ''; destinoReal = lanc.contaId; }
+                    const ehTerceiro = !!lanc.isTerceiro;
+                    const terceiroNome = lanc.terceiroNome || '';
 
-                    document.getElementById('transfContaOrigem').value = origemReal;
-                    document.getElementById('transfContaDestino').value = destinoReal;
+                    if (ehTerceiro) {
+                        // Terceiro: só existe um lado
+                        if (lanc.direcao === 'saida') {
+                            origemReal = lanc.contaId || 'c_padrao';
+                            destinoReal = window.TRANSF_TERCEIRO;
+                            document.getElementById('transfDestinoTerceiroNome').value = terceiroNome;
+                        } else {
+                            origemReal = window.TRANSF_TERCEIRO;
+                            destinoReal = lanc.contaId || 'c_padrao';
+                            document.getElementById('transfOrigemTerceiroNome').value = terceiroNome;
+                        }
+                    } else if (lanc.direcao === 'saida') {
+                        origemReal = lanc.contaId; destinoReal = par ? par.contaId : '';
+                    } else {
+                        origemReal = par ? par.contaId : ''; destinoReal = lanc.contaId;
+                    }
+
+                    document.getElementById('transfContaOrigem').value = origemReal || '';
+                    document.getElementById('transfContaDestino').value = destinoReal || '';
                     document.getElementById('transfValor').value = formatarParaMascara(lanc.valor);
-                    // 🎯 A "Data" do formulário agora representa o VENCIMENTO
-                    //    (o dia em que a transferência deve acontecer). Se for
-                    //    um lançamento legado que não tem `vencimento`
-                    //    explícito, cai para a `dataLancamento`.
                     document.getElementById('transfData').value = lanc.vencimento || lanc.dataLancamento || getHojeFormatado();
                     document.getElementById('transfObservacao').value = lanc.observacao || '';
-                    // 🎯 Popula os campos de "Mais opções" com dados do
-                    //    lançamento (com fallbacks para compatibilidade com
-                    //    transferências antigas que não tinham esses campos).
                     document.getElementById('transfDataLancamento').value = lanc.dataLancamento || getHojeFormatado();
                     document.getElementById('transfDataEfetivacao').value = lanc.dataEfetivacao || '';
                     if (chkEf) chkEf.checked = !!lanc.pago;
                     atualizarLabelTransfEfetivada();
 
-                    // 🎯 Carrega a Origem no Ciclo salva (se houver). Valores
-                    // antigos como "Transferência" caem em "Auto".
                     const origemSalva = (lanc.origem === 'Vale' || lanc.origem === 'Salário')
                         ? lanc.origem
                         : 'Auto';
@@ -6533,8 +6634,10 @@ select:focus, select:focus-visible {
             window.renderDropdownTransferencia('listaTransfContaOrigem', 'transfContaOrigem', 'lblTransfContaOrigem', 'menuTransfContaOrigem', null);
 
             // Popula destino, excluindo a conta já escolhida como origem
+            // (só faz sentido quando a origem é uma conta real — se for terceiro, sem exclusão)
             const origemId = document.getElementById('transfContaOrigem').value;
-            window.renderDropdownTransferencia('listaTransfContaDestino', 'transfContaDestino', 'lblTransfContaDestino', 'menuTransfContaDestino', origemId);
+            const excluir = (origemId && origemId !== window.TRANSF_TERCEIRO) ? origemId : null;
+            window.renderDropdownTransferencia('listaTransfContaDestino', 'transfContaDestino', 'lblTransfContaDestino', 'menuTransfContaDestino', excluir);
 
             // Ajusta o label do botão conforme o modo
             const btnSalvar = document.getElementById('btnConfirmarTransferencia');
@@ -6610,10 +6713,13 @@ select:focus, select:focus-visible {
         document.getElementById('listaTransfContaOrigem')?.addEventListener('click', () => {
             setTimeout(() => {
                 const origemId = document.getElementById('transfContaOrigem').value;
-                if (document.getElementById('transfContaDestino').value === origemId) {
+                // 🎯 Só exclui a origem do destino se ela for uma conta real
+                //    (não faz sentido excluir "Terceiro" — é uma sentinela).
+                const excluir = (origemId && origemId !== window.TRANSF_TERCEIRO) ? origemId : null;
+                if (excluir && document.getElementById('transfContaDestino').value === origemId) {
                     document.getElementById('transfContaDestino').value = '';
                 }
-                window.renderDropdownTransferencia('listaTransfContaDestino', 'transfContaDestino', 'lblTransfContaDestino', 'menuTransfContaDestino', origemId);
+                window.renderDropdownTransferencia('listaTransfContaDestino', 'transfContaDestino', 'lblTransfContaDestino', 'menuTransfContaDestino', excluir);
             }, 10);
         });
 
@@ -6631,20 +6737,39 @@ select:focus, select:focus-visible {
             const data = document.getElementById('transfData').value;
             const obs = document.getElementById('transfObservacao').value.trim();
 
+            const origemEhTerceiro = (origemId === window.TRANSF_TERCEIRO);
+            const destinoEhTerceiro = (destinoId === window.TRANSF_TERCEIRO);
+
             if (!origemId) { window.mostrarAviso("Selecione a conta de origem.", "erro"); return; }
             if (!destinoId) { window.mostrarAviso("Selecione a conta de destino.", "erro"); return; }
-            if (origemId === destinoId) { window.mostrarAviso("Origem e destino não podem ser a mesma conta.", "erro"); return; }
+            if (origemEhTerceiro && destinoEhTerceiro) {
+                window.mostrarAviso("Origem e destino não podem ser ambos terceiros.", "erro"); return;
+            }
+            if (!origemEhTerceiro && !destinoEhTerceiro && origemId === destinoId) {
+                window.mostrarAviso("Origem e destino não podem ser a mesma conta.", "erro"); return;
+            }
             if (valor <= 0) { window.mostrarAviso("Informe um valor válido.", "erro"); return; }
             if (!data || data.length < 10) { window.mostrarAviso("Data inválida.", "erro"); return; }
 
-            const origemObj = contasGlobais.find(c => c.id === origemId);
-            const destinoObj = contasGlobais.find(c => c.id === destinoId);
-            if (!origemObj || !destinoObj) { window.mostrarAviso("Conta não encontrada.", "erro"); return; }
+            // 🎯 Valida e coleta nome do terceiro quando aplicável
+            let terceiroNome = '';
+            if (origemEhTerceiro) {
+                terceiroNome = (document.getElementById('transfOrigemTerceiroNome')?.value || '').trim();
+                if (!terceiroNome) { window.mostrarAviso("Informe o nome do terceiro de origem.", "erro"); return; }
+            }
+            if (destinoEhTerceiro) {
+                terceiroNome = (document.getElementById('transfDestinoTerceiroNome')?.value || '').trim();
+                if (!terceiroNome) { window.mostrarAviso("Informe o nome do terceiro de destino.", "erro"); return; }
+            }
+
+            const origemObj = origemEhTerceiro ? null : contasGlobais.find(c => c.id === origemId);
+            const destinoObj = destinoEhTerceiro ? null : contasGlobais.find(c => c.id === destinoId);
+            if (!origemEhTerceiro && !origemObj) { window.mostrarAviso("Conta de origem não encontrada.", "erro"); return; }
+            if (!destinoEhTerceiro && !destinoObj) { window.mostrarAviso("Conta de destino não encontrada.", "erro"); return; }
 
             const eraEdicao = !!transferenciaSendoEditada;
 
-            // Em modo edição, apaga os 2 lançamentos antigos antes de criar os novos.
-            // Assim mantemos a integridade do par (nunca fica um órfão).
+            // Em modo edição, apaga os lançamentos antigos (par ou único) antes de criar.
             if (eraEdicao) {
                 const transIdAntigo = transferenciaSendoEditada.saida.transferenciaId;
                 const idsAntigos = [];
@@ -6654,87 +6779,174 @@ select:focus, select:focus-visible {
             }
 
             const transId = `trf_${Date.now()}_${Math.floor(Math.random()*1000)}`;
-            const idOrigem = Date.now();
-            const idDestino = idOrigem + 1;
-            const descricaoAuto = `${origemObj.nome} → ${destinoObj.nome}`;
             const timestampAgora = getTimestampAtual();
-
-            // 🎯 Lê os novos campos de "Mais opções"
-            const dataVenc = data;  // a "Data" principal agora é o vencimento
+            const dataVenc = data;
             const dataLanc = document.getElementById('transfDataLancamento')?.value || dataVenc;
             const dataEfet = document.getElementById('transfDataEfetivacao')?.value || '';
             const estaPaga = !!document.getElementById('chkTransfEfetivada')?.checked;
-
-            // Lançamento de SAÍDA (origem) — visível no extrato
-            // 🎯 Origem no ciclo: "Auto" classifica pela data, senão força o bucket
             const origemEscolhida = document.getElementById('transfOrigemManual')?.value || 'Auto';
-            const origemFinal = (origemEscolhida === 'Vale' || origemEscolhida === 'Salário')
-                ? origemEscolhida
-                : determinarOrigem(dataVenc, 'Despesa', null);
 
-            const lancSaida = {
-                id: idOrigem,
-                transacaoId: idOrigem,
-                transferenciaId: transId,
-                transferenciaParId: idDestino,
-                isTransferencia: true,
-                direcao: 'saida',
-                dataLancamento: dataLanc,
-                descricaoOriginal: descricaoAuto,
-                descricao: descricaoAuto,
-                categoria: 'Transferência',
-                subcategoria: destinoObj.nome,
-                contaId: origemId,
-                valorCompraOriginal: valor,
-                valor: valor.toFixed(2),
-                tipo: 'Despesa',
-                natureza: 'Despesa',
-                origem: origemFinal,
-                vencimentoOriginal: dataVenc,
-                vencimento: dataVenc,
-                observacao: obs,
-                // 🎯 `pago` reflete o toggle Efetivada/Pendente.
-                //    Transferências pendentes NÃO afetam o saldo das contas —
-                //    o cálculo do carrossel/aba Contas só considera `pago: true`.
-                pago: estaPaga,
-                dataPagamento: estaPaga ? timestampAgora : null,
-                dataEfetivacao: estaPaga ? (dataEfet || dataVenc) : null,
-                anexo: null
-            };
+            // ═══════════════════════════════════════════════════════════
+            // 🎯 CASO 1 — ORIGEM É TERCEIRO (dinheiro ENTRA)
+            // ═══════════════════════════════════════════════════════════
+            // Cria UMA entrada na conta do usuário. Sem par.
+            // Efeito: soma nos cards projetados (Receita) e, quando
+            // efetivada, soma no saldo real da conta.
+            // ═══════════════════════════════════════════════════════════
+            if (origemEhTerceiro) {
+                const descricaoAuto = `${terceiroNome} → ${destinoObj.nome}`;
+                const lancEntrada = {
+                    id: Date.now(),
+                    transacaoId: Date.now(),
+                    transferenciaId: transId,
+                    isTransferencia: true,
+                    isTerceiro: true,
+                    terceiroNome: terceiroNome,
+                    direcao: 'entrada',
+                    dataLancamento: dataLanc,
+                    descricaoOriginal: descricaoAuto,
+                    descricao: descricaoAuto,
+                    categoria: 'Transferência',
+                    subcategoria: terceiroNome,
+                    contaId: destinoId,
+                    valorCompraOriginal: valor,
+                    valor: valor.toFixed(2),
+                    tipo: 'Receita',
+                    natureza: 'Receita',
+                    origem: 'Transferência',
+                    compoeResumo: true,        // 🎯 entra na projeção (é receita real)
+                    vencimentoOriginal: dataVenc,
+                    vencimento: dataVenc,
+                    observacao: obs,
+                    pago: estaPaga,
+                    dataPagamento: estaPaga ? timestampAgora : null,
+                    dataEfetivacao: estaPaga ? (dataEfet || dataVenc) : null,
+                    anexo: null
+                };
+                bancoDeDados.push(lancEntrada);
+                salvarDespesaFirestore(lancEntrada);
+            }
+            // ═══════════════════════════════════════════════════════════
+            // 🎯 CASO 2 — DESTINO É TERCEIRO (dinheiro SAI)
+            // ═══════════════════════════════════════════════════════════
+            // Cria UMA saída na conta do usuário. Sem par.
+            // Efeito: soma nos cards projetados (Despesa) e, quando
+            // efetivada, subtrai do saldo real da conta.
+            // ═══════════════════════════════════════════════════════════
+            else if (destinoEhTerceiro) {
+                const descricaoAuto = `${origemObj.nome} → ${terceiroNome}`;
+                const origemFinal = (origemEscolhida === 'Vale' || origemEscolhida === 'Salário')
+                    ? origemEscolhida
+                    : determinarOrigem(dataVenc, 'Despesa', null);
+                const lancSaida = {
+                    id: Date.now(),
+                    transacaoId: Date.now(),
+                    transferenciaId: transId,
+                    isTransferencia: true,
+                    isTerceiro: true,
+                    terceiroNome: terceiroNome,
+                    direcao: 'saida',
+                    dataLancamento: dataLanc,
+                    descricaoOriginal: descricaoAuto,
+                    descricao: descricaoAuto,
+                    categoria: 'Transferência',
+                    subcategoria: terceiroNome,
+                    contaId: origemId,
+                    valorCompraOriginal: valor,
+                    valor: valor.toFixed(2),
+                    tipo: 'Despesa',
+                    natureza: 'Despesa',
+                    origem: origemFinal,
+                    vencimentoOriginal: dataVenc,
+                    vencimento: dataVenc,
+                    observacao: obs,
+                    pago: estaPaga,
+                    dataPagamento: estaPaga ? timestampAgora : null,
+                    dataEfetivacao: estaPaga ? (dataEfet || dataVenc) : null,
+                    anexo: null
+                };
+                bancoDeDados.push(lancSaida);
+                salvarDespesaFirestore(lancSaida);
+            }
+            // ═══════════════════════════════════════════════════════════
+            // 🎯 CASO 3 — TRANSFERÊNCIA ENTRE CONTAS PRÓPRIAS (par espelhado)
+            // ═══════════════════════════════════════════════════════════
+            // Comportamento antigo preservado: saída + entrada espelhadas.
+            // A grande diferença é o `isTerceiro: false` e o filtro em
+            // `atualizarCardsSaldo` — que passa a IGNORAR as duas pernas,
+            // para não mexer nos cards projetados.
+            // ═══════════════════════════════════════════════════════════
+            else {
+                const descricaoAuto = `${origemObj.nome} → ${destinoObj.nome}`;
+                const origemFinal = (origemEscolhida === 'Vale' || origemEscolhida === 'Salário')
+                    ? origemEscolhida
+                    : determinarOrigem(dataVenc, 'Despesa', null);
 
-            // Lançamento de ENTRADA (destino) — oculto do extrato, mas compõe o saldo
-            const lancEntrada = {
-                id: idDestino,
-                transacaoId: idDestino,
-                transferenciaId: transId,
-                transferenciaParId: idOrigem,
-                isTransferencia: true,
-                direcao: 'entrada',
-                dataLancamento: dataLanc,
-                descricaoOriginal: descricaoAuto,
-                descricao: descricaoAuto,
-                categoria: 'Transferência',
-                subcategoria: origemObj.nome,
-                contaId: destinoId,
-                valorCompraOriginal: valor,
-                valor: valor.toFixed(2),
-                tipo: 'Receita',
-                natureza: 'Receita',
-                origem: 'Transferência',
-                vencimentoOriginal: dataVenc,
-                vencimento: dataVenc,
-                observacao: obs,
-                pago: estaPaga,
-                dataPagamento: estaPaga ? timestampAgora : null,
-                dataEfetivacao: estaPaga ? (dataEfet || dataVenc) : null,
-                anexo: null,
-                ocultoExtrato: true
-            };
+                const idOrigem = Date.now();
+                const idDestino = idOrigem + 1;
 
-            bancoDeDados.push(lancSaida);
-            bancoDeDados.push(lancEntrada);
-            salvarDespesaFirestore(lancSaida);
-            salvarDespesaFirestore(lancEntrada);
+                const lancSaida = {
+                    id: idOrigem,
+                    transacaoId: idOrigem,
+                    transferenciaId: transId,
+                    transferenciaParId: idDestino,
+                    isTransferencia: true,
+                    isTerceiro: false,
+                    direcao: 'saida',
+                    dataLancamento: dataLanc,
+                    descricaoOriginal: descricaoAuto,
+                    descricao: descricaoAuto,
+                    categoria: 'Transferência',
+                    subcategoria: destinoObj.nome,
+                    contaId: origemId,
+                    valorCompraOriginal: valor,
+                    valor: valor.toFixed(2),
+                    tipo: 'Despesa',
+                    natureza: 'Despesa',
+                    origem: origemFinal,
+                    vencimentoOriginal: dataVenc,
+                    vencimento: dataVenc,
+                    observacao: obs,
+                    pago: estaPaga,
+                    dataPagamento: estaPaga ? timestampAgora : null,
+                    dataEfetivacao: estaPaga ? (dataEfet || dataVenc) : null,
+                    anexo: null
+                };
+
+                const lancEntrada = {
+                    id: idDestino,
+                    transacaoId: idDestino,
+                    transferenciaId: transId,
+                    transferenciaParId: idOrigem,
+                    isTransferencia: true,
+                    isTerceiro: false,
+                    direcao: 'entrada',
+                    dataLancamento: dataLanc,
+                    descricaoOriginal: descricaoAuto,
+                    descricao: descricaoAuto,
+                    categoria: 'Transferência',
+                    subcategoria: origemObj.nome,
+                    contaId: destinoId,
+                    valorCompraOriginal: valor,
+                    valor: valor.toFixed(2),
+                    tipo: 'Receita',
+                    natureza: 'Receita',
+                    origem: 'Transferência',
+                    vencimentoOriginal: dataVenc,
+                    vencimento: dataVenc,
+                    observacao: obs,
+                    pago: estaPaga,
+                    dataPagamento: estaPaga ? timestampAgora : null,
+                    dataEfetivacao: estaPaga ? (dataEfet || dataVenc) : null,
+                    anexo: null,
+                    ocultoExtrato: true
+                };
+
+                bancoDeDados.push(lancSaida);
+                bancoDeDados.push(lancEntrada);
+                salvarDespesaFirestore(lancSaida);
+                salvarDespesaFirestore(lancEntrada);
+            }
 
             atualizarTabela();
             if (typeof renderizarCarrosselContas === 'function') renderizarCarrosselContas();
@@ -8769,14 +8981,16 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                     // ═══════════════════════════════════════════════════════
                     // 🎯 Transferência: alterna AMBOS os lançamentos do par
                     // ═══════════════════════════════════════════════════════
-                    // Uma transferência é atômica: se o dinheiro sai de uma
-                    // conta, PRECISA entrar na outra. Sem essa sincronização,
-                    // o saldo de uma conta mudaria sem a outra acompanhar —
-                    // corrompendo o total consolidado.
+                    // Uma transferência entre contas próprias é atômica: se o
+                    // dinheiro sai de uma conta, PRECISA entrar na outra.
+                    // Sem essa sincronização, o saldo de uma conta mudaria
+                    // sem a outra acompanhar — corrompendo o total.
                     //
-                    // Clicar no status (✓ ou ⏱) da saída no Extrato dispara
-                    // este bloco, que atualiza a saída E a entrada juntas.
-                    const par = bancoDeDados.find(d => d.transferenciaId === item.transferenciaId && d.id !== item.id);
+                    // 🎯 Terceiro: só existe UM lado (saída OU entrada), então
+                    // não há par a sincronizar. O toggle age só no próprio.
+                    const par = item.isTerceiro
+                        ? null
+                        : bancoDeDados.find(d => d.transferenciaId === item.transferenciaId && d.id !== item.id);
                     const novoEstado = !item.pago;
 
                     item.pago = novoEstado;
@@ -8951,7 +9165,9 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                             valorParcela: despesa.valor,
                             isAjuste: despesa.isAjuste,
                             ocultoExtrato: despesa.ocultoExtrato,
-                            isTransferencia: despesa.isTransferencia
+                            isTransferencia: despesa.isTransferencia,
+                            isTerceiro: !!despesa.isTerceiro,
+                            terceiroNome: despesa.terceiroNome || ''
                         };
                     }
                     transacoesAgrupadas[idGrupo].valorTotalNoMes += valorFloat(despesa.valor);
@@ -9153,10 +9369,16 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                     if (isTransf) linha.classList.add('transferencia-row');
                     
                     // Tags agora são texto discreto — cor fica reservada para semântica de valor
-                    let textoTag = isTransf ? 'Transferência' : (transacao.isAjuste ? 'Ajuste' : transacao.tipo);
+                    let textoTag = isTransf
+                        ? (transacao.isTerceiro ? 'Terceiro' : 'Transferência')
+                        : (transacao.isAjuste ? 'Ajuste' : transacao.tipo);
                     
                     // ORIGEM — derivada da DATA (Salário ou Vale). Sem "Extra".
-                    let txtOrigem = isTransf ? 'Transferência' : (transacao.origem || '');
+                    let txtOrigem = isTransf
+                        ? (transacao.isTerceiro
+                            ? (transacao.direcao === 'saida' ? 'Enviado' : 'Recebido')
+                            : 'Transferência')
+                        : (transacao.origem || '');
                     
                     if (isTransf) {
                         // Transferência mantém o rótulo — não passa pelas regras abaixo.
@@ -9704,9 +9926,18 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             //    EFETIVADA — a diferença entre elas é tratada no saldo
             //    real das contas (carrossel + aba Contas), que só conta
             //    as pagas.
+            // ═══════════════════════════════════════════════════════════════
+            // 🎯 FILTRO DE TRANSFERÊNCIAS NOS CARDS PROJETADOS
+            // ═══════════════════════════════════════════════════════════════
+            // • Entre contas próprias → NÃO mexe nos cards. É dinheiro
+            //   andando de um bolso seu para outro; não muda quanto você
+            //   tem no fim do mês.
+            // • Para/de terceiros → SIM mexe nos cards. É dinheiro saindo
+            //   (despesa) ou entrando (receita) de verdade no seu mundo.
+            // ═══════════════════════════════════════════════════════════════
             const visiveis = despesasFiltradas.filter(d => {
                 if (!d.isTransferencia) return true;
-                return d.direcao === 'saida';
+                return !!d.isTerceiro;
             });
             const isRec = d => (d.tipo === 'Receita' || d.natureza === 'Receita');
 
@@ -10426,7 +10657,13 @@ window.checkRateio = function() {
             itemSendoApagado = bancoDeDados.find(d => d.id === idUnico); if (!itemSendoApagado) return;
             const boxEscopo = document.getElementById('boxApagarEscopo'); const texto = document.getElementById('textoApagar');
             
-            if (itemSendoApagado.isTransferencia) {
+            if (itemSendoApagado.isTransferencia && itemSendoApagado.isTerceiro) {
+                // 🎯 Terceiro: só existe UM lado — a mensagem de "par" seria falsa.
+                boxEscopo.classList.add('hidden');
+                const direcao = itemSendoApagado.direcao === 'saida' ? 'para' : 'de';
+                const nome = itemSendoApagado.terceiroNome || 'terceiro';
+                texto.innerHTML = `<strong>Transferência ${direcao} ${nome}:</strong> esta é uma transferência avulsa com terceiro. Apagar removerá este lançamento. Continuar?`;
+            } else if (itemSendoApagado.isTransferencia) {
                 boxEscopo.classList.add('hidden');
                 texto.innerHTML = '<strong>Transferência entre contas:</strong> apagar removerá tanto a saída quanto a entrada de uma só vez. Continuar?';
             } else if (itemSendoApagado.isRecorrente) { 
@@ -13671,7 +13908,9 @@ const inputDesc = document.getElementById('descricao');
             const categorias = {};
 
             bancoDeDados.forEach(d => {
-                if (d.isTransferencia || d.ocultoExtrato || d.isAjuste) return;
+                if (d.ocultoExtrato || d.isAjuste) return;
+                // 🎯 Terceiro entra como receita/despesa real; próprio fica fora.
+                if (d.isTransferencia && !d.isTerceiro) return;
                 // 🎯 Modo (gastar vs gastei):
                 //   'todos'    → pagos + pendentes
                 //   'pago'     → só efetivados (passado)
@@ -14392,9 +14631,11 @@ const inputDesc = document.getElementById('descricao');
             //    sincronizados — qualquer pergunta do tipo "qual meu saldo
             //    do salário?" bate com o card na tela.
             const isRec = d => (d.tipo === 'Receita' || d.natureza === 'Receita');
+            // 🎯 Espelho do filtro em `atualizarCardsSaldo`:
+            //    own-account NÃO conta; terceiro conta em ambas direções.
             const visiveis = despesasFiltradas.filter(d => {
                 if (!d.isTransferencia) return true;
-                return d.direcao === 'saida';
+                return !!d.isTerceiro;
             });
             const alvoComposicao = d => {
                 // 🎯 Espelho exato do `atualizarCardsSaldo`. Manter os dois
@@ -15040,7 +15281,11 @@ const inputDesc = document.getElementById('descricao');
             let total = 0, pago = 0, pendente = 0;
 
             bancoDeDados.forEach(d => {
-                if (!d.isTransferencia || d.direcao !== 'saida') return;
+                if (!d.isTransferencia) return;
+                // 🎯 Próprio: só a saída (a entrada é par espelhado, contaria 2x).
+                //    Terceiro: cada lado é avulso — saída E entrada entram.
+                if (!d.isTerceiro && d.direcao !== 'saida') return;
+
                 const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
                 if (!dataRef) return;
                 const noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
@@ -15052,14 +15297,32 @@ const inputDesc = document.getElementById('descricao');
                 total += val;
                 if (d.pago) pago += val; else pendente += val;
 
-                const par = bancoDeDados.find(x => x.transferenciaId === d.transferenciaId && x.id !== d.id);
-                const origem = contasGlobais.find(c => c.id === (d.contaId || 'c_padrao'));
-                const destino = par ? contasGlobais.find(c => c.id === (par.contaId || 'c_padrao')) : null;
+                // 🎯 Rótulos de origem/destino — 3 casos:
+                //    • Próprio:        origem = conta do lançamento, destino = conta do par
+                //    • Terceiro saída: origem = conta do usuário, destino = nome do terceiro
+                //    • Terceiro entrada: origem = nome do terceiro, destino = conta do usuário
+                const par = d.isTerceiro ? null : bancoDeDados.find(x => x.transferenciaId === d.transferenciaId && x.id !== d.id);
+                const contaDoLanc = contasGlobais.find(c => c.id === (d.contaId || 'c_padrao'));
+                let origem, destino;
+                if (d.isTerceiro) {
+                    const nomeTerceiro = d.terceiroNome || 'Terceiro';
+                    if (d.direcao === 'saida') {
+                        origem = contaDoLanc ? contaDoLanc.nome : 'Conta';
+                        destino = nomeTerceiro;
+                    } else {
+                        origem = nomeTerceiro;
+                        destino = contaDoLanc ? contaDoLanc.nome : 'Conta';
+                    }
+                } else {
+                    const contaPar = par ? contasGlobais.find(c => c.id === (par.contaId || 'c_padrao')) : null;
+                    origem = contaDoLanc ? contaDoLanc.nome : 'Conta';
+                    destino = contaPar ? contaPar.nome : 'Conta';
+                }
 
                 transferencias.push({
                     id: d.id,
-                    origem: origem ? origem.nome : 'Conta',
-                    destino: destino ? destino.nome : 'Conta',
+                    origem,
+                    destino,
                     valor: val,
                     data: dataRef,
                     dataLancamento: d.dataLancamento,
@@ -15144,24 +15407,50 @@ const inputDesc = document.getElementById('descricao');
             let totalSaida = 0, totalEntrada = 0;
 
             bancoDeDados.forEach(d => {
-                if (!d.isTransferencia || d.direcao !== 'saida') return;
-                const par = bancoDeDados.find(x => x.transferenciaId === d.transferenciaId && x.id !== d.id);
+                if (!d.isTransferencia) return;
+                // 🎯 Próprio: só a saída (a entrada é par espelhado).
+                //    Terceiro: cada lado é avulso — saída E entrada entram.
+                if (!d.isTerceiro && d.direcao !== 'saida') return;
+
+                const par = d.isTerceiro ? null : bancoDeDados.find(x => x.transferenciaId === d.transferenciaId && x.id !== d.id);
                 const origemId = d.contaId || 'c_padrao';
                 const destinoId = par ? (par.contaId || 'c_padrao') : null;
-                if (origemId !== conta.id && destinoId !== conta.id) return;
+
+                // 🎯 Filtra por conta envolvida:
+                //    • Próprio: a conta precisa ser uma das pontas
+                //    • Terceiro: a conta é sempre o contaId (única ponta real)
+                if (d.isTerceiro) {
+                    if (origemId !== conta.id) return;
+                } else {
+                    if (origemId !== conta.id && destinoId !== conta.id) return;
+                }
 
                 const val = valorFloat(d.valor);
-                const isSaida = origemId === conta.id;
+                // 🎯 `isSaida` pela DIREÇÃO real do lançamento — não mais por `origemId === conta.id`.
+                //    Sem isso, um terceiro-entrada (contaId = conta do usuário) seria classificado
+                //    como saída por engano.
+                const isSaida = (d.direcao === 'saida');
                 if (isSaida) totalSaida += val; else totalEntrada += val;
+
+                // 🎯 Contraparte:
+                //    • Terceiro      → nome do terceiro
+                //    • Próprio saída → nome da conta destino
+                //    • Próprio entrada → nome da conta origem
+                let contraparte;
+                if (d.isTerceiro) {
+                    contraparte = d.terceiroNome || 'Terceiro';
+                } else if (isSaida) {
+                    contraparte = contasGlobais.find(c => c.id === destinoId)?.nome || '—';
+                } else {
+                    contraparte = contasGlobais.find(c => c.id === origemId)?.nome || '—';
+                }
 
                 transferencias.push({
                     isSaida,
                     valor: val,
                     data: d.vencimento || d.dataLancamento,
                     pago: !!d.pago,
-                    contraparte: isSaida
-                        ? (contasGlobais.find(c => c.id === destinoId)?.nome || '—')
-                        : (contasGlobais.find(c => c.id === origemId)?.nome || '—')
+                    contraparte
                 });
             });
 
