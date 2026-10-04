@@ -18667,11 +18667,79 @@ const inputDesc = document.getElementById('descricao');
             if (!container) return;
             const filhos = Array.from(container.children);
             const temConversa = filhos.some(c => !c.classList.contains('as-welcome'));
-            if (!temConversa && filhos.length > 0) {
+if (!temConversa && filhos.length > 0) {
                 container.innerHTML = '';
                 asRenderBoasVindas();
             }
         };
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🐛 DIAGNÓSTICO TEMPORÁRIO -- DUMP DE TRANSFERÊNCIAS
+        // ═══════════════════════════════════════════════════════════════
+        // Adiciona um botão flutuante "🐛" no canto superior esquerdo.
+        // Ao clicar, exibe um overlay com TODOS os campos relevantes
+        // de cada lançamento que se pareça com transferência.
+        //
+        // Objetivo: entender exatamente o que cada registro corrompido
+        // tem (campos ausentes, valores errados, etc) ANTES de escrever
+        // o fix definitivo. Sem isso, qualquer correção é chute.
+        //
+        // 🗑️ REMOVER ESTE BLOCO INTEIRO DEPOIS DO DIAGNÓSTICO.
+        window.dumpTransf = function() {
+            const campos = [
+                'id', 'descricaoOriginal', 'descricao',
+                'isTransferencia', 'transferenciaId', 'transferenciaParId',
+                'isTerceiro', 'terceiroNome', 'direcao',
+                'categoria', 'subcategoria',
+                'tipo', 'natureza',
+                'vencimento', 'vencimentoOriginal', 'dataLancamento',
+                'contaId', 'ocultoExtrato', 'pago', 'valor'
+            ];
+
+            const todos = bancoDeDados.filter(d =>
+                d.isTransferencia || d.transferenciaId || d.isTerceiro ||
+                d.categoria === 'Transferência' || d.subcategoria === 'Transferência' ||
+                (d.descricaoOriginal && d.descricaoOriginal.includes('→')) ||
+                (d.descricao && d.descricao.includes('→'))
+            );
+
+            let txt = `TOTAL: ${todos.length} registros parecidos com transferência\n`;
+            txt += `Mês no header: ${dataFiltro.getMonth()+1}/${dataFiltro.getFullYear()}\n`;
+            txt += `Contas cadastradas: ${contasGlobais.map(c => c.id + '=' + c.nome).join(' | ')}\n`;
+            txt += '═'.repeat(50) + '\n\n';
+
+            todos.forEach((d, i) => {
+                txt += `─── [${i+1}] ───\n`;
+                campos.forEach(c => {
+                    const v = d[c];
+                    txt += `${c.padEnd(22)}: ${v === undefined ? '(undefined)' : JSON.stringify(v)}\n`;
+                });
+                txt += '\n';
+            });
+
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:999999;padding:16px;display:flex;flex-direction:column;gap:10px;padding-top:60px;';
+            overlay.innerHTML = `
+                <div style="color:#fff;font-weight:bold;font-size:14px;">🐛 Dump de Transferências (${todos.length} registros)</div>
+                <div style="color:#aaa;font-size:11px;">Selecione tudo abaixo, copie, e cole na conversa.</div>
+                <textarea readonly style="flex:1;font-family:monospace;font-size:10px;padding:10px;border-radius:8px;border:none;resize:none;background:#111;color:#0f0;">${txt}</textarea>
+                <button type="button" id="btnFecharDump" style="padding:14px;background:#4D6BFE;color:#fff;border:none;border-radius:8px;font-weight:bold;font-size:15px;">Fechar</button>
+            `;
+            overlay.querySelector('#btnFecharDump').addEventListener('click', () => overlay.remove());
+            document.body.appendChild(overlay);
+        };
+
+        (function criarBotaoDiagnostico() {
+            if (document.getElementById('btnDumpTransfDiag')) return;
+            const btn = document.createElement('button');
+            btn.id = 'btnDumpTransfDiag';
+            btn.type = 'button';
+            btn.textContent = '🐛';
+            btn.title = 'Dump de Transferências (temporário)';
+            btn.style.cssText = 'position:fixed;top:80px;left:8px;z-index:99998;width:40px;height:40px;border-radius:50%;background:#E11D48;color:#fff;border:2px solid #fff;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,0.4);cursor:pointer;';
+            btn.addEventListener('click', window.dumpTransf);
+            document.body.appendChild(btn);
+        })();
     </script>
 </body>
 </html>
