@@ -1,4 +1,4 @@
-﻿﻿﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -13530,7 +13530,8 @@ const inputDesc = document.getElementById('descricao');
                             ${item.categoria} ${item.subcategoria ? ' › ' + item.subcategoria : ''}
                         </div>
                     `;
-                    li.addEventListener('click', () => {
+                    li.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
                         inputDesc.value = descDisplay;
                         
                         const inputValorForm = document.getElementById('valor');
