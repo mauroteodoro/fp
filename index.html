@@ -6338,24 +6338,36 @@ select:focus, select:focus-visible {
             if (dataIniVal) dtIniNum = parseInt(dataIniVal);
             if (dataFimVal) dtFimNum = parseInt(dataFimVal);
 
-            let totais = { rec: 0, desp: 0 };
-            
+let totais = { rec: 0, desp: 0 };
+
+            // 🎯 Detecção robusta de transferência -- cobre registros de
+            //    qualquer versão do schema:
+            //      • `isTransferencia: true` (schema atual)
+            //      • `transferenciaId` presente (indício direto de par)
+            //      • `isTerceiro: true` (transferência avulsa com terceiro)
+            //      • categoria/subcategoria "Transferência" (registros muito
+            //        antigos, salvos antes do flag existir)
+            //    Sem isso, o BUG 2 (transferência não aparece no filtro)
+            //    e o BUG 3 (terceiro aparecendo em Despesas) persistiam.
+            const ehTransfRel = (d) =>
+                !!(d.isTransferencia || d.transferenciaId || d.isTerceiro ||
+                   d.categoria === 'Transferência' || d.subcategoria === 'Transferência');
+
             let filtrados = bancoDeDados.filter(d => {
                 if (d.ocultoExtrato) return false;
 
                 // ═══════════════════════════════════════════════════════════
-                // 🎯 FILTRO DE NATUREZA — 4 modos:
+                // 🎯 FILTRO DE NATUREZA -- 4 modos:
                 //    • Transferencia → SÓ transferências (próprias + terceiro)
                 //    • Todas / Receita / Despesa → exclui transferências
-                //      PRÓPRIAS (dinheiro trocando de bolso); terceiro
-                //      permanece (é receita/despesa real).
+                //      (próprias e terceiro). Terceiro agora é detectado pela
+                //      função `ehTransfRel`, então mesmo registros antigos
+                //      sem `isTransferencia` são corretamente excluídos.
                 // ═══════════════════════════════════════════════════════════
-                const ehTransferencia = !!d.isTransferencia;
+                const ehTransferencia = ehTransfRel(d);
                 if (tipoVal === 'Transferencia') {
                     if (!ehTransferencia) return false;
-} else {
-                    // 🎯 Nenhuma transferência entra em Despesas/Receitas/Todas.
-                    //    Elas só aparecem no modo "Transferências".
+                } else {
                     if (ehTransferencia) return false;
                 }
 
@@ -6404,11 +6416,16 @@ select:focus, select:focus-visible {
                 });
 
 filtrados.forEach(d => {
-                    // 🎯 Nenhuma transferência soma em Receitas/Despesas.
-                    if (d.isTransferencia) return;
-                    let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
-                    let val = parseFloat(d.valor);
-                    if (isR) totais.rec += val; else totais.desp += val;
+                    // 🎯 Transferência NÃO soma em Receitas/Despesas, mas
+                    //    PRECISA ser renderizada quando o filtro é
+                    //    "Transferências". Antes, o `return` pulava o render
+                    //    inteiro -- e o filtro de Transferências ficava vazio.
+                    const isTransf = ehTransfRel(d);
+                    if (!isTransf) {
+                        let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
+                        let val = parseFloat(d.valor);
+                        if (isR) totais.rec += val; else totais.desp += val;
+                    }
 
                     let iconeSvgStr = 'tag';
                     if (d.categoria) {
@@ -6429,7 +6446,7 @@ filtrados.forEach(d => {
                             </div>
                             <div class="truncate">
                                 <p class="text-sm font-bold text-slate-800 truncate flex items-center gap-1.5">
-                                    ${d.isTransferencia ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider shrink-0">Transf.</span>' : ''}
+${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider shrink-0">Transf.</span>' : ''}
                                     <span class="truncate">${d.descricaoOriginal || d.descricao}</span>
                                 </p>
                                 <p class="text-[10px] text-slate-400 uppercase tracking-wider truncate mt-0.5">${d.vencimento || d.dataLancamento} • ${contaNome}</p>
