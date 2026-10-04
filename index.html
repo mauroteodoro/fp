@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -6353,8 +6353,10 @@ select:focus, select:focus-visible {
                 const ehTransferencia = !!d.isTransferencia;
                 if (tipoVal === 'Transferencia') {
                     if (!ehTransferencia) return false;
-                } else {
-                    if (ehTransferencia && !d.isTerceiro) return false;
+} else {
+                    // 🎯 Nenhuma transferência entra em Despesas/Receitas/Todas.
+                    //    Elas só aparecem no modo "Transferências".
+                    if (ehTransferencia) return false;
                 }
 
                 // 🎯 Filtro de Status (Efetivada = pago; Pendente = !pago)
@@ -6401,10 +6403,9 @@ select:focus, select:focus-visible {
                     return dataB - dataA;
                 });
 
-                filtrados.forEach(d => {
-                    // 🎯 Própria transferência não entra nos totais (dinheiro
-                    //    round-trip). Terceiro entra: é receita/despesa real.
-                    if (d.isTransferencia && !d.isTerceiro) return;
+filtrados.forEach(d => {
+                    // 🎯 Nenhuma transferência soma em Receitas/Despesas.
+                    if (d.isTransferencia) return;
                     let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
                     let val = parseFloat(d.valor);
                     if (isR) totais.rec += val; else totais.desp += val;
@@ -6589,7 +6590,7 @@ select:focus, select:focus-visible {
 
             // Se o input atual não está entre os disponíveis, redefine para o primeiro
             const idsDisponiveis = contasGlobais.filter(c => !excludeId || c.id !== excludeId).map(c => c.id);
-            if (!input.value || !idsDisponiveis.includes(input.value)) {
+if (!input.value || !idsDisponiveis.includes(input.value)) {
                 if (primeiraDisponivel) {
                     let b = BANCOS[primeiraDisponivel.banco || 'carteira'] || BANCOS['outros'];
                     input.value = primeiraDisponivel.id;
@@ -6602,6 +6603,18 @@ select:focus, select:focus-visible {
                 } else {
                     input.value = '';
                     lbl.textContent = 'Sem contas disponíveis';
+                }
+            } else {
+                // 🎯 Label reflete o input já preenchido (edição de transferência).
+                const contaAtual = contasGlobais.find(c => c.id === input.value);
+                if (contaAtual) {
+                    let b = BANCOS[contaAtual.banco || 'carteira'] || BANCOS['outros'];
+                    lbl.innerHTML = `
+                        <div class="flex items-center gap-2.5 truncate">
+                            <div class="w-5 h-5 shrink-0">${renderBankLogo(b)}</div>
+                            <span class="truncate mt-0.5">${contaAtual.nome}</span>
+                        </div>
+                    `;
                 }
             }
         };
