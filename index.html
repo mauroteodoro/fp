@@ -3409,7 +3409,7 @@ select:focus, select:focus-visible {
             <!-- Lista de Resultados -->
             <div class="bg-white dark:bg-[#121b2b] rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.06)] overflow-hidden">
                 <div class="p-5 border-b border-slate-100 dark:border-[#1e2a40]">
-                    <h3 class="font-bold text-slate-800 dark:text-gray-200">Listagem de Movimentações</h3>
+<h3 class="font-bold text-slate-800 dark:text-gray-200">Listagem de Movimentações<span id="relDebugTitulo" class="text-[9px] font-normal text-slate-400 ml-2 break-all"></span></h3>
                 </div>
                 <div id="tabelaRelatorio" class="flex flex-col text-sm divide-y divide-slate-100 dark:divide-[#1e2a40]">
                     <p class="text-center py-10 text-slate-400 font-medium">Use os filtros acima e clique em Gerar Relatório.</p>
@@ -6461,6 +6461,26 @@ ${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amb
                 });
             }
 
+            // 🐛 DEBUG TEMPORÁRIO -- remover depois que o filtro for corrigido
+            try {
+                const dbgEl = document.getElementById('relDebugTitulo');
+                if (dbgEl) {
+                    const dbTransf = bancoDeDados.filter(x => x.isTransferencia && !x.ocultoExtrato);
+                    const passData = dbTransf.filter(x => {
+                        const dr = x.vencimento || x.vencimentoOriginal || x.dataLancamento;
+                        if (!dr || dr.length !== 10) return false;
+                        const p = dr.split('/');
+                        const n = parseInt(p[2] + p[1] + p[0]);
+                        return n >= dtIniNum && n <= dtFimNum;
+                    });
+                    const passStatus = dbTransf.filter(x => {
+                        if (statusVal === 'Efetivada' && !x.pago) return false;
+                        if (statusVal === 'Pendente' && x.pago) return false;
+                        return true;
+                    });
+                    dbgEl.textContent = `[t=${tipoVal}|st=${statusVal}|ini=${dtIniNum}|fim=${dtFimNum}|transfSemOculto=${dbTransf.length}|passData=${passData.length}|passStatus=${passStatus.length}|filtrados=${filtrados.length}]`;
+                }
+            } catch(e) { console.error('dbg:', e); }
             document.getElementById('relTotRec').textContent = formatMoeda(totais.rec);
             document.getElementById('relTotDesp').textContent = formatMoeda(totais.desp);
             let saldo = totais.rec - totais.desp;
