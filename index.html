@@ -6588,9 +6588,16 @@ filtrados.forEach(d => {
                 return;
             }
 
-            // Se o input atual não está entre os disponíveis, redefine para o primeiro
+// 🎯 3 casos possíveis para o input:
+            //   1. Vazio → seleciona a primeira disponível (padrão de abertura)
+            //   2. Valor válido → atualiza o label com a conta encontrada
+            //   3. Valor órfão (conta apagada) → mostra "Conta não encontrada"
+            //      e mantém o ID no input. NÃO força a primeira da lista --
+            //      isso era o que fazia o modal abrir com "PagBank" por
+            //      engano quando a conta original tinha sido removida.
             const idsDisponiveis = contasGlobais.filter(c => !excludeId || c.id !== excludeId).map(c => c.id);
-if (!input.value || !idsDisponiveis.includes(input.value)) {
+
+            if (!input.value) {
                 if (primeiraDisponivel) {
                     let b = BANCOS[primeiraDisponivel.banco || 'carteira'] || BANCOS['outros'];
                     input.value = primeiraDisponivel.id;
@@ -6605,7 +6612,6 @@ if (!input.value || !idsDisponiveis.includes(input.value)) {
                     lbl.textContent = 'Sem contas disponíveis';
                 }
             } else {
-                // 🎯 Label reflete o input já preenchido (edição de transferência).
                 const contaAtual = contasGlobais.find(c => c.id === input.value);
                 if (contaAtual) {
                     let b = BANCOS[contaAtual.banco || 'carteira'] || BANCOS['outros'];
@@ -6615,6 +6621,9 @@ if (!input.value || !idsDisponiveis.includes(input.value)) {
                             <span class="truncate mt-0.5">${contaAtual.nome}</span>
                         </div>
                     `;
+                } else {
+                    // 🎯 ID órfão -- não força "primeira disponível".
+                    lbl.innerHTML = '<span class="text-amber-500 italic">Conta não encontrada</span>';
                 }
             }
         };
@@ -6670,33 +6679,42 @@ if (!input.value || !idsDisponiveis.includes(input.value)) {
                     const par = bancoDeDados.find(d => d.transferenciaId === lanc.transferenciaId && d.id !== lanc.id);
                     transferenciaSendoEditada = { saida: lanc, entrada: par || null };
 
-                    // 🎯 Descobre origem/destino — cobre 3 casos:
-                    //   1. Transferência entre contas próprias (par existe, ambos reais)
-                    //   2. Saída para terceiro (só saída, isTerceiro: true)
-                    //   3. Entrada de terceiro (só entrada, isTerceiro: true)
-                    let origemReal, destinoReal;
+// 🎯 Normaliza `direcao` -- 2 fontes em ordem de confiança:
+                    //   1. Campo `direcao` (schema atual)
+                    //   2. `tipo`/`natureza` (Receita=entrada, Despesa=saída)
+                    // Registros antigos podem ter `direcao: undefined`, e sem
+                    // essa normalização o modal cai no `else` (entrada) e
+                    // inverte os lados.
+                    let direcao = lanc.direcao;
+                    if (direcao !== 'saida' && direcao !== 'entrada') {
+                        const isRec = lanc.tipo === 'Receita' || lanc.natureza === 'Receita';
+                        direcao = isRec ? 'entrada' : 'saida';
+                    }
+
+                    let origemReal = '', destinoReal = '';
                     const ehTerceiro = !!lanc.isTerceiro;
                     const terceiroNome = lanc.terceiroNome || '';
 
                     if (ehTerceiro) {
-                        // Terceiro: só existe um lado
-                        if (lanc.direcao === 'saida') {
-                            origemReal = lanc.contaId || 'c_padrao';
+                        if (direcao === 'saida') {
+                            origemReal = lanc.contaId || '';
                             destinoReal = window.TRANSF_TERCEIRO;
                             document.getElementById('transfDestinoTerceiroNome').value = terceiroNome;
                         } else {
                             origemReal = window.TRANSF_TERCEIRO;
-                            destinoReal = lanc.contaId || 'c_padrao';
+                            destinoReal = lanc.contaId || '';
                             document.getElementById('transfOrigemTerceiroNome').value = terceiroNome;
                         }
-                    } else if (lanc.direcao === 'saida') {
-                        origemReal = lanc.contaId; destinoReal = par ? par.contaId : '';
+                    } else if (direcao === 'saida') {
+                        origemReal = lanc.contaId || '';
+                        destinoReal = par ? (par.contaId || '') : '';
                     } else {
-                        origemReal = par ? par.contaId : ''; destinoReal = lanc.contaId;
+                        origemReal = par ? (par.contaId || '') : '';
+                        destinoReal = lanc.contaId || '';
                     }
 
-                    document.getElementById('transfContaOrigem').value = origemReal || '';
-                    document.getElementById('transfContaDestino').value = destinoReal || '';
+                    document.getElementById('transfContaOrigem').value = origemReal;
+                    document.getElementById('transfContaDestino').value = destinoReal;
                     document.getElementById('transfValor').value = formatarParaMascara(lanc.valor);
                     document.getElementById('transfData').value = lanc.vencimento || lanc.dataLancamento || getHojeFormatado();
                     document.getElementById('transfObservacao').value = lanc.observacao || '';
