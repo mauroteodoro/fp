@@ -1,21 +1,52 @@
-// ═══════════════════════════════════════════════════════════════
-// 🧨 KILL SWITCH — substitui o service worker antigo
-// Ao ativar: apaga TODOS os caches e se auto-desregistra.
-// Depois disso, o app baixa tudo direto da rede.
-// ═══════════════════════════════════════════════════════════════
-self.addEventListener('install', () => self.skipWaiting());
+﻿const CACHE = 'financas-v1';
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    // 1. Apaga todos os caches do Cache Storage
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+});
 
-    // 2. Desregistra este service worker
-    await self.registration.unregister();
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
 
-    // 3. Recarrega todas as abas abertas (pra pegar versão fresca)
-    const clients = await self.clients.matchAll({ type: 'window' });
-    clients.forEach(client => client.navigate(client.url));
-  })());
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+
+  const url = req.url;
+
+  // 🔥 Firebase/Firestore/Auth: sempre direto pela rede, nunca cacheia
+  if (
+    url.includes('firestore.googleapis.com') ||
+    url.includes('identitytoolkit.googleapis.com') ||
+    url.includes('securetoken.googleapis.com') ||
+    url.includes('firebaseinstallations.googleapis.com') ||
+    url.includes('firebaseapp.com') ||
+    url.includes('firebaseio.com') ||
+    url.includes('/v1/')
+  ) {
+    return;
+  }
+
+  // 🌐 HTML, fontes, Chart.js, SDK: cache-first com atualização em background
+  e.respondWith(
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(req);
+
+      const fetchPromise = fetch(req)
+        .then((res) => {
+          if (res && res.status === 200 && res.type !== 'opaqueredirect') {
+            cache.put(req, res.clone());
+          }
+          return res;
+        })
+        .catch(() => cached);
+
+      return cached || fetchPromise;
+    })
+  );
 });

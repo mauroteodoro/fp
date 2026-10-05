@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -3409,7 +3409,7 @@ select:focus, select:focus-visible {
             <!-- Lista de Resultados -->
             <div class="bg-white dark:bg-[#121b2b] rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.06)] overflow-hidden">
                 <div class="p-5 border-b border-slate-100 dark:border-[#1e2a40]">
-<h3 class="font-bold text-slate-800 dark:text-gray-200">Listagem de Movimentações<span id="relDebugTitulo" class="text-[9px] font-normal text-slate-400 ml-2 break-all"></span></h3>
+                    <h3 class="font-bold text-slate-800 dark:text-gray-200">Listagem de Movimentações</h3>
                 </div>
                 <div id="tabelaRelatorio" class="flex flex-col text-sm divide-y divide-slate-100 dark:divide-[#1e2a40]">
                     <p class="text-center py-10 text-slate-400 font-medium">Use os filtros acima e clique em Gerar Relatório.</p>
@@ -6338,37 +6338,23 @@ select:focus, select:focus-visible {
             if (dataIniVal) dtIniNum = parseInt(dataIniVal);
             if (dataFimVal) dtFimNum = parseInt(dataFimVal);
 
-let totais = { rec: 0, desp: 0 };
-
-            // 🎯 Detecção robusta de transferência -- cobre registros de
-            //    qualquer versão do schema:
-            //      • `isTransferencia: true` (schema atual)
-            //      • `transferenciaId` presente (indício direto de par)
-            //      • `isTerceiro: true` (transferência avulsa com terceiro)
-            //      • categoria/subcategoria "Transferência" (registros muito
-            //        antigos, salvos antes do flag existir)
-            //    Sem isso, o BUG 2 (transferência não aparece no filtro)
-            //    e o BUG 3 (terceiro aparecendo em Despesas) persistiam.
-            const ehTransfRel = (d) =>
-                !!(d.isTransferencia || d.transferenciaId || d.isTerceiro ||
-                   d.categoria === 'Transferência' || d.subcategoria === 'Transferência');
-
+            let totais = { rec: 0, desp: 0 };
+            
             let filtrados = bancoDeDados.filter(d => {
                 if (d.ocultoExtrato) return false;
 
                 // ═══════════════════════════════════════════════════════════
-                // 🎯 FILTRO DE NATUREZA -- 4 modos:
+                // 🎯 FILTRO DE NATUREZA — 4 modos:
                 //    • Transferencia → SÓ transferências (próprias + terceiro)
                 //    • Todas / Receita / Despesa → exclui transferências
-                //      (próprias e terceiro). Terceiro agora é detectado pela
-                //      função `ehTransfRel`, então mesmo registros antigos
-                //      sem `isTransferencia` são corretamente excluídos.
+                //      PRÓPRIAS (dinheiro trocando de bolso); terceiro
+                //      permanece (é receita/despesa real).
                 // ═══════════════════════════════════════════════════════════
-                const ehTransferencia = ehTransfRel(d);
+                const ehTransferencia = !!d.isTransferencia;
                 if (tipoVal === 'Transferencia') {
                     if (!ehTransferencia) return false;
                 } else {
-                    if (ehTransferencia) return false;
+                    if (ehTransferencia && !d.isTerceiro) return false;
                 }
 
                 // 🎯 Filtro de Status (Efetivada = pago; Pendente = !pago)
@@ -6415,17 +6401,13 @@ let totais = { rec: 0, desp: 0 };
                     return dataB - dataA;
                 });
 
-filtrados.forEach(d => {
-                    // 🎯 Transferência NÃO soma em Receitas/Despesas, mas
-                    //    PRECISA ser renderizada quando o filtro é
-                    //    "Transferências". Antes, o `return` pulava o render
-                    //    inteiro -- e o filtro de Transferências ficava vazio.
-                    const isTransf = ehTransfRel(d);
-                    if (!isTransf) {
-                        let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
-                        let val = parseFloat(d.valor);
-                        if (isR) totais.rec += val; else totais.desp += val;
-                    }
+                filtrados.forEach(d => {
+                    // 🎯 Própria transferência não entra nos totais (dinheiro
+                    //    round-trip). Terceiro entra: é receita/despesa real.
+                    if (d.isTransferencia && !d.isTerceiro) return;
+                    let isR = (d.tipo === 'Receita' || d.natureza === 'Receita');
+                    let val = parseFloat(d.valor);
+                    if (isR) totais.rec += val; else totais.desp += val;
 
                     let iconeSvgStr = 'tag';
                     if (d.categoria) {
@@ -6446,7 +6428,7 @@ filtrados.forEach(d => {
                             </div>
                             <div class="truncate">
                                 <p class="text-sm font-bold text-slate-800 truncate flex items-center gap-1.5">
-${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider shrink-0">Transf.</span>' : ''}
+                                    ${d.isTransferencia ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-bold uppercase tracking-wider shrink-0">Transf.</span>' : ''}
                                     <span class="truncate">${d.descricaoOriginal || d.descricao}</span>
                                 </p>
                                 <p class="text-[10px] text-slate-400 uppercase tracking-wider truncate mt-0.5">${d.vencimento || d.dataLancamento} • ${contaNome}</p>
@@ -6461,26 +6443,6 @@ ${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amb
                 });
             }
 
-            // 🐛 DEBUG TEMPORÁRIO -- remover depois que o filtro for corrigido
-            try {
-                const dbgEl = document.getElementById('relDebugTitulo');
-                if (dbgEl) {
-                    const dbTransf = bancoDeDados.filter(x => x.isTransferencia && !x.ocultoExtrato);
-                    const passData = dbTransf.filter(x => {
-                        const dr = x.vencimento || x.vencimentoOriginal || x.dataLancamento;
-                        if (!dr || dr.length !== 10) return false;
-                        const p = dr.split('/');
-                        const n = parseInt(p[2] + p[1] + p[0]);
-                        return n >= dtIniNum && n <= dtFimNum;
-                    });
-                    const passStatus = dbTransf.filter(x => {
-                        if (statusVal === 'Efetivada' && !x.pago) return false;
-                        if (statusVal === 'Pendente' && x.pago) return false;
-                        return true;
-                    });
-                    dbgEl.textContent = `[t=${tipoVal}|st=${statusVal}|ini=${dtIniNum}|fim=${dtFimNum}|transfSemOculto=${dbTransf.length}|passData=${passData.length}|passStatus=${passStatus.length}|filtrados=${filtrados.length}]`;
-                }
-            } catch(e) { console.error('dbg:', e); }
             document.getElementById('relTotRec').textContent = formatMoeda(totais.rec);
             document.getElementById('relTotDesp').textContent = formatMoeda(totais.desp);
             let saldo = totais.rec - totais.desp;
@@ -6625,16 +6587,9 @@ ${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amb
                 return;
             }
 
-// 🎯 3 casos possíveis para o input:
-            //   1. Vazio → seleciona a primeira disponível (padrão de abertura)
-            //   2. Valor válido → atualiza o label com a conta encontrada
-            //   3. Valor órfão (conta apagada) → mostra "Conta não encontrada"
-            //      e mantém o ID no input. NÃO força a primeira da lista --
-            //      isso era o que fazia o modal abrir com "PagBank" por
-            //      engano quando a conta original tinha sido removida.
+            // Se o input atual não está entre os disponíveis, redefine para o primeiro
             const idsDisponiveis = contasGlobais.filter(c => !excludeId || c.id !== excludeId).map(c => c.id);
-
-            if (!input.value) {
+            if (!input.value || !idsDisponiveis.includes(input.value)) {
                 if (primeiraDisponivel) {
                     let b = BANCOS[primeiraDisponivel.banco || 'carteira'] || BANCOS['outros'];
                     input.value = primeiraDisponivel.id;
@@ -6647,20 +6602,6 @@ ${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amb
                 } else {
                     input.value = '';
                     lbl.textContent = 'Sem contas disponíveis';
-                }
-            } else {
-                const contaAtual = contasGlobais.find(c => c.id === input.value);
-                if (contaAtual) {
-                    let b = BANCOS[contaAtual.banco || 'carteira'] || BANCOS['outros'];
-                    lbl.innerHTML = `
-                        <div class="flex items-center gap-2.5 truncate">
-                            <div class="w-5 h-5 shrink-0">${renderBankLogo(b)}</div>
-                            <span class="truncate mt-0.5">${contaAtual.nome}</span>
-                        </div>
-                    `;
-                } else {
-                    // 🎯 ID órfão -- não força "primeira disponível".
-                    lbl.innerHTML = '<span class="text-amber-500 italic">Conta não encontrada</span>';
                 }
             }
         };
@@ -6716,42 +6657,33 @@ ${isTransf ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-amb
                     const par = bancoDeDados.find(d => d.transferenciaId === lanc.transferenciaId && d.id !== lanc.id);
                     transferenciaSendoEditada = { saida: lanc, entrada: par || null };
 
-// 🎯 Normaliza `direcao` -- 2 fontes em ordem de confiança:
-                    //   1. Campo `direcao` (schema atual)
-                    //   2. `tipo`/`natureza` (Receita=entrada, Despesa=saída)
-                    // Registros antigos podem ter `direcao: undefined`, e sem
-                    // essa normalização o modal cai no `else` (entrada) e
-                    // inverte os lados.
-                    let direcao = lanc.direcao;
-                    if (direcao !== 'saida' && direcao !== 'entrada') {
-                        const isRec = lanc.tipo === 'Receita' || lanc.natureza === 'Receita';
-                        direcao = isRec ? 'entrada' : 'saida';
-                    }
-
-                    let origemReal = '', destinoReal = '';
+                    // 🎯 Descobre origem/destino — cobre 3 casos:
+                    //   1. Transferência entre contas próprias (par existe, ambos reais)
+                    //   2. Saída para terceiro (só saída, isTerceiro: true)
+                    //   3. Entrada de terceiro (só entrada, isTerceiro: true)
+                    let origemReal, destinoReal;
                     const ehTerceiro = !!lanc.isTerceiro;
                     const terceiroNome = lanc.terceiroNome || '';
 
                     if (ehTerceiro) {
-                        if (direcao === 'saida') {
-                            origemReal = lanc.contaId || '';
+                        // Terceiro: só existe um lado
+                        if (lanc.direcao === 'saida') {
+                            origemReal = lanc.contaId || 'c_padrao';
                             destinoReal = window.TRANSF_TERCEIRO;
                             document.getElementById('transfDestinoTerceiroNome').value = terceiroNome;
                         } else {
                             origemReal = window.TRANSF_TERCEIRO;
-                            destinoReal = lanc.contaId || '';
+                            destinoReal = lanc.contaId || 'c_padrao';
                             document.getElementById('transfOrigemTerceiroNome').value = terceiroNome;
                         }
-                    } else if (direcao === 'saida') {
-                        origemReal = lanc.contaId || '';
-                        destinoReal = par ? (par.contaId || '') : '';
+                    } else if (lanc.direcao === 'saida') {
+                        origemReal = lanc.contaId; destinoReal = par ? par.contaId : '';
                     } else {
-                        origemReal = par ? (par.contaId || '') : '';
-                        destinoReal = lanc.contaId || '';
+                        origemReal = par ? par.contaId : ''; destinoReal = lanc.contaId;
                     }
 
-                    document.getElementById('transfContaOrigem').value = origemReal;
-                    document.getElementById('transfContaDestino').value = destinoReal;
+                    document.getElementById('transfContaOrigem').value = origemReal || '';
+                    document.getElementById('transfContaDestino').value = destinoReal || '';
                     document.getElementById('transfValor').value = formatarParaMascara(lanc.valor);
                     document.getElementById('transfData').value = lanc.vencimento || lanc.dataLancamento || getHojeFormatado();
                     document.getElementById('transfObservacao').value = lanc.observacao || '';
@@ -13598,8 +13530,7 @@ const inputDesc = document.getElementById('descricao');
                             ${item.categoria} ${item.subcategoria ? ' › ' + item.subcategoria : ''}
                         </div>
                     `;
-                    li.addEventListener('pointerdown', (e) => {
-                        e.preventDefault();
+                    li.addEventListener('click', () => {
                         inputDesc.value = descDisplay;
                         
                         const inputValorForm = document.getElementById('valor');
@@ -18687,79 +18618,11 @@ const inputDesc = document.getElementById('descricao');
             if (!container) return;
             const filhos = Array.from(container.children);
             const temConversa = filhos.some(c => !c.classList.contains('as-welcome'));
-if (!temConversa && filhos.length > 0) {
+            if (!temConversa && filhos.length > 0) {
                 container.innerHTML = '';
                 asRenderBoasVindas();
             }
         };
-
-        // ═══════════════════════════════════════════════════════════════
-        // 🐛 DIAGNÓSTICO TEMPORÁRIO -- DUMP DE TRANSFERÊNCIAS
-        // ═══════════════════════════════════════════════════════════════
-        // Adiciona um botão flutuante "🐛" no canto superior esquerdo.
-        // Ao clicar, exibe um overlay com TODOS os campos relevantes
-        // de cada lançamento que se pareça com transferência.
-        //
-        // Objetivo: entender exatamente o que cada registro corrompido
-        // tem (campos ausentes, valores errados, etc) ANTES de escrever
-        // o fix definitivo. Sem isso, qualquer correção é chute.
-        //
-        // 🗑️ REMOVER ESTE BLOCO INTEIRO DEPOIS DO DIAGNÓSTICO.
-        window.dumpTransf = function() {
-            const campos = [
-                'id', 'descricaoOriginal', 'descricao',
-                'isTransferencia', 'transferenciaId', 'transferenciaParId',
-                'isTerceiro', 'terceiroNome', 'direcao',
-                'categoria', 'subcategoria',
-                'tipo', 'natureza',
-                'vencimento', 'vencimentoOriginal', 'dataLancamento',
-                'contaId', 'ocultoExtrato', 'pago', 'valor'
-            ];
-
-            const todos = bancoDeDados.filter(d =>
-                d.isTransferencia || d.transferenciaId || d.isTerceiro ||
-                d.categoria === 'Transferência' || d.subcategoria === 'Transferência' ||
-                (d.descricaoOriginal && d.descricaoOriginal.includes('→')) ||
-                (d.descricao && d.descricao.includes('→'))
-            );
-
-            let txt = `TOTAL: ${todos.length} registros parecidos com transferência\n`;
-            txt += `Mês no header: ${dataFiltro.getMonth()+1}/${dataFiltro.getFullYear()}\n`;
-            txt += `Contas cadastradas: ${contasGlobais.map(c => c.id + '=' + c.nome).join(' | ')}\n`;
-            txt += '═'.repeat(50) + '\n\n';
-
-            todos.forEach((d, i) => {
-                txt += `─── [${i+1}] ───\n`;
-                campos.forEach(c => {
-                    const v = d[c];
-                    txt += `${c.padEnd(22)}: ${v === undefined ? '(undefined)' : JSON.stringify(v)}\n`;
-                });
-                txt += '\n';
-            });
-
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:999999;padding:16px;display:flex;flex-direction:column;gap:10px;padding-top:60px;';
-            overlay.innerHTML = `
-                <div style="color:#fff;font-weight:bold;font-size:14px;">🐛 Dump de Transferências (${todos.length} registros)</div>
-                <div style="color:#aaa;font-size:11px;">Selecione tudo abaixo, copie, e cole na conversa.</div>
-                <textarea readonly style="flex:1;font-family:monospace;font-size:10px;padding:10px;border-radius:8px;border:none;resize:none;background:#111;color:#0f0;">${txt}</textarea>
-                <button type="button" id="btnFecharDump" style="padding:14px;background:#4D6BFE;color:#fff;border:none;border-radius:8px;font-weight:bold;font-size:15px;">Fechar</button>
-            `;
-            overlay.querySelector('#btnFecharDump').addEventListener('click', () => overlay.remove());
-            document.body.appendChild(overlay);
-        };
-
-        (function criarBotaoDiagnostico() {
-            if (document.getElementById('btnDumpTransfDiag')) return;
-            const btn = document.createElement('button');
-            btn.id = 'btnDumpTransfDiag';
-            btn.type = 'button';
-            btn.textContent = '🐛';
-            btn.title = 'Dump de Transferências (temporário)';
-            btn.style.cssText = 'position:fixed;top:80px;left:8px;z-index:99998;width:40px;height:40px;border-radius:50%;background:#E11D48;color:#fff;border:2px solid #fff;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,0.4);cursor:pointer;';
-            btn.addEventListener('click', window.dumpTransf);
-            document.body.appendChild(btn);
-        })();
     </script>
 </body>
 </html>
