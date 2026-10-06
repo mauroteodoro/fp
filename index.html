@@ -1,4 +1,4 @@
-﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -1991,6 +1991,36 @@ select:focus, select:focus-visible {
             </div>
         </div>
 
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- 🚨 ALERTA DE VENCIMENTOS — abre automaticamente ao abrir   -->
+        <!--    o app, uma vez por dia, se houver contas atrasadas,     -->
+        <!--    vencendo hoje ou vencendo amanhã.                       -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="modalAlertasVencimento" class="fixed inset-0 bg-slate-900/70 dark:bg-black/85 hidden items-center justify-center z-[5000] backdrop-blur-sm transition-opacity px-4">
+            <div class="bg-white dark:bg-[#121b2b] rounded-2xl w-full max-w-md card-shadow border border-slate-200 dark:border-[#1e2a40] transform scale-95 transition-transform flex flex-col max-h-[85vh] overflow-hidden">
+                <!-- Cabeçalho -->
+                <div class="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-[#1e2a40] flex items-start gap-3">
+                    <div id="iconeAlertaHeader" class="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                        <!-- ícone preenchido via JS -->
+                    </div>
+                    <div class="flex-1 min-w-0 pt-0.5">
+                        <h3 id="tituloAlertaVenc" class="text-base font-bold text-slate-900 dark:text-gray-100 font-montserrat leading-tight">Contas a vencer</h3>
+                        <p id="subtituloAlertaVenc" class="text-[12px] text-slate-500 dark:text-gray-400 leading-snug mt-0.5">—</p>
+                    </div>
+                    <button type="button" onclick="fecharAlertaVencimento()" class="text-slate-400 hover:text-slate-900 dark:hover:text-gray-200 transition-colors active:scale-90 p-2 rounded-lg -mr-1 -mt-1 shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <!-- Lista de itens -->
+                <div id="listaAlertasVenc" class="flex-1 overflow-y-auto hover-scrollbar px-3 py-2 space-y-1.5"></div>
+                <!-- Rodapé -->
+                <div class="px-5 py-4 border-t border-slate-100 dark:border-[#1e2a40] flex gap-2 shrink-0">
+                    <button type="button" onclick="fecharAlertaVencimento()" class="flex-1 bg-transparent hover:bg-slate-100 dark:hover:bg-[#1a2639] text-slate-600 dark:text-gray-300 font-semibold py-3 rounded-full transition-colors active:scale-95 h-[46px] border border-slate-200 dark:border-[#1e2a40] text-sm">Fechar</button>
+                    <button type="button" onclick="irParaExtratoDoAlerta()" class="flex-[1.3] bg-[#4D6BFE] hover:bg-[#4338CA] text-white font-bold py-3 rounded-full transition-all active:scale-95 shadow-lg shadow-[#4D6BFE]/20 h-[46px] text-sm">Ver no Extrato</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal de Backups / Checkpoints -->
         <div id="modalBackups" class="fixed inset-0 bg-slate-900/80 dark:bg-black/90 hidden items-center justify-center z-[3000] backdrop-blur-sm transition-opacity px-4">
             <div class="bg-white dark:bg-[#121b2b] rounded-2xl w-full max-w-md card-shadow border border-slate-200 dark:border-[#1e2a40] transform scale-95 transition-transform flex flex-col max-h-[85vh] overflow-hidden">
@@ -2647,11 +2677,7 @@ select:focus, select:focus-visible {
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v10l7 5"/></svg>
                     <span class="text-[9px] font-semibold tracking-tight leading-none truncate w-full text-center px-0.5">Gráficos</span>
                 </button>
-                <button type="button" onclick="abrirTela('relatorios')" data-bottom-tela="relatorios"
-                        class="bottom-nav-btn flex flex-col items-center justify-center gap-1 flex-1 py-2.5 transition-colors active:scale-95 min-w-0">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    <span class="text-[9px] font-semibold tracking-tight leading-none truncate w-full text-center px-0.5">Relatórios</span>
-                </button>
+
                 <button type="button" onclick="mudarParaAbaProjecao()" data-bottom-tela="simulador"
                         class="bottom-nav-btn flex flex-col items-center justify-center gap-1 flex-1 py-2.5 transition-colors active:scale-95 min-w-0">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -2659,6 +2685,25 @@ select:focus, select:focus-visible {
                 </button>
             </div>
         </nav>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- 🔔 SINO FLUTUANTE DE VENCIMENTOS                          -->
+        <!--    Fica visível enquanto houver conta atrasada, vencendo   -->
+        <!--    hoje ou amanhã. Some sozinho quando o usuário resolve   -->
+        <!--    (paga ou apaga) todas. Clique reabre o modal.           -->
+        <!--    Posição: canto inferior-direito no mobile (acima da     -->
+        <!--    barra de navegação) e canto superior-direito no         -->
+        <!--    desktop (abaixo do header).                             -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
+                style="display: none;"
+                class="fixed z-[400] right-4 bottom-[5.5rem] md:bottom-auto md:top-24 md:right-6 w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/40 flex items-center justify-center transition-all active:scale-90">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span id="badgeAlertaVenc" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-slate-900 text-[10px] font-bold flex items-center justify-center border-2 border-white leading-none">0</span>
+        </button>
 
         <!-- ESTRUTURA PRINCIPAL COM MENU LATERAL -->
         <!-- 🎯 Alinhamento pixel-perfect com o topo do botão "Resumo".
@@ -2688,10 +2733,7 @@ select:focus, select:focus-visible {
                         <p class="px-3.5 text-[8px] font-bold text-slate-300 dark:text-gray-600 uppercase tracking-[0.15em] select-none pointer-events-none">Planejar</p>
                     </div>
                     
-                    <button type="button" id="btnMenuRelatorios" onclick="abrirTela('relatorios')" class="w-full flex items-center gap-2.5 text-left px-3.5 py-2.5 text-[13px] font-semibold rounded-lg transition-colors bg-transparent text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-[#1a2639]">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        <span>Relatórios</span>
-                    </button>
+
                     <button type="button" id="btnMenuGraficos" onclick="abrirTela('graficos')" class="w-full flex items-center gap-2.5 text-left px-3.5 py-2.5 text-[13px] font-semibold rounded-lg transition-colors bg-transparent text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-[#1a2639]">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v10l7 5"/></svg>
                         <span>Gráficos</span>
@@ -2905,11 +2947,52 @@ select:focus, select:focus-visible {
                 
                 <div class="w-full">
                     <!-- CHIPS DE FILTRO RÁPIDO -->
-                    <div id="chipsExtrato" class="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-[#1e2a40] flex items-center gap-2 overflow-x-auto no-scrollbar">
-                        <button type="button" data-chip-extrato="todas" onclick="setFiltroChipExtrato('todas')" class="px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-[#4D6BFE] text-white shadow-sm shadow-[#4D6BFE]/20 whitespace-nowrap">Todas</button>
-                        <button type="button" data-chip-extrato="receitas" onclick="setFiltroChipExtrato('receitas')" class="px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Receitas</button>
-                        <button type="button" data-chip-extrato="despesas" onclick="setFiltroChipExtrato('despesas')" class="px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Despesas</button>
-                        <button type="button" data-chip-extrato="pendentes" onclick="setFiltroChipExtrato('pendentes')" class="px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Pendentes</button>
+                    <!-- 🎯 3 controles: "Todas" (reset), tipo (Entradas/Saídas)
+                         e ordem (Mais recentes/Mais antigos). Os dois últimos
+                         abrem dropdowns. Sem `overflow-x-auto` — usamos
+                         `flex-wrap` para não haver clipping dos dropdowns. -->
+                    <div id="chipsExtrato" class="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-[#1e2a40] flex items-center gap-2 flex-wrap">
+                        <!-- Dropdown: Tipo (Tudo / Entradas / Saídas) -->
+                        <div class="relative">
+                            <button type="button" id="btnFiltroChipTipo" onclick="abrirMenuChipFiltro('menuFiltroChipTipo', 'btnFiltroChipTipo', event)" class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+                                <span id="lblFiltroChipTipo">Tipo</span>
+                                <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div id="menuFiltroChipTipo" class="hidden w-40 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
+                                <button type="button" onclick="setFiltroChipTipo('todas')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors border-b border-slate-100 dark:border-[#1e2a40]">Tudo</button>
+                                <button type="button" onclick="setFiltroChipTipo('entradas')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-green-600 dark:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors flex items-center gap-2 border-b border-slate-100 dark:border-[#1e2a40]">
+                                    <span class="font-bold text-lg leading-none">+</span> Entradas
+                                </button>
+                                <button type="button" onclick="setFiltroChipTipo('saidas')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
+                                    <span class="font-bold text-lg leading-none">−</span> Saídas
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown: Origem (Salário / Vale) — só em CLT com vale -->
+                        <div class="relative" id="wrapFiltroChipOrigem">
+                            <button type="button" id="btnFiltroChipOrigem" onclick="abrirMenuChipFiltro('menuFiltroChipOrigem', 'btnFiltroChipOrigem', event)" class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+                                <span id="lblFiltroChipOrigem">Origem</span>
+                                <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div id="menuFiltroChipOrigem" class="hidden w-44 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
+                                <button type="button" onclick="setFiltroChipOrigem('todas')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors border-b border-slate-100 dark:border-[#1e2a40]">Toda a Origem</button>
+                                <button type="button" onclick="setFiltroChipOrigem('salario')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors border-b border-slate-100 dark:border-[#1e2a40]">Salário</button>
+                                <button type="button" id="btnOptValeChip" onclick="setFiltroChipOrigem('vale')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors">Vale</button>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown: Ordem (Mais recentes / Mais antigos) -->
+                        <div class="relative">
+                            <button type="button" id="btnFiltroChipOrdem" onclick="abrirMenuChipFiltro('menuFiltroChipOrdem', 'btnFiltroChipOrdem', event)" class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">
+                                <span id="lblFiltroChipOrdem">Mais recentes</span>
+                                <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div id="menuFiltroChipOrdem" class="hidden w-44 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
+                                <button type="button" onclick="setFiltroChipOrdem('recentes')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors border-b border-slate-100 dark:border-[#1e2a40]">Mais recentes</button>
+                                <button type="button" onclick="setFiltroChipOrdem('antigos')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors">Mais antigos</button>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- CABEÇALHO DESKTOP (Escondido no Mobile) -->
@@ -3260,163 +3343,6 @@ select:focus, select:focus-visible {
 
         </main>
 
-        <!-- ==================== ABA 3: RELATÓRIOS ==================== -->
-        <main id="abaRelatorios" class="space-y-5 pb-24 relative hidden w-full">
-            <div class="bg-white dark:bg-[#121b2b] rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.06)] p-5 md:p-6">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-cyan-400 font-montserrat mb-6 flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    Filtros de Relatório
-                </h2>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 mb-6">
-                    <!-- Filtro: Período (Custom Calendar) -->
-                    <div class="relative sm:col-span-2 lg:col-span-4 z-[150]">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Período (Início e Fim)</label>
-                        <input type="hidden" id="filtroRelDataIni" value="">
-                        <input type="hidden" id="filtroRelDataFim" value="">
-                        <button type="button" id="btnFiltroPeriodo" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
-                            <span id="lblFiltroPeriodo" class="truncate font-medium flex items-center gap-2 min-w-0">
-                                <svg class="h-4 w-4 text-slate-900 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <span class="truncate">Carregando...</span>
-                            </span>
-                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="menuFiltroPeriodo" class="hidden absolute w-[280px] sm:w-[320px] mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-2xl shadow-2xl dropdown-anim overflow-hidden z-[9999] p-4">
-                            <div class="flex justify-between items-center mb-4">
-                                <button type="button" onclick="mudarCalMes(-1, event)" class="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1a2639] rounded-full text-slate-500 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-                                <span id="lblCalMesAno" class="font-bold text-slate-800 dark:text-cyan-400 text-sm font-montserrat"></span>
-                                <button type="button" onclick="mudarCalMes(1, event)" class="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1a2639] rounded-full text-slate-500 transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
-                            </div>
-                            <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                                <div class="text-[10px] font-bold text-slate-400">D</div>
-                                <div class="text-[10px] font-bold text-slate-400">S</div>
-                                <div class="text-[10px] font-bold text-slate-400">T</div>
-                                <div class="text-[10px] font-bold text-slate-400">Q</div>
-                                <div class="text-[10px] font-bold text-slate-400">Q</div>
-                                <div class="text-[10px] font-bold text-slate-400">S</div>
-                                <div class="text-[10px] font-bold text-slate-400">S</div>
-                            </div>
-                            <div id="gridCalDias" class="grid grid-cols-7 gap-1 text-center"></div>
-                            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-[#1e2a40] flex justify-between items-center">
-                                <span id="lblCalStatus" class="text-[10px] font-bold text-slate-900 uppercase tracking-wider">Selecione o Início</span>
-                                <button type="button" id="btnCalAplicar" onclick="aplicarCustomCal(event)" class="bg-[#4D6BFE] text-white text-xs font-bold py-2 px-4 rounded-full shadow-md shadow-[#4D6BFE]/20 hover:bg-[#4338CA] transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100">Aplicar</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Filtro: Natureza -->
-                    <div class="relative lg:col-span-4 z-[140]">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Natureza</label>
-                        <input type="hidden" id="filtroRelTipo" value="Todos">
-                        <button type="button" id="btnFiltroTipo" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
-                            <span id="lblFiltroTipo" class="truncate font-medium">Todas</span>
-                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="menuFiltroTipo" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
-                            <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm">
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors font-bold text-center" onclick="selecionarFiltroTipo('Todos', 'Todas')">Todas</li>
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Receita', 'Receitas (+)')"><span class="text-green-500 font-bold">+</span> Receitas (+)</li>
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Despesa', 'Despesas (-)')"><span class="text-red-500 font-bold">-</span> Despesas (-)</li>
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors flex items-center gap-2" onclick="selecionarFiltroTipo('Transferencia', 'Transferências')">
-                                    <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                                    Transferências
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Filtro: Status -->
-                    <div class="relative lg:col-span-4 z-[135]">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Status</label>
-                        <input type="hidden" id="filtroRelStatus" value="Todos">
-                        <button type="button" id="btnFiltroStatus" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
-                            <span id="lblFiltroStatus" class="truncate font-medium">Todos os status</span>
-                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="menuFiltroStatus" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
-                            <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm">
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors font-bold text-center" onclick="selecionarFiltroStatus('Todos', 'Todos os status')">Todos os status</li>
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] border-b border-slate-100 dark:border-[#1e2a40] transition-colors flex items-center gap-2" onclick="selecionarFiltroStatus('Efetivada', 'Efetivadas')"><span class="text-green-500 font-bold">✓</span> Efetivadas</li>
-                                <li class="cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors flex items-center gap-2" onclick="selecionarFiltroStatus('Pendente', 'Pendentes')"><span class="text-amber-500 font-bold">⏱</span> Pendentes</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Filtro: Conta -->
-                    <div class="relative lg:col-span-4 z-[130]">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Conta</label>
-                        <input type="hidden" id="filtroRelConta" value="Todas">
-                        <button type="button" id="btnFiltroConta" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
-                            <span id="lblFiltroConta" class="truncate font-medium">Todas as Contas</span>
-                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="menuFiltroConta" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
-                            <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm" id="listaFiltroConta"></ul>
-                        </div>
-                    </div>
-
-                    <!-- Filtro: Categoria -->
-                    <div class="relative lg:col-span-4 z-[120]">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Categoria</label>
-                        <input type="hidden" id="filtroRelCategoria" value="Todas">
-                        <button type="button" id="btnFiltroCategoria" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
-                            <span id="lblFiltroCategoria" class="truncate font-medium">Todas as Categorias</span>
-                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="menuFiltroCategoria" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
-                            <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm" id="listaFiltroCategoria"></ul>
-                        </div>
-                    </div>
-
-                    <!-- Filtro: Origem -->
-                    <div class="relative lg:col-span-4 z-[110]">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Origem</label>
-                        <input type="hidden" id="filtroRelOrigem" value="Todas">
-                        <button type="button" id="btnFiltroOrigem" class="w-full flex justify-between items-center border border-slate-300 dark:border-[#1e2a40] rounded-xl px-3 focus:bg-white bg-slate-50 dark:bg-[#0b1120] text-slate-800 dark:text-white transition-all shadow-sm text-left text-sm h-[48px]">
-                            <span id="lblFiltroOrigem" class="truncate font-medium">Todas as Origens</span>
-                            <svg class="h-4 w-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div id="menuFiltroOrigem" class="hidden absolute w-full mt-1 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-2xl dropdown-anim overflow-hidden z-[9999]">
-                            <ul class="hover-scrollbar max-h-[350px] overflow-y-auto text-sm" id="listaFiltroOrigem"></ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end border-t border-slate-100 dark:border-[#1e2a40] pt-5">
-                    <button type="button" onclick="gerarRelatorio()" class="bg-[#4D6BFE] hover:bg-[#4338CA] text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg shadow-[#4D6BFE]/20 active:scale-95 text-sm uppercase tracking-wide flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                        Gerar Relatório
-                    </button>
-                </div>
-            </div>
-
-            <!-- Resumo Financeiro do Filtro -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                <div class="bg-white dark:bg-[#121b2b] p-5 md:p-6 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] relative flex flex-col justify-center min-h-[120px]">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Receitas</p>
-                    <p id="relTotRec" class="text-2xl font-bold text-green-600 dark:text-green-500 font-montserrat tracking-tight">R$ 0,00</p>
-                 </div>
-                 <div class="bg-white dark:bg-[#121b2b] p-5 md:p-6 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] relative flex flex-col justify-center min-h-[120px]">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Despesas</p>
-                    <p id="relTotDesp" class="text-2xl font-bold text-red-600 dark:text-red-400 font-montserrat tracking-tight">R$ 0,00</p>
-                 </div>
-                 <div class="bg-white dark:bg-[#121b2b] p-5 md:p-6 rounded-2xl shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] relative flex flex-col justify-center min-h-[120px]">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Resultado Líquido</p>
-                    <p id="relTotSaldo" class="text-2xl font-bold text-slate-900 dark:text-cyan-400 font-montserrat tracking-tight">R$ 0,00</p>
-                 </div>
-            </div>
-
-            <!-- Lista de Resultados -->
-            <div class="bg-white dark:bg-[#121b2b] rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.06)] overflow-hidden">
-                <div class="p-5 border-b border-slate-100 dark:border-[#1e2a40]">
-                    <h3 class="font-bold text-slate-800 dark:text-gray-200">Listagem de Movimentações</h3>
-                </div>
-                <div id="tabelaRelatorio" class="flex flex-col text-sm divide-y divide-slate-100 dark:divide-[#1e2a40]">
-                    <p class="text-center py-10 text-slate-400 font-medium">Use os filtros acima e clique em Gerar Relatório.</p>
-                </div>
-            </div>
-        </main>
-
         <!-- ==================== ABA 4: GRÁFICOS ==================== -->
         <main id="abaGraficos" class="space-y-5 pb-24 relative hidden w-full">
 
@@ -3714,7 +3640,9 @@ select:focus, select:focus-visible {
             { m: 'menuFiltroOrigem', b: 'btnFiltroOrigem' },
             { m: 'menuFiltroStatus', b: 'btnFiltroStatus' },
             { m: 'menuTransfContaOrigem', b: 'btnTransfContaOrigem' },
-            { m: 'menuTransfContaDestino', b: 'btnTransfContaDestino' }
+            { m: 'menuTransfContaDestino', b: 'btnTransfContaDestino' },
+            { m: 'menuFiltroChipTipo', b: 'btnFiltroChipTipo' },
+            { m: 'menuFiltroChipOrdem', b: 'btnFiltroChipOrdem' }
         ];
         let currentUserUID = null;
         let bancoDeDados = [];
@@ -4676,6 +4604,21 @@ select:focus, select:focus-visible {
                     setupDropdownCategorias();
                     renderizarCarrosselContas();
                     
+                    // 🚨 Alerta de vencimentos — mostra uma vez por dia,
+                    // depois que a UI assentou. O delay evita o modal
+                    // "brigar" com o fade-in do app.
+                    // O sino flutuante é atualizado aqui E dentro de
+                    // `atualizarTabela()` — assim reflete o estado atual
+                    // em qualquer momento, sem depender do modal.
+                    setTimeout(() => {
+                        if (typeof window.atualizarIconeAlertaVencimento === 'function') {
+                            window.atualizarIconeAlertaVencimento();
+                        }
+                        if (typeof window.verificarAlertasVencimento === 'function') {
+                            window.verificarAlertasVencimento();
+                        }
+                    }, 1200);
+                    
                     // 🎯 Alinha o conteúdo principal com o menu lateral.
                     // Três camadas de disparo, porque cada uma cobre um
                     // cenário diferente de carregamento:
@@ -4806,12 +4749,6 @@ select:focus, select:focus-visible {
                 fadeInTela(abaProjecao);
                 marcarBtnMenuAtivo(document.getElementById('btnTabProjecao'));
                 carregarOuCalcularFolha();
-            } else if (tela === 'relatorios') {
-                abaRelatorios.classList.remove('hidden'); abaRelatorios.classList.add('block');
-                fadeInTela(abaRelatorios);
-                marcarBtnMenuAtivo(document.getElementById('btnMenuRelatorios'));
-                window.popularFiltrosRelatorio();
-                window.gerarRelatorio();
             } else if (tela === 'graficos') {
                 const g = document.getElementById('abaGraficos');
                 if (g) {
@@ -8641,6 +8578,11 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             });
 
             if (typeof renderListaTiposCompra === 'function') renderListaTiposCompra(); 
+
+            // 🎯 Sincroniza a visibilidade do chip Origem com o perfil atual
+            // (esconde em PJ e em CLT sem vale). Também reaplica o estado
+            // visual dos chips, porque o perfil pode ter mudado.
+            if (typeof _atualizarChipsExtrato === 'function') _atualizarChipsExtrato();
         }
         window.selecionarRegime = function(valor, rotulo) {
             document.getElementById('perfilRegime').value = valor;
@@ -9147,19 +9089,188 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             });
         }
 
-        let filtroChipExtrato = 'todas';
-        window.setFiltroChipExtrato = function(filtro) {
-            filtroChipExtrato = filtro;
-            document.querySelectorAll('[data-chip-extrato]').forEach(btn => {
-                const ativo = btn.dataset.chipExtrato === filtro;
-                if (ativo) {
-                    btn.className = 'px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-[#4D6BFE] text-white shadow-sm shadow-[#4D6BFE]/20 whitespace-nowrap';
-                } else {
-                    btn.className = 'px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap';
-                }
-            });
+        // ═══════════════════════════════════════════════════════════════
+        // 🎯 FILTROS DO EXTRATO — Tipo (Entradas/Saídas) + Ordem
+        // ═══════════════════════════════════════════════════════════════
+        // Dois filtros independentes, cada um controlado por um dropdown.
+        //   • filtroChipTipo  → 'todas' | 'entradas' | 'saidas'
+        //   • filtroChipOrdem → 'recentes' | 'antigos'
+        //
+        // O botão "Todas" é o RESET: volta ambos para o padrão. Fica
+        // destacado (azul) somente quando os dois estão no default.
+        let filtroChipTipo = 'todas';
+        let filtroChipOrdem = 'recentes';
+        let filtroChipOrigem = 'todas';
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🎯 ORIGEM EFETIVA — extraída para reuso
+        // ═══════════════════════════════════════════════════════════════
+        // Antes, a normalização de origem vivia dentro do loop de render.
+        // Agora que ela também é usada pelo filtro de chips, precisa ser
+        // uma função única — assim filtro e render SEMPRE concordam sobre
+        // o que é "Salário" e o que é "Vale" para cada lançamento.
+        //
+        // Regras (idênticas ao comportamento anterior):
+        //   • PJ → Recebimento (receita) ou Caixa (despesa)
+        //   • CLT → Salário/Ajuste explícitos são respeitados; "Vale"
+        //     explícito só vale se o usuário AINDA recebe vale; senão,
+        //     deriva da data de vencimento (determinarOrigem).
+        function _obterOrigemEfetiva(transacao) {
+            if (transacao.isTransferencia) return '';
+
+            let txtOrigem = transacao.origem || '';
+
+            if (meuPerfil.regime === 'PJ') {
+                const ehReceita = transacao.tipo === 'Receita' || transacao.natureza === 'Receita';
+                return ehReceita ? 'Recebimento' : 'Caixa';
+            }
+
+            const valeRespeitavel = (txtOrigem === 'Vale' && meuPerfil.temVale !== 'Não');
+            const origemRespeitavel = txtOrigem === 'Salário' || txtOrigem === 'Ajuste' || valeRespeitavel;
+            if (!origemRespeitavel) {
+                const dataRefOrig = transacao.vencimento || transacao.dataLancamento;
+                return determinarOrigem(dataRefOrig, transacao.natureza || 'Despesa', null);
+            }
+            return txtOrigem;
+        }
+
+        // Redesenha os botões conforme o estado atual. Chamado por
+        // todos os setters e quando o perfil muda. NÃO toca na lista —
+        // só na aparência dos chips e na visibilidade do botão Origem.
+        function _atualizarChipsExtrato() {
+            const wrapOrigem = document.getElementById('wrapFiltroChipOrigem');
+            const btnTipo  = document.getElementById('btnFiltroChipTipo');
+            const btnOrdem = document.getElementById('btnFiltroChipOrdem');
+            const btnOrigem = document.getElementById('btnFiltroChipOrigem');
+            const lblTipo  = document.getElementById('lblFiltroChipTipo');
+            const lblOrdem = document.getElementById('lblFiltroChipOrdem');
+            const lblOrigem = document.getElementById('lblFiltroChipOrigem');
+            const optVale = document.getElementById('btnOptValeChip');
+
+            const ativoFlex   = 'flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-[#4D6BFE] text-white shadow-sm shadow-[#4D6BFE]/20 whitespace-nowrap';
+            const inativoFlex = 'flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap';
+
+            // 🎯 Visibilidade do botão Origem:
+            //   • PJ → escondido (não existe Salário/Vale nesse regime)
+            //   • CLT sem vale → escondido (só "Salário" faria sentido, e
+            //     é redundante — todo lançamento já é Salário nesse caso)
+            //   • CLT com vale → visível
+            const mostrarOrigem = (meuPerfil.regime !== 'PJ' && meuPerfil.temVale !== 'Não');
+            if (wrapOrigem) {
+                wrapOrigem.style.display = mostrarOrigem ? '' : 'none';
+            }
+
+            // 🎯 Dentro do dropdown, a opção "Vale" também fica visível só
+            // quando faz sentido. Hoje, mostrarOrigem já garante isso (a
+            // única condição em que o dropdown aparece é quando há vale),
+            // mas mantemos a guarda aqui para o caso de, no futuro, o
+            // botão passar a ser exibido para CLT sem vale também.
+            if (optVale) {
+                optVale.style.display = (meuPerfil.temVale === 'Não' || meuPerfil.regime === 'PJ') ? 'none' : '';
+            }
+
+            // Se o filtro estava em "vale" mas o perfil mudou e o vale
+            // sumiu, reseta para "todas" — senão a lista ficaria vazia
+            // sem o usuário entender o porquê.
+            if (filtroChipOrigem === 'vale' && !mostrarOrigem) {
+                filtroChipOrigem = 'todas';
+            }
+
+            if (btnTipo) {
+                btnTipo.className = (filtroChipTipo !== 'todas') ? ativoFlex : inativoFlex;
+            }
+            if (lblTipo) {
+                lblTipo.textContent = filtroChipTipo === 'entradas' ? 'Entradas'
+                                    : filtroChipTipo === 'saidas'   ? 'Saídas'
+                                    : 'Tipo';
+            }
+            if (btnOrigem) {
+                btnOrigem.className = (filtroChipOrigem !== 'todas') ? ativoFlex : inativoFlex;
+            }
+            if (lblOrigem) {
+                lblOrigem.textContent = filtroChipOrigem === 'salario' ? 'Salário'
+                                      : filtroChipOrigem === 'vale'    ? 'Vale'
+                                      : 'Origem';
+            }
+            if (btnOrdem) {
+                btnOrdem.className = (filtroChipOrdem === 'antigos') ? ativoFlex : inativoFlex;
+            }
+            if (lblOrdem) {
+                lblOrdem.textContent = filtroChipOrdem === 'antigos' ? 'Mais antigos' : 'Mais recentes';
+            }
+        }
+
+        // Tipo: todas / entradas / saidas
+        window.setFiltroChipTipo = function(valor) {
+            filtroChipTipo = valor;
+            document.getElementById('menuFiltroChipTipo')?.classList.add('hidden');
+            _atualizarChipsExtrato();
             atualizarTabela();
         };
+
+        // Ordem: recentes / antigos
+        window.setFiltroChipOrdem = function(valor) {
+            filtroChipOrdem = valor;
+            document.getElementById('menuFiltroChipOrdem')?.classList.add('hidden');
+            _atualizarChipsExtrato();
+            atualizarTabela();
+        };
+
+        // Origem: todas / salario / vale
+        window.setFiltroChipOrigem = function(valor) {
+            filtroChipOrigem = valor;
+            document.getElementById('menuFiltroChipOrigem')?.classList.add('hidden');
+            _atualizarChipsExtrato();
+            atualizarTabela();
+        };
+
+        // 🎯 Abre/fecha os dropdowns dos chips.
+        // Usa `position: fixed` com coordenadas calculadas na abertura —
+        // evita o clipping que aconteceria se o menu fosse `absolute`
+        // dentro do container dos chips (que tem `overflow-x-auto`).
+        // A regra "só um menu aberto por vez" é garantida fechando
+        // TODOS os menus conhecidos (TODOS_OS_MENUS + os dois chips)
+        // antes de abrir o alvo.
+        window.abrirMenuChipFiltro = function(menuId, btnId, e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById(menuId);
+            const btn = document.getElementById(btnId);
+            if (!menu || !btn) return;
+
+            const estavaFechado = menu.classList.contains('hidden');
+
+            // Fecha todos os menus conhecidos (exceto o alvo, que vamos
+            // reabrir logo abaixo).
+            TODOS_OS_MENUS.forEach(par => {
+                const m = document.getElementById(par.m);
+                if (m && m.id !== menuId) m.classList.add('hidden');
+            });
+            document.getElementById('menuFiltroChipTipo')?.classList.add('hidden');
+            document.getElementById('menuFiltroChipOrigem')?.classList.add('hidden');
+            document.getElementById('menuFiltroChipOrdem')?.classList.add('hidden');
+
+            if (!estavaFechado) return;
+
+            // Posiciona em coordenadas da tela. `getBoundingClientRect`
+            // sempre retorna coordenadas de viewport — casam com fixed.
+            const rect = btn.getBoundingClientRect();
+            menu.style.position = 'fixed';
+            menu.style.top = (rect.bottom + 6) + 'px';
+
+            // Enconsta na borda direita se o menu estouraria a tela.
+            const menuW = (menuId === 'menuFiltroChipOrdem') ? 176 : 160;
+            const maxLeft = window.innerWidth - menuW - 12;
+            menu.style.left = Math.min(rect.left, maxLeft) + 'px';
+
+            menu.classList.remove('hidden');
+        };
+
+        // Fecha os chips ao redimensionar (evita menu "preso" no lugar
+        // errado depois de um rotate do celular ou mudança de viewport).
+        window.addEventListener('resize', () => {
+            document.getElementById('menuFiltroChipTipo')?.classList.add('hidden');
+            document.getElementById('menuFiltroChipOrdem')?.classList.add('hidden');
+        });
 
         function atualizarTabela() {
             const corpoTabela = document.getElementById('tabelaDespesas'); const mensagemVazio = document.getElementById('mensagemVazio');
@@ -9296,17 +9407,22 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
 
                     const dtA = _chaveOrdenacao(a);
                     const dtB = _chaveOrdenacao(b);
+                    // 🎯 Filtro de ordem — inverte o eixo de datas dentro
+                    //    de cada grupo (pendentes / efetivadas).
+                    //      recentes → pendentes ASC, efetivadas DESC (padrão)
+                    //      antigos  → pendentes DESC, efetivadas ASC
+                    const inverter = (filtroChipOrdem === 'antigos');
 
                     if (aPago === 0) {
-                        // Pendente — crescente por data
-                        if (dtA !== dtB) return dtA - dtB;
+                        // Pendente — padrão crescente; invertido decrescente
+                        if (dtA !== dtB) return inverter ? (dtB - dtA) : (dtA - dtB);
                     } else {
-                        // Efetivada — decrescente por data
-                        if (dtA !== dtB) return dtB - dtA;
+                        // Efetivada — padrão decrescente; invertido crescente
+                        if (dtA !== dtB) return inverter ? (dtA - dtB) : (dtB - dtA);
                     }
 
-                    // Desempate estável (mesma data + mesmo status)
-                    return b.transacaoId - a.transacaoId;
+                    // Desempate estável — mesma data + mesmo status
+                    return inverter ? (a.transacaoId - b.transacaoId) : (b.transacaoId - a.transacaoId);
                 });
 
                 // Filtro de busca textual
@@ -9326,13 +9442,34 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                     });
                 }
 
-                // Filtro rápido por chip
-                if (filtroChipExtrato !== 'todas') {
+                // ═══════════════════════════════════════════════════════
+                // 🎯 FILTRO RÁPIDO POR CHIP — Tipo (Entradas/Saídas)
+                // ═══════════════════════════════════════════════════════
+                // Entradas = transações com sinal positivo (Receita).
+                // Saídas   = transações com sinal negativo (Despesa).
+                if (filtroChipTipo !== 'todas') {
                     arrayTransacoes = arrayTransacoes.filter(t => {
                         const isR = (t.tipo === 'Receita' || t.natureza === 'Receita');
-                        if (filtroChipExtrato === 'receitas') return isR;
-                        if (filtroChipExtrato === 'despesas') return !isR;
-                        if (filtroChipExtrato === 'pendentes') return !t.pago;
+                        if (filtroChipTipo === 'entradas') return isR;
+                        if (filtroChipTipo === 'saidas')   return !isR;
+                        return true;
+                    });
+                }
+
+                // ═══════════════════════════════════════════════════════
+                // 🎯 FILTRO DE ORIGEM — Salário / Vale
+                // ═══════════════════════════════════════════════════════
+                // Transferências não têm origem Salário/Vale (são movimento
+                // entre contas ou com terceiros) — ficam fora quando o
+                // filtro está ativo. A origem é normalizada pelo mesmo
+                // helper que o render usa, garantindo consistência total
+                // entre o que a linha mostra e o que o filtro considera.
+                if (filtroChipOrigem !== 'todas') {
+                    arrayTransacoes = arrayTransacoes.filter(t => {
+                        if (t.isTransferencia) return false;
+                        const origem = _obterOrigemEfetiva(t);
+                        if (filtroChipOrigem === 'salario') return origem === 'Salário';
+                        if (filtroChipOrigem === 'vale')    return origem === 'Vale';
                         return true;
                     });
                 }
@@ -9456,34 +9593,16 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                         ? (transacao.isTerceiro ? 'Terceiro' : 'Transferência')
                         : (transacao.isAjuste ? 'Ajuste' : transacao.tipo);
                     
-                    // ORIGEM — derivada da DATA (Salário ou Vale). Sem "Extra".
-                    let txtOrigem = isTransf
-                        ? (transacao.isTerceiro
-                            ? (transacao.direcao === 'saida' ? 'Enviado' : 'Recebido')
-                            : 'Transferência')
-                        : (transacao.origem || '');
-                    
+                    // ORIGEM — calculada pelo helper compartilhado com o
+                    // filtro de chips. Transferências mantêm seus rótulos
+                    // específicos ("Transferência", "Enviado", "Recebido").
+                    let txtOrigem;
                     if (isTransf) {
-                        // Transferência mantém o rótulo — não passa pelas regras abaixo.
-                    } else if (meuPerfil.regime === 'PJ') {
-                        txtOrigem = ehReceita ? 'Recebimento' : 'Caixa';
+                        txtOrigem = transacao.isTerceiro
+                            ? (transacao.direcao === 'saida' ? 'Enviado' : 'Recebido')
+                            : 'Transferência';
                     } else {
-                        // CLT: Salário/Ajuste explícitos são respeitados.
-                        //
-                        // 🎯 EXCEÇÃO: "Vale" só é respeitado se o usuário
-                        //    AINDA recebe vale. Se ele desativou a opção
-                        //    (Configurações → Recebe Vale? → Não), qualquer
-                        //    lançamento com `origem: 'Vale'` é legado — o
-                        //    app ignora e recalcula pela data. Sem isso,
-                        //    as tags "Vale" continuavam aparecendo no
-                        //    Extrato mesmo depois do usuário declarar que
-                        //    não recebe mais vale.
-                        const valeRespeitavel = (txtOrigem === 'Vale' && meuPerfil.temVale !== 'Não');
-                        const origemRespeitavel = txtOrigem === 'Salário' || txtOrigem === 'Ajuste' || valeRespeitavel;
-                        if (!origemRespeitavel) {
-                            const dataRefOrig = transacao.vencimento || transacao.dataLancamento;
-                            txtOrigem = determinarOrigem(dataRefOrig, transacao.natureza || 'Despesa', null);
-                        }
+                        txtOrigem = _obterOrigemEfetiva(transacao);
                     }
 
                     // Origem exibida como texto discreto — sem cor de fundo.
@@ -9726,6 +9845,13 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             //    (que chama `atualizarTabela` indiretamente via sync).
             //    Precisamos disso porque o card mostra dados mês-dependentes.
             if (typeof atualizarCardOrcamentoResumo === 'function') atualizarCardOrcamentoResumo();
+
+            // 🔔 Mantém o sino flutuante sincronizado com o estado atual.
+            //    Quando a última conta pendente é paga/apagada, o ícone
+            //    desaparece sozinho no próximo repaint.
+            if (typeof window.atualizarIconeAlertaVencimento === 'function') {
+                window.atualizarIconeAlertaVencimento();
+            }
         }
                 // 🗑️ `calcularSaldoTotalMesHistorico()` + `obterSaldoAcumuladoAnterior()`
         //    removidas — só se chamavam entre si, e o recurso de "saldo
@@ -10919,6 +11045,31 @@ window.checkRateio = function() {
             if (escopo === 'unica' || !itemSendoEditado.totalParcelas) {
                 itemSendoEditado.descricaoOriginal = nd; itemSendoEditado.descricao = nd; itemSendoEditado.valor = nv.toFixed(2); itemSendoEditado.dataLancamento = ndc; itemSendoEditado.vencimento = formatarDataComparacao(ndt); itemSendoEditado.categoria = nc; itemSendoEditado.subcategoria = ns; itemSendoEditado.origem = determinarOrigem(ndt, itemSendoEditado.natureza, origemManualEdit); itemSendoEditado.observacao = nobs; itemSendoEditado.dataEfetivacao = ndEfet; itemSendoEditado.anexo = anexoEditBase64; itemSendoEditado.contaId = document.getElementById('editContaSelecionada').value;
                 if (itemSendoEditado.tipo === 'Receita' || itemSendoEditado.natureza === 'Receita') itemSendoEditado.compoeResumo = compoeResumoEdit;
+
+                // 🎯 SINCRONIZA `vencimentoOriginal` COM A EDIÇÃO DO USUÁRIO.
+                // Sem isso, em lançamentos RECORRENTES, `ajustarVencimentosRecorrentes()`
+                // recalcula o `vencimento` na próxima renderização lendo o DIA de
+                // `vencimentoOriginal` — e sobrescreve silenciosamente a alteração
+                // feita aqui. Era esse o "não se concretiza" reportado.
+                //
+                // Regra:
+                //   • Recorrente → atualiza SÓ o DIA, preservando o mês/ano do
+                //     âncora original. Assim o "começo da série" não muda, o
+                //     filtro histórico continua funcionando, e a derivação para
+                //     os meses seguintes passa a usar o novo dia.
+                //   • Não recorrente → atualiza o valor inteiro, para manter os
+                //     dois campos consistentes (mesmo não sendo usado na
+                //     filtragem, evita divergência silenciosa no dado).
+                if (itemSendoEditado.isRecorrente && itemSendoEditado.vencimentoOriginal) {
+                    const pOrig = itemSendoEditado.vencimentoOriginal.split('/');
+                    const pNovo = ndt.split('/');
+                    if (pOrig.length === 3 && pNovo.length === 3) {
+                        itemSendoEditado.vencimentoOriginal = `${pNovo[0].padStart(2,'0')}/${pOrig[1]}/${pOrig[2]}`;
+                    }
+                } else {
+                    itemSendoEditado.vencimentoOriginal = formatarDataComparacao(ndt);
+                }
+
                 salvarDespesaFirestore(itemSendoEditado);
             } else {
                 const pd = ndt.split('/'); const dBase = parseInt(pd[0], 10); const mBase = parseInt(pd[1], 10) - 1; const aBase = parseInt(pd[2], 10); let offset = 0;
@@ -13668,6 +13819,253 @@ const inputDesc = document.getElementById('descricao');
             win.document.write(html);
             win.document.close();
             setTimeout(() => { win.focus(); win.print(); }, 400);
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🚨 ALERTA DE VENCIMENTOS
+        // ═══════════════════════════════════════════════════════════════
+        // Detecta e exibe, ao abrir o app, contas que precisam de atenção:
+        //   • ATRASADAS   → vencimento passado, ainda pendentes
+        //   • VENCE HOJE  → vencimento é hoje
+        //   • VENCE AMANHÃ → vencimento é amanhã
+        //
+        // Critérios:
+        //   • Só despesas (não receitas)
+        //   • Só pendentes
+        //   • Ignora ajustes, transferências próprias e ocultos
+        //   • Recorrentes: respeita o status real de `pagamentos[anoMesStr]`
+        //
+        // Frequência: UMA VEZ POR DIA (localStorage com a data local).
+        // Quando os itens forem resolvidos, o alerta para de aparecer.
+
+        function _alertasVencimentoHoje() {
+            const h = new Date();
+            h.setHours(0, 0, 0, 0);
+            return h;
+        }
+
+        function _alertasVencimentoColetar() {
+            const hoje = _alertasVencimentoHoje();
+            const hojeNum = hoje.getTime();
+            const amanhaNum = hojeNum + 86400000;
+
+            const atrasadas = [];
+            const hojeItens = [];
+            const amanhaItens = [];
+
+            bancoDeDados.forEach(d => {
+                if (d.isAjuste || d.ocultoExtrato) return;
+                // Transferência entre contas próprias não é obrigação financeira.
+                if (d.isTransferencia && !d.isTerceiro) return;
+                // Só despesas
+                const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
+                if (isR) return;
+
+                const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
+                if (!dataRef || dataRef.length !== 10) return;
+
+                // Status de pagamento (recorrentes olham o mapa de meses)
+                let pago;
+                if (d.isRecorrente) {
+                    const p = dataRef.split('/');
+                    const anoMesStr = `${p[2]}${p[1]}`;
+                    const status = d.pagamentos && d.pagamentos[anoMesStr];
+                    pago = !!status;
+                } else {
+                    pago = !!d.pago;
+                }
+                if (pago) return;
+
+                // 🎯 Recorrentes têm dois mecanismos de "sumir do mês":
+                //    • `mesesOcultos` → o usuário apagou SÓ aquela ocorrência
+                //    • `encerradoEm` → a série foi encerrada a partir do mês X
+                // Sem estas guardas, uma recorrente apagada continuava
+                // aparecendo no alerta — exatamente o bug que o usuário viu.
+                const partes = dataRef.split('/');
+                const anoMesNum = parseInt(partes[2]) * 100 + parseInt(partes[1]);
+                if (d.mesesOcultos && d.mesesOcultos.includes(anoMesNum)) return;
+                if (d.encerradoEm && anoMesNum >= d.encerradoEm) return;
+
+                const dtVenc = new Date(partes[2], partes[1] - 1, partes[0]);
+                dtVenc.setHours(0, 0, 0, 0);
+                const tVenc = dtVenc.getTime();
+
+                const item = {
+                    id: d.id,
+                    descricao: d.descricaoOriginal || d.descricao || '—',
+                    valor: valorFloat(d.valor),
+                    vencimento: dataRef,
+                    categoria: d.categoria || '—',
+                    diasAtraso: 0
+                };
+
+                if (tVenc < hojeNum) {
+                    item.diasAtraso = Math.round((hojeNum - tVenc) / 86400000);
+                    atrasadas.push(item);
+                } else if (tVenc === hojeNum) {
+                    hojeItens.push(item);
+                } else if (tVenc === amanhaNum) {
+                    amanhaItens.push(item);
+                }
+            });
+
+            // Atrasadas: as mais antigas primeiro (mais críticas).
+            // Hoje/amanhã: alfabéticas — estáveis e previsíveis.
+            atrasadas.sort((a, b) => b.diasAtraso - a.diasAtraso);
+            hojeItens.sort((a, b) => a.descricao.localeCompare(b.descricao));
+            amanhaItens.sort((a, b) => a.descricao.localeCompare(b.descricao));
+
+            return { atrasadas, hojeItens, amanhaItens };
+        }
+
+        window.verificarAlertasVencimento = function(forcar) {
+            // 🎯 Só mostra uma vez por dia (a menos que `forcar` seja true).
+            // Usa data LOCAL (não `toISOString()` que devolve UTC — no
+            // Brasil, isso fazia o alerta "renovar" às 21h).
+            const hj = new Date();
+            const hojeStr = `${hj.getFullYear()}-${String(hj.getMonth()+1).padStart(2,'0')}-${String(hj.getDate()).padStart(2,'0')}`;
+            if (!forcar && localStorage.getItem('alertaVencimentosDia') === hojeStr) return;
+
+            const { atrasadas, hojeItens, amanhaItens } = _alertasVencimentoColetar();
+            const total = atrasadas.length + hojeItens.length + amanhaItens.length;
+            if (total === 0) return;
+
+            // Não compete com um modal que o usuário já abriu.
+            const algumModalAberto = Array.from(document.querySelectorAll('[id^="modal"]'))
+                .some(m => !m.classList.contains('hidden') && m.style.display !== 'none');
+            if (algumModalAberto) return;
+
+            // Marca como mostrado
+            localStorage.setItem('alertaVencimentosDia', hojeStr);
+
+            const iconeEl = document.getElementById('iconeAlertaHeader');
+            const tituloEl = document.getElementById('tituloAlertaVenc');
+            const subEl = document.getElementById('subtituloAlertaVenc');
+
+            // 🎯 Cabeçalho assume o tom do item MAIS CRÍTICO presente:
+            // atrasadas > hoje > amanhã. Nada de cores contraditórias.
+            if (atrasadas.length > 0) {
+                iconeEl.className = 'w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
+                iconeEl.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>';
+                tituloEl.textContent = 'Contas atrasadas';
+            } else if (hojeItens.length > 0) {
+                iconeEl.className = 'w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400';
+                iconeEl.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg>';
+                tituloEl.textContent = 'Vencendo hoje';
+            } else {
+                iconeEl.className = 'w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-[#4D6BFE]/10 dark:bg-[#4D6BFE]/20 text-[#4D6BFE]';
+                iconeEl.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2"/></svg>';
+                tituloEl.textContent = 'Vencendo em breve';
+            }
+
+            const partes = [];
+            if (atrasadas.length > 0) partes.push(`<strong class="text-red-600 dark:text-red-400">${atrasadas.length}</strong> atrasada${atrasadas.length === 1 ? '' : 's'}`);
+            if (hojeItens.length > 0) partes.push(`<strong class="text-amber-600 dark:text-amber-400">${hojeItens.length}</strong> hoje`);
+            if (amanhaItens.length > 0) partes.push(`<strong class="text-slate-700 dark:text-gray-200">${amanhaItens.length}</strong> amanhã`);
+            subEl.innerHTML = partes.join(' · ');
+
+            // ─── Lista de itens agrupados por urgência ────────────────
+            const lista = document.getElementById('listaAlertasVenc');
+            lista.innerHTML = '';
+
+            const criarGrupo = (titulo, cor, itens, badgeTexto, badgeClasse) => {
+                if (itens.length === 0) return;
+                const header = document.createElement('div');
+                header.className = `px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider ${cor}`;
+                header.textContent = titulo;
+                lista.appendChild(header);
+
+                itens.forEach(it => {
+                    const row = document.createElement('div');
+                    row.className = 'px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-[#1a2639] transition-colors flex items-center gap-3';
+                    const badge = badgeTexto
+                        ? `<span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${badgeClasse}">${badgeTexto}</span>`
+                        : '';
+                    const diasExtra = it.diasAtraso > 1
+                        ? ` · ${it.diasAtraso}d`
+                        : '';
+                    row.innerHTML = `
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5 mb-0.5">
+                                ${badge}
+                                <span class="text-[10px] text-slate-400 dark:text-gray-500">${it.vencimento}${diasExtra}</span>
+                            </div>
+                            <div class="text-[13px] font-semibold text-slate-800 dark:text-gray-100 truncate">${it.descricao}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5 truncate">${it.categoria}</div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-[13px] font-bold text-red-600 dark:text-red-400 whitespace-nowrap">${formatMoeda(it.valor)}</div>
+                        </div>
+                    `;
+                    lista.appendChild(row);
+                });
+            };
+
+            criarGrupo('🚨 Atrasadas', 'text-red-600 dark:text-red-400', atrasadas, null, null);
+            criarGrupo('⏰ Vencem hoje', 'text-amber-600 dark:text-amber-400', hojeItens, 'HOJE', 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400');
+            criarGrupo('📅 Vencem amanhã', 'text-slate-600 dark:text-gray-300', amanhaItens, 'AMANHÃ', 'bg-slate-100 dark:bg-[#1a2639] text-slate-600 dark:text-gray-300');
+
+            window.abrirModalGenerico('modalAlertasVencimento');
+        };
+
+        window.fecharAlertaVencimento = function() {
+            window.fecharModalGenerico('modalAlertasVencimento');
+        };
+
+        window.irParaExtratoDoAlerta = function() {
+            window.fecharAlertaVencimento();
+            setTimeout(() => {
+                window.abrirTela('extrato');
+            }, 320);
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🔔 ÍCONE FLUTUANTE PERSISTENTE
+        // ═══════════════════════════════════════════════════════════════
+        // Um sino flutuante que fica visível enquanto existir qualquer
+        // conta atrasada, vencendo hoje ou vencendo amanhã. Some sozinho
+        // quando o usuário paga (ou apaga) todas.
+        //
+        // Chamado em dois pontos:
+        //   1. No boot, logo após `bancoDeDados` ser carregado
+        //   2. No fim de `atualizarTabela()`, que roda a cada mudança de
+        //      estado (pagar, apagar, editar, trocar de mês, etc.)
+        //
+        // `style.display` inline em vez de classe Tailwind: o CDN injeta
+        // `.hidden` e `.flex` com a MESMA especificidade, e a ordem de
+        // carregamento varia. Inline é determinístico.
+        window.atualizarIconeAlertaVencimento = function() {
+            const btn = document.getElementById('btnAlertaVencimento');
+            const badge = document.getElementById('badgeAlertaVenc');
+            if (!btn || !badge) return;
+
+            const { atrasadas, hojeItens, amanhaItens } = _alertasVencimentoColetar();
+            const total = atrasadas.length + hojeItens.length + amanhaItens.length;
+
+            if (total === 0) {
+                btn.style.display = 'none';
+                return;
+            }
+
+            btn.style.display = 'flex';
+            badge.textContent = total > 99 ? '99+' : String(total);
+
+            // 🎯 Cor do botão reflete a GRAVIDADE do cenário:
+            //   • Atrasadas     → vermelho (crítico)
+            //   • Só hoje/amanhã → âmbar (atenção)
+            const critico = atrasadas.length > 0;
+            const baseClasses = 'fixed z-[400] right-4 bottom-[5.5rem] md:bottom-auto md:top-24 md:right-6 w-12 h-12 rounded-full text-white shadow-lg flex items-center justify-center transition-all active:scale-90';
+            if (critico) {
+                btn.className = baseClasses + ' bg-red-500 hover:bg-red-600 shadow-red-500/40';
+            } else {
+                btn.className = baseClasses + ' bg-amber-500 hover:bg-amber-600 shadow-amber-500/40';
+            }
+        };
+
+        // 🎯 Clique no sino: reabre o modal mesmo que já tenha sido
+        // mostrado hoje (força a exibição).
+        window.abrirAlertaVencimentoManual = function() {
+            window.verificarAlertasVencimento(true);
         };
 
         // ===================== BUSCA GLOBAL =====================
@@ -17068,7 +17466,14 @@ const inputDesc = document.getElementById('descricao');
                 }
                 if (pago) return;
 
+                // 🎯 Mesmo fix do `_alertasVencimentoColetar`: recorrentes
+                // apagadas no mês (`mesesOcultos`) ou encerradas
+                // (`encerradoEm`) não podem ser listadas como atrasadas.
                 const partes = dataRef.split('/');
+                const anoMesNum = parseInt(partes[2]) * 100 + parseInt(partes[1]);
+                if (d.mesesOcultos && d.mesesOcultos.includes(anoMesNum)) return;
+                if (d.encerradoEm && anoMesNum >= d.encerradoEm) return;
+
                 const dtVenc = new Date(partes[2], partes[1] - 1, partes[0]);
                 dtVenc.setHours(0, 0, 0, 0);
                 if (dtVenc.getTime() >= hojeNum) return;
