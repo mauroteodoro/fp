@@ -2535,29 +2535,45 @@ select:focus, select:focus-visible {
           </div> <!-- Fim Wrapper Invisível -->
         </div> <!-- Fim modalNovoLancamento -->
         
-                                                                <!-- CABEÇALHO PRINCIPAL -->
+        <!-- CABEÇALHO PRINCIPAL -->
         <header id="mainHeader" class="fixed top-0 left-0 w-full bg-white dark:bg-[#121b2b] text-slate-900 dark:text-gray-100 flex flex-wrap sm:flex-nowrap items-center gap-x-1.5 sm:gap-x-2 gap-y-2 px-4 sm:px-8 lg:px-10 py-2 z-[300] shadow-[0_2px_8px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-colors duration-300">
 
-            <!-- IDENTIDADE — linha própria no mobile, inline no desktop -->
-            <!-- 🎯 Sem `w-full` no mobile: o sino compartilha a linha 1
-                 e fica à direita. Um sentinel `w-full sm:hidden` logo
-                 depois força a quebra de linha — o resto vai pra linha 2. -->
-            <div class="flex items-center gap-2.5 min-w-0 shrink-0">
-                <button type="button" onclick="abrirModalPerfil()" title="Configurações"
-                        class="w-9 h-9 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] rounded-full flex items-center justify-center text-slate-600 dark:text-gray-300 shadow-sm cursor-pointer hover:scale-105 hover:bg-slate-200 dark:hover:bg-[#2a3850] transition-all active:scale-95">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </button>
-                <div class="flex flex-col leading-tight min-w-0">
-                    <span class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-gray-400">Olá,</span>
-                    <h1 id="headerNome" class="text-base font-bold tracking-tight text-slate-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis">Mauro</h1>
-                </div>
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- 🎯 HEADER REFEITO — mobile enxuto, desktop completo        -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- Mobile (2 linhas, 4 elementos visíveis):                    -->
+            <!--   L1: (M) avatar · Olá, Nome · 🔔 sino                      -->
+            <!--   L2: [ ‹ Out 2026 › ]              [ + ]                   -->
+            <!--                                                              -->
+            <!-- Desktop (1 linha, layout preservado):                       -->
+            <!--   ⚙️ · Olá, Nome · [lupa] [ + ] [🔔] [👁] · seletor central -->
+            <!--                                                              -->
+            <!-- Ações secundárias (olho, lupa, assistente, config) migram   -->
+            <!-- para o HUB DO AVATAR no mobile — padrão Nubank/Inter.       -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- AVATAR MOBILE — abre o hub de ações -->
+            <button type="button" id="btnHubMobile" onclick="abrirHubMobile()" title="Minha conta" aria-label="Minha conta"
+                    class="sm:hidden w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#4D6BFE]/30 transition active:scale-95"
+                    style="background: linear-gradient(135deg, #6B85FF 0%, #4D6BFE 55%, #3A56E0 100%);">
+                <span id="hubInicialMobile">M</span>
+            </button>
+
+            <!-- CONFIGURAÇÕES DESKTOP — acesso direto em telas grandes -->
+            <button type="button" onclick="abrirModalPerfil()" title="Configurações"
+                    class="hidden sm:flex w-11 h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] rounded-full items-center justify-center text-slate-600 dark:text-gray-300 shadow-sm cursor-pointer hover:scale-105 hover:bg-slate-200 dark:hover:bg-[#2a3850] transition-all active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+
+            <!-- IDENTIDADE -->
+            <div class="flex flex-col leading-tight min-w-0 shrink-0">
+                <span class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-gray-400">Olá,</span>
+                <h1 id="headerNome" class="text-base font-bold tracking-tight text-slate-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis">Mauro</h1>
             </div>
 
-            <!-- 🔔 SINO DE VENCIMENTOS — sempre visível.
-                 Mobile : canto direito da linha 1 (acima do assistente).
-                 Desktop: último botão à direita, ao lado do olho. -->
+            <!-- 🔔 SINO — linha 1 à direita no mobile; entre + e olho no desktop -->
             <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
-                    class="order-2 sm:order-5 ml-auto sm:ml-0 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full flex items-center justify-center shadow-sm transition active:scale-90 relative bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] text-slate-500 dark:text-gray-400">
+                    class="ml-auto sm:ml-0 sm:order-4 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full flex items-center justify-center shadow-sm transition active:scale-90 relative bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] text-slate-500 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -2565,59 +2581,32 @@ select:focus, select:focus-visible {
                 <span id="badgeAlertaVenc" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-[#121b2b] leading-none">0</span>
             </button>
 
-            <!-- Sentinel: quebra de linha em mobile. Sem ele, os botões
-                 olho/lupa/seletor/+ puxariam para a linha 1. -->
-            <div class="w-full sm:hidden order-3"></div>
+            <!-- Sentinel: quebra de linha em mobile — sem ele, seletor e +
+                 subiriam para a linha 1. -->
+            <div class="w-full sm:hidden"></div>
 
-            <!-- OLHO — 1º da linha 2 mobile · 3º à direita no desktop -->
-            <button type="button" id="btnOcultarSaldos"
-                    class="order-4 sm:order-4 w-9 h-9 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full flex items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
-                <svg id="iconOlhoAberto" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <!-- 👁️ Olho FECHADO — pálpebra arqueada com cílios curtos.
-                     Substitui o "olho riscado" anterior (que parece
-                     "proibido") por um olho genuinamente FECHADO, cuja
-                     leitura é "escondi de propósito". Adaptável a
-                     qualquer tamanho — os traços são proporcionais. -->
-                <svg id="iconOlhoFechado" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 10c1.8 3.5 5.1 5.5 9 5.5s7.2-2 9-5.5" />
-                    <path d="M5.5 13.5l-1 1.5" />
-                    <path d="M9 15.5l-.5 1.5" />
-                    <path d="M15 15.5l.5 1.5" />
-                    <path d="M18.5 13.5l1 1.5" />
-                </svg>
-            </button>
-
-            <!-- LUPA — 2º da linha 2 mobile · ponta direita no desktop (ml-auto) -->
+            <!-- DESKTOP: lupa (empurra os ícones para a direita) -->
             <button type="button" id="btnBuscaGlobal" title="Buscar em todos os meses"
-                    class="order-5 sm:order-2 sm:ml-auto w-10 h-10 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full flex items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
+                    class="hidden sm:flex sm:order-2 sm:ml-auto w-11 h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"></path></svg>
             </button>
 
-            <!-- SELETOR DE MÊS — protagonista da linha 2 mobile · centro absoluto no desktop -->
-            <div class="order-6 flex-1 sm:flex-initial sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex justify-center min-w-0">
+            <!-- SELETOR DE MÊS — linha 2 mobile (ocupa a sobra), centro no desktop -->
+            <div class="flex-1 sm:flex-initial sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex justify-center min-w-0">
                 <div class="w-full sm:w-auto flex items-center bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-transparent rounded-full p-0.5 h-10 sm:h-11 shadow-[0_1px_3px_rgb(0,0,0,0.03),0_4px_14px_-6px_rgb(77,107,254,0.15)] dark:shadow-[0_1px_3px_rgb(0,0,0,0.3),0_4px_14px_-6px_rgb(77,107,254,0.35)]">
                     <button type="button" id="btnMesAnt"
-                            class="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&lsaquo;</button>
+                            class="w-9 h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&lsaquo;</button>
                     <button type="button" id="btnAbrirSeletorMes"
                             class="flex-1 sm:flex-none sm:w-[140px] flex items-center justify-center px-2 sm:px-4 h-9 rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors group">
                         <span id="mesAtualDisplay" class="text-sm font-bold text-slate-800 dark:text-gray-100 select-none whitespace-nowrap">Set 2026</span>
                     </button>
                     <button type="button" id="btnMesProx"
-                            class="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&rsaquo;</button>
+                            class="w-9 h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&rsaquo;</button>
                 </div>
             </div>
 
-            <!-- NOVA AÇÃO (+) — 4º da linha 2 mobile · 2º à direita no desktop -->
-            <div class="order-7 sm:order-3 relative z-[500] shrink-0">
-                <!-- 🪙 Botão "Nova Ação" — moeda com "+".
-                     Substitui o glifo "+" textual (que dependia de
-                     line-height da fonte e desalinhava 1px no centro)
-                     e o porquinho (que em 20px virava uma mancha
-                     ambígua com o olho). A moeda comunica "dinheiro"
-                     instantaneamente e o "+" dentro dela mantém a
-                     semântica de "adicionar" do botão original.
-                     SVG centraliza geometricamente — alinhamento
-                     perfeito em qualquer tamanho, sem padding óptico. -->
+            <!-- DESKTOP: botão + -->
+            <div class="sm:order-3 relative z-[500] shrink-0">
                 <button type="button" id="btnAcaoPrincipal" title="Nova Ação"
                         class="w-10 h-10 sm:w-11 sm:h-11 bg-[#4D6BFE] hover:bg-[#4338CA] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#4D6BFE]/20 hover:shadow-xl hover:shadow-[#4D6BFE]/30 hover:scale-105 transition-all duration-200 active:scale-90">
                     <svg class="w-5 h-5 sm:w-[22px] sm:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2641,16 +2630,16 @@ select:focus, select:focus-visible {
                 </div>
             </div>
 
-            <!-- ASSISTENTE — acesso rápido no mobile.
-                 🎯 Substitui o antigo botão "Sair" (que era `sm:hidden` e
-                 duplicava o "Sair do Sistema" do modal de Configurações).
-                 Ganho duplo: acesso ao Assistente em 1 toque, e o header
-                 mobile perde um elemento que não era necessário.
-                 Logout continua acessível em Configurações → Sair do Sistema. -->
-            <button type="button" onclick="abrirTela('assistente')" title="Assistente"
-                    class="w-9 h-9 shrink-0 order-8 sm:hidden bg-[#4D6BFE]/10 dark:bg-[#4D6BFE]/15 border border-[#4D6BFE]/25 dark:border-[#4D6BFE]/40 text-[#4D6BFE] hover:bg-[#4D6BFE]/20 dark:hover:bg-[#4D6BFE]/25 rounded-full flex items-center justify-center shadow-sm transition active:scale-90">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            <!-- DESKTOP: olho (no mobile, vive no hub do avatar) -->
+            <button type="button" id="btnOcultarSaldos" title="Ocultar valores"
+                    class="hidden sm:flex sm:order-5 w-11 h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
+                <svg id="iconOlhoAberto" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <svg id="iconOlhoFechado" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 10c1.8 3.5 5.1 5.5 9 5.5s7.2-2 9-5.5" />
+                    <path d="M5.5 13.5l-1 1.5" />
+                    <path d="M9 15.5l-.5 1.5" />
+                    <path d="M15 15.5l.5 1.5" />
+                    <path d="M18.5 13.5l1 1.5" />
                 </svg>
             </button>
 
@@ -2706,30 +2695,56 @@ select:focus, select:focus-visible {
         </nav>
 
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- 🔔 SINO FLUTUANTE DE VENCIMENTOS                          -->
-        <!--    Fica visível enquanto houver conta atrasada, vencendo   -->
-        <!--    hoje ou amanhã. Some sozinho quando o usuário resolve   -->
-        <!--    (paga ou apaga) todas. Clique reabre o modal.           -->
-        <!--    Posição: canto inferior-direito no mobile (acima da     -->
-        <!--    barra de navegação) e canto superior-direito no         -->
-        <!--    desktop (abaixo do header).                             -->
+        <!-- 🎯 HUB MOBILE — bottom sheet de identidade + ações         -->
+        <!--    Sobe de baixo ao tocar no avatar do header. Padrão       -->
+        <!--    Nubank / C6 / Inter. Ações secundárias do header         -->
+        <!--    (olho, lupa, assistente, config) vivem aqui no mobile.   -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- 🎯 Posição: logo abaixo do header, canto superior direito.
-             Usa `--header-h + --safe-top` (as variáveis do próprio app)
-             para se ancorar embaixo do header em qualquer viewport.
-             Visual: fundo claro com blur, borda fina, sombra mínima.
-             A "cor forte" fica reservada ao badge (contagem) e ao
-             tom do ícone — que muda para âmbar/vermelho conforme a
-             gravidade do cenário. -->
-        <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
-                style="display: none; top: calc(var(--header-h) + var(--safe-top) + 0.5rem);"
-                class="fixed z-[400] right-3 md:right-6 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/95 dark:bg-[#121b2b]/95 backdrop-blur-sm border border-slate-200/80 dark:border-[#2a3850]/80 shadow-[0_2px_8px_rgba(15,23,42,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] flex items-center justify-center transition-all active:scale-90">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-[18px] md:w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span id="badgeAlertaVenc" class="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-[#121b2b] leading-none">0</span>
-        </button>
+        <div id="hubMobileBackdrop" class="hidden fixed inset-0 bg-slate-900/50 dark:bg-black/70 z-[5500] opacity-0 transition-opacity duration-250" onclick="fecharHubMobile()"></div>
+        <div id="hubMobileSheet" class="fixed left-0 right-0 bottom-0 bg-white dark:bg-[#121b2b] rounded-t-3xl z-[5510] shadow-[0_-8px_32px_rgba(15,23,42,0.15)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] translate-y-full transition-transform duration-300 ease-out" style="padding-bottom: var(--safe-bottom);">
+            <div class="pt-3 pb-1 flex justify-center"><div class="w-10 h-1 bg-slate-300 dark:bg-[#2a3850] rounded-full"></div></div>
+            <div class="px-5 pt-2 pb-4 flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0" style="background: linear-gradient(135deg, #6B85FF 0%, #4D6BFE 55%, #3A56E0 100%);">
+                    <span id="hubInicialGrande">M</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p id="hubNome" class="text-base font-bold text-slate-900 dark:text-gray-100 truncate">Usuário</p>
+                    <p id="hubEmail" class="text-[11px] text-slate-500 dark:text-gray-400 truncate">—</p>
+                </div>
+            </div>
+            <div class="px-3 pb-3 grid grid-cols-2 gap-2">
+                <button type="button" onclick="hubAcaoOcultar()" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#1a2639] hover:bg-slate-100 dark:hover:bg-[#2a3850] border border-slate-200 dark:border-[#1e2a40] transition-colors active:scale-[0.98] text-left">
+                    <span class="text-slate-700 dark:text-gray-300 shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </span>
+                    <span id="hubLblOlho" class="text-[13px] font-semibold text-slate-700 dark:text-gray-200 truncate">Ocultar valores</span>
+                </button>
+                <button type="button" onclick="hubAcaoBuscar()" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#1a2639] hover:bg-slate-100 dark:hover:bg-[#2a3850] border border-slate-200 dark:border-[#1e2a40] transition-colors active:scale-[0.98] text-left">
+                    <span class="text-slate-700 dark:text-gray-300 shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"/></svg>
+                    </span>
+                    <span class="text-[13px] font-semibold text-slate-700 dark:text-gray-200 truncate">Buscar</span>
+                </button>
+                <button type="button" onclick="hubAcaoAssistente()" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#4D6BFE]/5 dark:bg-[#4D6BFE]/10 hover:bg-[#4D6BFE]/10 dark:hover:bg-[#4D6BFE]/15 border border-[#4D6BFE]/20 dark:border-[#4D6BFE]/30 transition-colors active:scale-[0.98] text-left">
+                    <span class="text-[#4D6BFE] shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    </span>
+                    <span class="text-[13px] font-semibold text-[#4D6BFE] truncate">Assistente</span>
+                </button>
+                <button type="button" onclick="hubAcaoConfig()" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-[#1a2639] hover:bg-slate-100 dark:hover:bg-[#2a3850] border border-slate-200 dark:border-[#1e2a40] transition-colors active:scale-[0.98] text-left">
+                    <span class="text-slate-700 dark:text-gray-300 shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </span>
+                    <span class="text-[13px] font-semibold text-slate-700 dark:text-gray-200 truncate">Configurações</span>
+                </button>
+            </div>
+            <div class="px-3 pb-6 pt-1">
+                <button type="button" onclick="hubAcaoSair()" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100/70 dark:hover:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 font-semibold text-[13px] transition-colors active:scale-[0.98]">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Sair do Sistema
+                </button>
+            </div>
+        </div>
 
         <!-- ESTRUTURA PRINCIPAL COM MENU LATERAL -->
         <!-- 🎯 Alinhamento pixel-perfect com o topo do botão "Resumo".
@@ -8347,7 +8362,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             });
         };
 
-        document.getElementById('btnOcultarSaldos')?.addEventListener('click', function() {
+        window.toggleOcultarSaldos = function() {
             saldosOcultos = !saldosOcultos;
 
             const iconAberto = document.getElementById('iconOlhoAberto');
@@ -8474,7 +8489,8 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 restaurarBarra(barraSal);
                 restaurarBarra(barraVale);
             }
-        });
+        };
+        document.getElementById('btnOcultarSaldos')?.addEventListener('click', window.toggleOcultarSaldos);
 
         // 🎯 Observer global: mantém a máscara sincronizada quando o app
         //    reconstrói partes do DOM (ex: cards do carrossel de contas são
@@ -8519,6 +8535,10 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             const nomeCompleto = meuPerfil.nome || 'Mauro Santos';
             if(document.getElementById('headerNome')) document.getElementById('headerNome').textContent = nomeCompleto;
             ajustarFonteNomeHeader(nomeCompleto);
+
+            // 🎯 Atualiza a inicial do avatar mobile (hub)
+            const hubInic = document.getElementById('hubInicialMobile');
+            if (hubInic) hubInic.textContent = _inicialNome(nomeCompleto);
 
             // ═══════════════════════════════════════════════════════════
             // 🎯 CARD DE BUCKET — VISIBILIDADE E LAYOUT POR REGIME
@@ -14070,20 +14090,14 @@ const inputDesc = document.getElementById('descricao');
 
             // 🎯 Base de classes: idêntica à do header. O que muda entre
             //    os dois estados é só a paleta de cores e o badge.
-            const baseClasses = 'order-2 sm:order-5 ml-auto sm:ml-0 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full flex items-center justify-center shadow-sm transition active:scale-90 relative';
+            const baseClasses = 'ml-auto sm:ml-0 sm:order-4 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full flex items-center justify-center shadow-sm transition active:scale-90 relative';
 
             if (total === 0) {
-                // ── Estado NEUTRO (cinza) ────────────────────────────
-                // Mesmo tom dos outros botões do header — passa
-                // despercebido no dia a dia.
+                // ── Estado NEUTRO (cinza) — alinhado aos demais botões do header
                 btn.className = baseClasses + ' bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] text-slate-500 dark:text-gray-400';
                 badge.classList.add('hidden');
             } else {
                 // ── Estado ATIVO (âmbar + badge com contagem) ────────
-                // A distinção atrasada × hoje/amanhã fica no badge:
-                // vermelho para atrasadas, âmbar para hoje/amanhã.
-                // O botão em si mantém o mesmo amarelo "de notificação"
-                // nos dois casos — a leitura é "tem coisa pra ver".
                 btn.className = baseClasses + ' bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400';
 
                 badge.textContent = total > 99 ? '99+' : String(total);
@@ -14106,6 +14120,88 @@ const inputDesc = document.getElementById('descricao');
                 return;
             }
             window.verificarAlertasVencimento(true);
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🎯 HUB MOBILE — funções
+        // ═══════════════════════════════════════════════════════════════
+        // Painel que sobe ao tocar no avatar mobile. Concentra ações
+        // secundárias (olho, lupa, assistente, config, sair) que antes
+        // poluíam o header.
+
+        // Extrai a primeira letra do nome (para o avatar).
+        function _inicialNome(nome) {
+            if (!nome || !String(nome).trim()) return 'U';
+            return String(nome).trim().charAt(0).toUpperCase();
+        }
+
+        window.abrirHubMobile = function() {
+            const sheet = document.getElementById('hubMobileSheet');
+            const backdrop = document.getElementById('hubMobileBackdrop');
+            if (!sheet || !backdrop) return;
+
+            // Preenche dados atuais do usuário
+            const nome = meuPerfil.nome || 'Usuário';
+            document.getElementById('hubInicialGrande').textContent = _inicialNome(nome);
+            document.getElementById('hubNome').textContent = nome;
+            document.getElementById('hubEmail').textContent = meuPerfil.email || '—';
+
+            // Ajusta o label do olho conforme o estado atual
+            const lblOlho = document.getElementById('hubLblOlho');
+            if (lblOlho) {
+                lblOlho.textContent = saldosOcultos ? 'Mostrar valores' : 'Ocultar valores';
+            }
+
+            // Trava o scroll do body
+            document.body.style.overflow = 'hidden';
+
+            // Abre com animação (fade do backdrop + slide do sheet)
+            backdrop.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                sheet.classList.remove('translate-y-full');
+            });
+        };
+
+        window.fecharHubMobile = function() {
+            const sheet = document.getElementById('hubMobileSheet');
+            const backdrop = document.getElementById('hubMobileBackdrop');
+            if (!sheet || !backdrop) return;
+
+            sheet.classList.add('translate-y-full');
+            backdrop.classList.add('opacity-0');
+
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+                // Só destrava o scroll se NÃO houver outro modal aberto
+                const restantes = Array.from(document.querySelectorAll('[id^="modal"]'))
+                    .filter(m => !m.classList.contains('hidden') && m.style.display !== 'none');
+                if (restantes.length === 0) document.body.style.overflow = '';
+            }, 300);
+        };
+
+        // 🎯 Ações do hub — todas fecham o painel primeiro, depois
+        //    (300ms) executam a ação. Evita que o painel fique "por cima"
+        //    do modal que vai abrir logo em seguida.
+        window.hubAcaoOcultar = function() {
+            window.fecharHubMobile();
+            setTimeout(() => { if (typeof window.toggleOcultarSaldos === 'function') window.toggleOcultarSaldos(); }, 300);
+        };
+        window.hubAcaoBuscar = function() {
+            window.fecharHubMobile();
+            setTimeout(() => { if (typeof window.abrirBuscaGlobal === 'function') window.abrirBuscaGlobal(); }, 300);
+        };
+        window.hubAcaoAssistente = function() {
+            window.fecharHubMobile();
+            setTimeout(() => { if (typeof window.abrirTela === 'function') window.abrirTela('assistente'); }, 300);
+        };
+        window.hubAcaoConfig = function() {
+            window.fecharHubMobile();
+            setTimeout(() => { if (typeof window.abrirModalPerfil === 'function') window.abrirModalPerfil(); }, 300);
+        };
+        window.hubAcaoSair = function() {
+            window.fecharHubMobile();
+            setTimeout(() => { if (typeof window.fazerLogout === 'function') window.fazerLogout(); }, 300);
         };
 
         // ===================== BUSCA GLOBAL =====================
