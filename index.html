@@ -12849,10 +12849,12 @@ window.checkRateio = function() {
             div.style.zIndex = '9999';
             div.style.pointerEvents = 'none';
             div.style.cursor = 'grabbing';
-            div.style.transform = 'scale(1.04) rotate(1.5deg)';
-            // 🎯 Durante o arrasto, a sombra fica mais profunda para dar
-            // a sensação real de "o card foi levantado da superfície".
-            div.style.boxShadow = '0 12px 24px -8px rgba(0, 0, 0, 0.15), 0 20px 40px -12px rgba(0, 0, 0, 0.18)';
+            // 🎯 Escala 1.08 (era 1.04) + rotação 2deg — o card fica
+            // visivelmente "acima" dos outros durante o arrasto. Junto com
+            // a sombra dupla profunda abaixo, é imediato perceber QUEM está
+            // sendo movido e quem está sendo empurrado.
+            div.style.transform = 'scale(1.08) rotate(2deg)';
+            div.style.boxShadow = '0 16px 32px -10px rgba(0, 0, 0, 0.22), 0 28px 56px -16px rgba(0, 0, 0, 0.28)';
             // 🎯 Fundo do drag vem de uma CSS variable que respeita o tema
             // vigente. Antes era o literal `#F8FAFC`, que no dark mode
             // criava texto claro sobre fundo claro — invisível. A variável
@@ -13006,9 +13008,14 @@ window.checkRateio = function() {
                             const newLeft = el.getBoundingClientRect().left;
                             const dxFlip = oldLeft - newLeft;
                             if (Math.abs(dxFlip) > 1) {
+                                // 🎯 Duração 380ms (era 260ms) + curva com
+                                // overshoot suave (1.15): o card vai um
+                                // pouquinho além do destino e volta — dá
+                                // a sensação de "peso" do card sendo empurrado,
+                                // bem mais claro do que um deslize seco.
                                 el.animate(
                                     [{ transform: `translateX(${dxFlip}px)` }, { transform: 'translateX(0)' }],
-                                    { duration: 260, easing: 'cubic-bezier(0.34, 1.15, 0.64, 1)', fill: 'none' }
+                                    { duration: 380, easing: 'cubic-bezier(0.34, 1.15, 0.64, 1)', fill: 'none' }
                                 );
                             }
                         });
@@ -13470,15 +13477,9 @@ window.checkRateio = function() {
                 // responsabilidades — mais leve e sem estado residual.
                 div.addEventListener('pointerdown', (e) => {
                     if (e.button !== 0) return;
+                    if (e.target.closest('button')) return;
 
                     const isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
-                    const fromHandle = !!e.target.closest('.conta-drag-handle');
-
-                    // 🎯 Ignora pointerdown em botões (o gesto do botão é do botão).
-                    //    EXCEÇÃO: o handle de arrastar — ele é um <button>, mas
-                    //    precisa iniciar o drag imediatamente em vez de só reagir
-                    //    ao clique.
-                    if (e.target.closest('button') && !fromHandle) return;
 
                     dragState = {
                         card: div,
@@ -13495,54 +13496,30 @@ window.checkRateio = function() {
                     };
 
                     if (isTouch) {
-                        if (fromHandle) {
-                            // ═══════════════════════════════════════════════════════
-                            // 🎯 DRAG IMEDIATO PELO HANDLE — sem espera de long-press
-                            // ═══════════════════════════════════════════════════════
-                            // O usuário toca no ícone ≡ do card e pode arrastar
-                            // imediatamente. Não precisa "segurar parado" — a
-                            // affordance visual do ícone já comunica o que ele faz.
-                            //
-                            // O `touch-none` no handle impede o navegador de
-                            // interpretar o toque como scroll da página ou do
-                            // carrossel; o `touchmove` global também já bloqueia
-                            // porque `longPressReady` fica true desde o instante
-                            // do toque.
+                        // 📱 Feedback visual imediato: card "ergue" ao toque.
+                        div.style.transform = hoverTransform;
+                        div.style.boxShadow = hoverShadow;
+                        setTimeout(() => {
+                            if (!dragState || dragState.card !== div) {
+                                div.style.transform = repousoTransform;
+                                div.style.boxShadow = repousoShadow;
+                            }
+                        }, 350);
+
+                        // 📱 LONG-PRESS — 200ms (era 400ms). Rápido o bastante
+                        // para parecer natural, curto o bastante para não
+                        // competir com o swipe horizontal do carrossel
+                        // (qualquer deslize antes cancela e libera o scroll).
+                        dragState.longPressTimer = setTimeout(() => {
+                            if (!dragState || dragState.card !== div) return;
                             dragState.longPressReady = true;
                             if (navigator.vibrate) {
-                                try { navigator.vibrate(15); } catch(_) {}
+                                try { navigator.vibrate([18, 40, 22]); } catch(_) {}
                             }
-                            // Feedback visual imediato: card "ergue" um pouco
                             div.style.transition = 'transform 0.15s ease, box-shadow 0.15s ease';
-                            div.style.transform = 'scale(0.96)';
-                            div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12), 0 12px 24px -8px rgba(0,0,0,0.18)';
-                        } else {
-                            // 📱 Feedback visual (antes era um listener separado):
-                            //    levanta o card por 350ms ou até o drag assumir.
-                            div.style.transform = hoverTransform;
-                            div.style.boxShadow = hoverShadow;
-                            setTimeout(() => {
-                                if (!dragState || dragState.card !== div) {
-                                    div.style.transform = repousoTransform;
-                                    div.style.boxShadow = repousoShadow;
-                                }
-                            }, 350);
-
-                            // 📱 LONG-PRESS: caminho mantido para quem toca em
-                            // outra parte do card. Só habilita o arrasto depois
-                            // de 400ms parado — preserva o scroll horizontal
-                            // nativo do carrossel.
-                            dragState.longPressTimer = setTimeout(() => {
-                                if (!dragState || dragState.card !== div) return;
-                                dragState.longPressReady = true;
-                                if (navigator.vibrate) {
-                                    try { navigator.vibrate([18, 40, 22]); } catch(_) {}
-                                }
-                                div.style.transition = 'transform 0.15s ease, box-shadow 0.15s ease';
-                                div.style.transform = 'scale(0.96)';
-                                div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12), 0 12px 24px -8px rgba(0,0,0,0.18)';
-                            }, 400);
-                        }
+                            div.style.transform = 'scale(0.94)';
+                            div.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15), 0 18px 36px -10px rgba(0,0,0,0.22)';
+                        }, 200);
                     }
                 });
 
@@ -13588,19 +13565,9 @@ window.checkRateio = function() {
                             <div class="w-9 h-9 shrink-0">${renderBankLogo(b)}</div>
                             <span class="font-semibold text-sm text-slate-600 dark:text-gray-300 truncate">${c.nome}</span>
                         </div>
-                        <div class="flex items-center gap-0.5 shrink-0">
-                            <!-- 🎯 Handle explícito de reordenar — só no mobile.
-                                 O usuário toca nele e arrasta imediatamente,
-                                 sem precisar "segurar parado" por 400ms.
-                                 touch-none impede que o navegador interprete
-                                 o gesto como scroll — o drag assume na hora. -->
-                            <button type="button" class="conta-drag-handle sm:hidden p-2 text-slate-400 dark:text-gray-500 hover:text-[#4D6BFE] transition-colors active:scale-90 rounded-full hover:bg-[#4D6BFE]/10 shrink-0 touch-none cursor-grab" title="Segure e arraste para reordenar" aria-label="Reordenar conta">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16"/></svg>
-                            </button>
-                            <button type="button" onclick="abrirModalAjuste('Conta|${c.id}')" title="Reajustar" class="p-1.5 text-slate-300 dark:text-gray-500 hover:text-[#4D6BFE] transition-colors active:scale-90 rounded-full hover:bg-[#4D6BFE]/10 shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                            </button>
-                        </div>
+                        <button type="button" onclick="abrirModalAjuste('Conta|${c.id}')" title="Reajustar" class="p-1.5 text-slate-300 dark:text-gray-500 hover:text-[#4D6BFE] transition-colors active:scale-90 rounded-full hover:bg-[#4D6BFE]/10 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
                     </div>
                     <div class="flex flex-col mt-auto">
                         <p class="font-montserrat font-bold ${isNeg ? 'text-red-600 dark:text-red-500' : 'text-slate-900 dark:text-white'} valor-sensivel text-xl tracking-tight">
