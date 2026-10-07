@@ -343,8 +343,8 @@ select:focus, select:focus-visible {
             --safe-right: env(safe-area-inset-right, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
-            /* Header mobile tem 2 linhas compactas (identidade + botões). */
-            --header-h: 6rem;
+            /* Header mobile: 2 linhas (saudação / navegação). */
+            --header-h: 6.5rem;
             /* 🎯 Fundo do card DURANTE O DRAG (arrastar para reordenar).
                • Light: cinza-claro levemente fora do branco — dá a sensação
                  de "levantado" sem virar um bloco destacado.
@@ -357,7 +357,7 @@ select:focus, select:focus-visible {
         }
         html.dark { --drag-card-bg: #1a2639; }
         @media (min-width: 640px) {
-            /* No desktop volta a 1 linha compacta. */
+            /* Header desktop: linha única (layout original). */
             :root { --header-h: 5rem; }
         }
         /* 🎯 Alinhamento vertical real do conteúdo é resolvido em
@@ -1084,9 +1084,7 @@ select:focus, select:focus-visible {
         /*      outro botão do header.                                  */
         .bottom-nav-btn.is-active-bottom,
         .bottom-nav-btn.is-active-bottom svg,
-        .bottom-nav-btn.is-active-bottom span,
-        #mainHeader button[title="Assistente"],
-        #mainHeader button[title="Assistente"] svg {
+        .bottom-nav-btn.is-active-bottom span {
             color: #4D6BFE !important;
         }
                 /* ═══════════════════════════════════════════════════════════ */
@@ -2535,124 +2533,115 @@ select:focus, select:focus-visible {
           </div> <!-- Fim Wrapper Invisível -->
         </div> <!-- Fim modalNovoLancamento -->
         
-                                                                <!-- CABEÇALHO PRINCIPAL -->
-        <header id="mainHeader" class="fixed top-0 left-0 w-full bg-white dark:bg-[#121b2b] text-slate-900 dark:text-gray-100 flex flex-wrap sm:flex-nowrap items-center gap-x-1.5 sm:gap-x-2 gap-y-2 px-4 sm:px-8 lg:px-10 py-2 z-[300] shadow-[0_2px_8px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-colors duration-300">
+        <!-- CABEÇALHO PRINCIPAL -->
+        <header id="mainHeader" class="fixed top-0 left-0 w-full bg-white dark:bg-[#121b2b] text-slate-900 dark:text-gray-100 z-[300] transition-colors duration-300 flex flex-col sm:flex-row sm:flex-nowrap sm:items-center sm:gap-x-2 shadow-[0_2px_8px_rgba(15,23,42,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
 
-            <!-- IDENTIDADE — linha própria no mobile, inline no desktop -->
-            <!-- 🎯 Sem `w-full` no mobile: o sino compartilha a linha 1
-                 e fica à direita. Um sentinel `w-full sm:hidden` logo
-                 depois força a quebra de linha — o resto vai pra linha 2. -->
-            <div class="flex items-center gap-2.5 min-w-0 shrink-0">
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- MOBILE = LINHA 1  ·  DESKTOP = inline (sm:contents)      -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div class="flex items-center justify-between gap-3 h-14 sm:h-auto sm:contents">
+
+                <!-- Configurações — somente desktop (volta ao lugar original) -->
                 <button type="button" onclick="abrirModalPerfil()" title="Configurações"
-                        class="hidden">
+                        class="hidden sm:flex sm:order-1 w-11 h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] rounded-full items-center justify-center text-slate-600 dark:text-gray-300 shadow-sm cursor-pointer hover:scale-105 hover:bg-slate-200 dark:hover:bg-[#2a3850] transition-all active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
-                <div class="flex flex-col leading-tight min-w-0">
-                    <span class="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-gray-400">Olá,</span>
-                    <h1 id="headerNome" class="text-base font-bold tracking-tight text-slate-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis">Mauro</h1>
+
+                <!-- Saudação -->
+                <div class="flex flex-col leading-none min-w-0 sm:order-2 sm:shrink-0 sm:flex-col sm:leading-tight sm:gap-0.5">
+                    <span class="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-gray-400 leading-none">Olá,</span>
+                    <h1 id="headerNome" class="text-[17px] sm:text-base font-bold tracking-tight text-slate-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis leading-tight mt-1 sm:mt-0">Mauro</h1>
                 </div>
-            </div>
 
-            <!-- 🔔 SINO DE VENCIMENTOS — sempre visível.
-                 Mobile : canto direito da linha 1 (acima do assistente).
-                 Desktop: último botão à direita, ao lado do olho. -->
-            <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
-                    class="hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-                <span id="badgeAlertaVenc" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-[#121b2b] leading-none">0</span>
-            </button>
+                <!-- Grupo à direita (mobile: linha 1) / desktop: solto pelo contents -->
+                <div class="flex items-center gap-0.5 sm:gap-x-1 shrink-0 sm:contents">
 
-            <!-- Sentinel: quebra de linha em mobile. Sem ele, os botões
-                 olho/lupa/seletor/+ puxariam para a linha 1. -->
-            <div class="w-full sm:hidden order-3"></div>
-
-            <!-- OLHO — 1º da linha 2 mobile · 3º à direita no desktop -->
-            <button type="button" id="btnOcultarSaldos"
-                    class="order-4 sm:order-4 w-9 h-9 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full flex items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
-                <svg id="iconOlhoAberto" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                <!-- 👁️ Olho FECHADO — pálpebra arqueada com cílios curtos.
-                     Substitui o "olho riscado" anterior (que parece
-                     "proibido") por um olho genuinamente FECHADO, cuja
-                     leitura é "escondi de propósito". Adaptável a
-                     qualquer tamanho — os traços são proporcionais. -->
-                <svg id="iconOlhoFechado" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 10c1.8 3.5 5.1 5.5 9 5.5s7.2-2 9-5.5" />
-                    <path d="M5.5 13.5l-1 1.5" />
-                    <path d="M9 15.5l-.5 1.5" />
-                    <path d="M15 15.5l.5 1.5" />
-                    <path d="M18.5 13.5l1 1.5" />
-                </svg>
-            </button>
-
-            <!-- LUPA — 2º da linha 2 mobile · ponta direita no desktop (ml-auto) -->
-            <button type="button" id="btnBuscaGlobal" title="Buscar em todos os meses"
-                    class="hidden sm:flex order-5 sm:order-2 sm:ml-auto w-10 h-10 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"></path></svg>
-            </button>
-
-            <!-- SELETOR DE MÊS — protagonista da linha 2 mobile · centro absoluto no desktop -->
-            <div class="order-6 flex-1 sm:flex-initial sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex justify-center min-w-0">
-                <div class="w-full sm:w-auto flex items-center bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-transparent rounded-full px-1.5 sm:px-0.5 py-0.5 h-11 sm:h-11 shadow-[0_1px_3px_rgb(0,0,0,0.03),0_4px_14px_-6px_rgb(77,107,254,0.15)] dark:shadow-[0_1px_3px_rgb(0,0,0,0.3),0_4px_14px_-6px_rgb(77,107,254,0.35)]">
-                    <button type="button" id="btnMesAnt"
-                            class="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&lsaquo;</button>
-                    <button type="button" id="btnAbrirSeletorMes"
-                            class="flex-1 sm:flex-none sm:w-[140px] flex items-center justify-center px-2 sm:px-4 h-10 sm:h-9 rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors group">
-                        <span id="mesAtualDisplay" class="text-sm font-bold text-slate-800 dark:text-gray-100 select-none whitespace-nowrap">Set 2026</span>
+                    <!-- LUPA — visível em ambos -->
+                    <button type="button" id="btnBuscaGlobal" title="Buscar em todos os meses" aria-label="Buscar"
+                            class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors active:scale-90 sm:order-3 sm:ml-auto sm:bg-slate-100 sm:dark:bg-[#1a2639] sm:border sm:border-slate-200 sm:dark:border-[#1e2a40] sm:shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"></path></svg>
                     </button>
-                    <button type="button" id="btnMesProx"
-                            class="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&rsaquo;</button>
-                </div>
-            </div>
 
-            <!-- NOVA AÇÃO (+) — 4º da linha 2 mobile · 2º à direita no desktop -->
-            <div class="order-7 sm:order-3 relative z-[500] shrink-0">
-                <!-- 🪙 Botão "Nova Ação" — moeda com "+".
-                     Substitui o glifo "+" textual (que dependia de
-                     line-height da fonte e desalinhava 1px no centro)
-                     e o porquinho (que em 20px virava uma mancha
-                     ambígua com o olho). A moeda comunica "dinheiro"
-                     instantaneamente e o "+" dentro dela mantém a
-                     semântica de "adicionar" do botão original.
-                     SVG centraliza geometricamente — alinhamento
-                     perfeito em qualquer tamanho, sem padding óptico. -->
-                <button type="button" id="btnAcaoPrincipal" title="Nova Ação"
-                        class="w-10 h-10 sm:w-11 sm:h-11 bg-[#4D6BFE] hover:bg-[#4338CA] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#4D6BFE]/20 hover:shadow-xl hover:shadow-[#4D6BFE]/30 hover:scale-105 transition-all duration-200 active:scale-90">
-                    <svg class="w-5 h-5 sm:w-[22px] sm:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path d="M12 8v8M8 12h8"/>
-                    </svg>
-                </button>
-                <div id="menuAcaoPrincipal" class="hidden absolute top-full right-0 mt-3 w-48 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-xl dropdown-anim overflow-hidden py-2">
-                    <button type="button" onclick="abrirModalLancamento('Despesa')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
-                        <span class="text-red-500 font-bold text-lg leading-none">-</span> Despesa
+                    <!-- SINO — visível em ambos -->
+                    <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
+                            class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors active:scale-90 relative sm:order-5 sm:bg-slate-100 sm:dark:bg-[#1a2639] sm:border sm:border-slate-200 sm:dark:border-[#1e2a40] sm:shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span id="badgeAlertaVenc" class="hidden absolute top-1.5 right-1.5 sm:-top-1 sm:-right-1 min-w-[15px] sm:min-w-[16px] h-[15px] sm:h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none sm:border-2 sm:border-white sm:dark:border-[#121b2b]">0</span>
                     </button>
-                    <button type="button" onclick="window.mostrarAviso('Despesa Cartão em breve!', 'info'); document.getElementById('menuAcaoPrincipal').classList.add('hidden')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
-                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Despesa cartão
-                    </button>
-                    <button type="button" onclick="abrirModalLancamento('Receita')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
-                        <span class="text-green-500 font-bold text-lg leading-none">+</span> Receita
-                    </button>
-                    <button type="button" onclick="document.getElementById('menuAcaoPrincipal').classList.add('hidden'); abrirModalTransferencia()" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
-                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Transferência
+
+                    <!-- ASSISTENTE — apenas mobile -->
+                    <button type="button" onclick="abrirTela('assistente')" title="Assistente" aria-label="Assistente"
+                            class="w-10 h-10 flex items-center justify-center rounded-full text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors active:scale-90 sm:hidden">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ASSISTENTE — acesso rápido no mobile.
-                 🎯 Substitui o antigo botão "Sair" (que era `sm:hidden` e
-                 duplicava o "Sair do Sistema" do modal de Configurações).
-                 Ganho duplo: acesso ao Assistente em 1 toque, e o header
-                 mobile perde um elemento que não era necessário.
-                 Logout continua acessível em Configurações → Sair do Sistema. -->
-            <button type="button" onclick="abrirTela('assistente')" title="Assistente"
-                    class="hidden">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                </svg>
-            </button>
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- MOBILE = LINHA 2  ·  DESKTOP = inline (sm:contents)      -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div class="flex items-center justify-between gap-2 h-12 sm:h-auto sm:contents border-t border-slate-100 dark:border-[#1e2a40] sm:border-t-0">
+
+                <!-- SELETOR DE MÊS — inline no mobile · absoluto-centrado no desktop -->
+                <div class="sm:order-6 sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex sm:justify-center">
+                    <div class="flex items-center bg-slate-50 dark:bg-[#0b1120] border border-slate-200 dark:border-transparent rounded-full px-1 sm:px-0.5 py-0.5 shadow-[0_1px_3px_rgb(0,0,0,0.03),0_4px_14px_-6px_rgb(77,107,254,0.15)] dark:shadow-[0_1px_3px_rgb(0,0,0,0.3),0_4px_14px_-6px_rgb(77,107,254,0.35)]">
+                        <button type="button" id="btnMesAnt"
+                                class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-white dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&lsaquo;</button>
+                        <button type="button" id="btnAbrirSeletorMes"
+                                class="flex items-center justify-center px-3 sm:px-4 sm:w-[140px] h-8 sm:h-9 rounded-full sm:hover:bg-white dark:sm:hover:bg-[#1a2639] transition-colors group">
+                            <span id="mesAtualDisplay" class="text-sm font-bold text-slate-800 dark:text-gray-100 select-none whitespace-nowrap">Set 2026</span>
+                        </button>
+                        <button type="button" id="btnMesProx"
+                                class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-white dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&rsaquo;</button>
+                    </div>
+                </div>
+
+                <!-- Grupo à direita (mobile: linha 2) / desktop: solto pelo contents -->
+                <div class="flex items-center gap-0.5 sm:gap-x-1 shrink-0 sm:contents">
+
+                    <!-- OLHO — visível em ambos -->
+                    <button type="button" id="btnOcultarSaldos" title="Ocultar valores" aria-label="Ocultar valores"
+                            class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#1a2639] transition-colors active:scale-90 sm:order-4 sm:bg-slate-100 sm:dark:bg-[#1a2639] sm:border sm:border-slate-200 sm:dark:border-[#1e2a40] sm:shadow-sm">
+                        <svg id="iconOlhoAberto" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        <svg id="iconOlhoFechado" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 10c1.8 3.5 5.1 5.5 9 5.5s7.2-2 9-5.5" />
+                            <path d="M5.5 13.5l-1 1.5" />
+                            <path d="M9 15.5l-.5 1.5" />
+                            <path d="M15 15.5l.5 1.5" />
+                            <path d="M18.5 13.5l1 1.5" />
+                        </svg>
+                    </button>
+
+                    <!-- BOTÃO "+" — visível em ambos -->
+                    <div class="relative z-[500] shrink-0 sm:order-7">
+                        <button type="button" id="btnAcaoPrincipal" title="Nova Ação" aria-label="Nova Ação"
+                                class="w-10 h-10 sm:w-11 sm:h-11 bg-[#4D6BFE] hover:bg-[#4338CA] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#4D6BFE]/20 hover:shadow-xl hover:shadow-[#4D6BFE]/30 hover:scale-105 transition-all duration-200 active:scale-90">
+                            <svg class="w-5 h-5 sm:w-[22px] sm:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                        </button>
+                        <div id="menuAcaoPrincipal" class="hidden absolute top-full right-0 mt-3 w-48 bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] rounded-xl shadow-xl dropdown-anim overflow-hidden py-2">
+                            <button type="button" onclick="abrirModalLancamento('Despesa')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
+                                <span class="text-red-500 font-bold text-lg leading-none">-</span> Despesa
+                            </button>
+                            <button type="button" onclick="window.mostrarAviso('Despesa Cartão em breve!', 'info'); document.getElementById('menuAcaoPrincipal').classList.add('hidden')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> Despesa cartão
+                            </button>
+                            <button type="button" onclick="abrirModalLancamento('Receita')" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
+                                <span class="text-green-500 font-bold text-lg leading-none">+</span> Receita
+                            </button>
+                            <button type="button" onclick="document.getElementById('menuAcaoPrincipal').classList.add('hidden'); abrirModalTransferencia()" class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors">
+                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Transferência
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- PAINEL DE MESES -->
             <div id="painelSeletorMes"
