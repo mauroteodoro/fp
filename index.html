@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -2557,7 +2557,7 @@ select:focus, select:focus-visible {
                  Mobile : canto direito da linha 1 (acima do assistente).
                  Desktop: último botão à direita, ao lado do olho. -->
             <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
-                    class="order-2 sm:order-5 ml-auto sm:ml-0 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full flex items-center justify-center shadow-sm transition active:scale-90 relative bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] text-slate-500 dark:text-gray-400">
+                    class="hidden sm:flex order-2 sm:order-5 ml-auto sm:ml-0 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full items-center justify-center shadow-sm transition active:scale-90 relative bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] text-slate-500 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -2589,21 +2589,21 @@ select:focus, select:focus-visible {
 
             <!-- LUPA — 2º da linha 2 mobile · ponta direita no desktop (ml-auto) -->
             <button type="button" id="btnBuscaGlobal" title="Buscar em todos os meses"
-                    class="order-5 sm:order-2 sm:ml-auto w-10 h-10 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full flex items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
+                    class="hidden sm:flex order-5 sm:order-2 sm:ml-auto w-10 h-10 sm:w-11 sm:h-11 shrink-0 bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] rounded-full items-center justify-center text-slate-700 dark:text-gray-300 shadow-sm transition active:scale-90">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"></path></svg>
             </button>
 
             <!-- SELETOR DE MÊS — protagonista da linha 2 mobile · centro absoluto no desktop -->
             <div class="order-6 flex-1 sm:flex-initial sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex justify-center min-w-0">
-                <div class="w-full sm:w-auto flex items-center bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-transparent rounded-full p-0.5 h-10 sm:h-11 shadow-[0_1px_3px_rgb(0,0,0,0.03),0_4px_14px_-6px_rgb(77,107,254,0.15)] dark:shadow-[0_1px_3px_rgb(0,0,0,0.3),0_4px_14px_-6px_rgb(77,107,254,0.35)]">
+                <div class="w-full sm:w-auto flex items-center bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-transparent rounded-full p-0.5 h-11 sm:h-11 shadow-[0_1px_3px_rgb(0,0,0,0.03),0_4px_14px_-6px_rgb(77,107,254,0.15)] dark:shadow-[0_1px_3px_rgb(0,0,0,0.3),0_4px_14px_-6px_rgb(77,107,254,0.35)]">
                     <button type="button" id="btnMesAnt"
-                            class="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&lsaquo;</button>
+                            class="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&lsaquo;</button>
                     <button type="button" id="btnAbrirSeletorMes"
-                            class="flex-1 sm:flex-none sm:w-[140px] flex items-center justify-center px-2 sm:px-4 h-9 rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors group">
+                            class="flex-1 sm:flex-none sm:w-[140px] flex items-center justify-center px-2 sm:px-4 h-10 sm:h-9 rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors group">
                         <span id="mesAtualDisplay" class="text-sm font-bold text-slate-800 dark:text-gray-100 select-none whitespace-nowrap">Set 2026</span>
                     </button>
                     <button type="button" id="btnMesProx"
-                            class="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&rsaquo;</button>
+                            class="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-full sm:hover:bg-slate-100 dark:sm:hover:bg-[#1a2639] transition-colors text-slate-600 dark:text-gray-300 font-bold active:scale-90">&rsaquo;</button>
                 </div>
             </div>
 
@@ -2648,7 +2648,7 @@ select:focus, select:focus-visible {
                  mobile perde um elemento que não era necessário.
                  Logout continua acessível em Configurações → Sair do Sistema. -->
             <button type="button" onclick="abrirTela('assistente')" title="Assistente"
-                    class="w-9 h-9 shrink-0 order-8 sm:hidden bg-[#4D6BFE]/10 dark:bg-[#4D6BFE]/15 border border-[#4D6BFE]/25 dark:border-[#4D6BFE]/40 text-[#4D6BFE] hover:bg-[#4D6BFE]/20 dark:hover:bg-[#4D6BFE]/25 rounded-full flex items-center justify-center shadow-sm transition active:scale-90">
+                    class="hidden">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                 </svg>
