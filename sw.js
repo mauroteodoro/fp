@@ -1,4 +1,4 @@
-﻿const CACHE = 'financas-v2';
+﻿const CACHE = 'financas-v1';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -18,7 +18,6 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
 
   const url = req.url;
-  const accept = req.headers.get('accept') || '';
 
   // 🔥 Firebase/Firestore/Auth: sempre direto pela rede, nunca cacheia
   if (
@@ -33,41 +32,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // 🎯 HTML e navegações: NETWORK-FIRST
-  // Motivo: o app é editado com frequência. Com cache-first, toda edição
-  // ficava "presa" — só aparecia no segundo reload, e no mobile (onde
-  // não existe Ctrl+Shift+R) exigia limpar o cache manualmente.
-  //
-  // Com network-first, o HTML sempre é buscado da rede. Se estiver
-  // offline, cai no cache automaticamente — o modo offline continua
-  // funcionando normalmente.
-  const ehHTML = req.mode === 'navigate'
-              || accept.includes('text/html')
-              || url.endsWith('.html')
-              || url.endsWith('/');
-
-  if (ehHTML) {
-    e.respondWith(
-      caches.open(CACHE).then(async (cache) => {
-        try {
-          const res = await fetch(req);
-          if (res && res.status === 200 && res.type !== 'opaqueredirect') {
-            cache.put(req, res.clone());
-          }
-          return res;
-        } catch (_) {
-          const cached = await cache.match(req);
-          return cached || Response.error();
-        }
-      })
-    );
-    return;
-  }
-
-  // 🌐 Demais assets (fontes, Chart.js, SDK do Firebase, ícones):
-  // cache-first com atualização em background. Esses arquivos são
-  // versionados por URL — quando trocam, a URL troca, então o cache
-  // nunca fica obsoleto.
+  // 🌐 HTML, fontes, Chart.js, SDK: cache-first com atualização em background
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(req);
