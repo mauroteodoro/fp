@@ -1518,10 +1518,131 @@ select:focus, select:focus-visible {
                         0 4px 14px -6px rgba(6, 182, 212, 0.22) !important;
         }
 
-        /* ─── 17. Seletor de mês — sombra hardcoded (dark) ─── */
+        /* ========================================================== */
+        /* 🧭 AJUSTES FINOS — Remoção de fundos e neon pontuais        */
+        /* ========================================================== */
+        /* Elementos específicos que ganham realce desnecessário.     */
+        /* Uso de `[title="..."]` como seletor: único no DOM e não     */
+        /* colide com outros botões que compartilham a mesma classe.  */
+        /* ========================================================== */
+
+        /* ─── 18+19. Ícones flutuantes — apenas o glifo, sem fundo ─── */
+        /* Matam TODOS os estados (normal, hover, focus, active) e    */
+        /* qualquer camada que possa parecer quadrado/bolinha/pílula:  */
+        /* background, border, outline e box-shadow.                  */
+        /* O padding do botão continua — é ele que dá a área de toque. */
+
+        /* Lápis "Reajustar" */
+        [title="Reajustar"],
+        [title="Reajustar"]:hover,
+        [title="Reajustar"]:focus,
+        [title="Reajustar"]:focus-visible,
+        [title="Reajustar"]:active {
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            border: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+            color: #94A3B8 !important;
+        }
+        [title="Reajustar"]:hover { color: #475569 !important; }
+        html.dark [title="Reajustar"],
+        html.dark [title="Reajustar"]:hover,
+        html.dark [title="Reajustar"]:focus,
+        html.dark [title="Reajustar"]:focus-visible,
+        html.dark [title="Reajustar"]:active {
+            color: #64748B !important;
+        }
+        html.dark [title="Reajustar"]:hover { color: #CBD5E1 !important; }
+
+        /* Ícones "i" (Entender / Entender o cálculo) */
+        [title="Entender o cálculo"],
+        [title="Entender o cálculo"]:hover,
+        [title="Entender o cálculo"]:focus,
+        [title="Entender o cálculo"]:focus-visible,
+        [title="Entender o cálculo"]:active,
+        [title="Entender"],
+        [title="Entender"]:hover,
+        [title="Entender"]:focus,
+        [title="Entender"]:focus-visible,
+        [title="Entender"]:active {
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            border: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+            color: #94A3B8 !important;
+        }
+        [title="Entender o cálculo"]:hover,
+        [title="Entender"]:hover { color: #475569 !important; }
+        html.dark [title="Entender o cálculo"],
+        html.dark [title="Entender o cálculo"]:hover,
+        html.dark [title="Entender o cálculo"]:focus,
+        html.dark [title="Entender o cálculo"]:focus-visible,
+        html.dark [title="Entender o cálculo"]:active,
+        html.dark [title="Entender"],
+        html.dark [title="Entender"]:hover,
+        html.dark [title="Entender"]:focus,
+        html.dark [title="Entender"]:focus-visible,
+        html.dark [title="Entender"]:active {
+            color: #64748B !important;
+        }
+        html.dark [title="Entender o cálculo"]:hover,
+        html.dark [title="Entender"]:hover { color: #CBD5E1 !important; }
+
+        /* ─── 20. Seletor de meses — sombra neutra (light) ─── */
+        [class*="rgb(77,107,254,0.15)"] {
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04),
+                        0 4px 12px -6px rgba(15, 23, 42, 0.10) !important;
+        }
+
+        /* ─── 21. Seletor de meses — sombra neutra (dark) ─── */
         [class*="rgb(77,107,254,0.35)"] {
-            box-shadow: 0 1px 3px rgba(0,0,0,0.30),
-                        0 4px 14px -6px rgba(6, 182, 212, 0.42) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30),
+                        0 4px 12px -6px rgba(0, 0, 0, 0.40) !important;
+        }
+
+        /* ========================================================== */
+        /* 🧭 CARDS DE CONTA — Aparência "botão saltado"              */
+        /* ========================================================== */
+        /* Replica a linguagem visual do Seletor de Meses: fundo      */
+        /* próprio, borda fina e sombra neutra difusa por baixo —     */
+        /* o card lê como peça elevada da superfície, não como bloco  */
+        /* achatado.                                                  */
+        /*                                                            */
+        /* A sombra vive no seletor `[data-conta-id]` (e não no       */
+        /* className) para que o drag/hover em runtime possam         */
+        /* sobrescrevê-la com `style.boxShadow` inline sem precisar   */
+        /* apagar a regra. Quando o inline é limpo (`''`), a sombra   */
+        /* base volta naturalmente.                                   */
+        /* ========================================================== */
+        #containerContas > [data-conta-id] {
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06),
+                        0 10px 24px -8px rgba(15, 23, 42, 0.16),
+                        0 4px 8px -4px rgba(15, 23, 42, 0.08);
+        }
+        #containerContas > [data-conta-id].conta-card-hovered {
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08),
+                        0 3px 6px rgba(15, 23, 42, 0.09),
+                        0 16px 32px -10px rgba(15, 23, 42, 0.22),
+                        0 6px 12px -4px rgba(15, 23, 42, 0.12);
+        }   
+        html.dark #containerContas > [data-conta-id] {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.40),
+                        0 10px 24px -8px rgba(0, 0, 0, 0.55),
+                        0 4px 8px -4px rgba(0, 0, 0, 0.35);
+        }
+        html.dark #containerContas > [data-conta-id].conta-card-hovered {
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.14),
+                        0 3px 6px rgba(0, 0, 0, 0.48),
+                        0 16px 32px -10px rgba(0, 0, 0, 0.68),
+                        0 6px 12px -4px rgba(0, 0, 0, 0.48);
         }
     </style>
 </head>
@@ -3088,7 +3209,7 @@ select:focus, select:focus-visible {
                                  esquerda e deixando um vão vazio na direita.
                                  Com o scroll-padding, o snap respeita o respiro
                                  lateral e o card aterrissa na posição natural. -->
-                                 <div id="containerContas" class="flex gap-3 overflow-x-auto no-scrollbar pb-3 px-6 md:px-8 snap-x scroll-pl-6 md:scroll-pl-8 stagger-cards items-stretch">
+                                 <div id="containerContas" class="flex gap-3 overflow-x-auto no-scrollbar pt-1 pb-3 px-6 md:px-8 snap-x scroll-pl-6 md:scroll-pl-8 stagger-cards items-stretch">
                                     <!-- Cards renderizados via JS -->
                                 </div>
     
@@ -4986,8 +5107,18 @@ select:focus, select:focus-visible {
         function fadeInTela(el) {
             if (!el) return;
             el.classList.remove('anim-fade-in');
-            void el.offsetWidth;
-            el.classList.add('anim-fade-in');
+            // 🎯 Dupla RAF substitui o `void el.offsetWidth`.
+            // O `void offsetWidth` forçava um reflow SÍNCRONO — o browser
+            // recalculava todo o layout antes de devolver o controle.
+            // Dupla RAF garante o mesmo efeito (reset da animação) sem
+            // travar o frame: o 1º RAF espera o browser pintar o estado
+            // sem a classe; o 2º adiciona a classe para disparar a
+            // animação do zero.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.classList.add('anim-fade-in');
+                });
+            });
         }
 
         // 🎯 Helpers para o estado dos botões do menu lateral.
@@ -5024,8 +5155,12 @@ select:focus, select:focus-visible {
         }
 
         window.abrirTela = function(tela) {
-            // 🎯 Rola para o topo sempre que trocar de aba
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // 🎯 Scroll INSTANTÂNEO ao trocar de aba (não smooth).
+            // O `behavior: 'smooth'` animava a rolagem em paralelo com
+            // a reconstrução de layout da nova aba — os dois competindo
+            // pela main thread causavam o "engasgo" visível.
+            // `scrollTo(0, 0)` é síncrono e instantâneo.
+            window.scrollTo(0, 0);
 
             // 1. Reseta o visual de TODOS os botões do menu lateral
             ['btnMenuResumo', 'btnMenuExtrato', 'btnMenuContas', 'btnMenuRelatorios', 'btnMenuGraficos', 'btnTabProjecao', 'btnMenuAssistente'].forEach(b => {
@@ -5120,10 +5255,23 @@ select:focus, select:focus-visible {
                 // na view, os dados já refletem `dataFiltro` atual — sem
                 // esperar o próximo clique em ‹ ›.
                 if (tela === 'resumo' || tela === 'extrato') {
-                    if (typeof atualizarTabela === 'function') atualizarTabela();
+                    // 🎯 Defer com dupla RAF: a view aparece IMEDIATAMENTE
+                    // e só depois a tabela é reconstruída. Sem isso, o
+                    // browser precisa processar ~500 nós de DOM (linhas +
+                    // SVGs + carrossel + tabela de contas) ANTES de pintar
+                    // a nova aba — a troca fica visivelmente pesada.
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            if (typeof atualizarTabela === 'function') atualizarTabela();
+                        });
+                    });
                 }
                 
-                if (tela === 'contas' && typeof window.renderTabelaContasTela === 'function') window.renderTabelaContasTela();
+                if (tela === 'contas' && typeof window.renderTabelaContasTela === 'function') {
+                    requestAnimationFrame(() => {
+                        if (typeof window.renderTabelaContasTela === 'function') window.renderTabelaContasTela();
+                    });
+                }
             }
         }
 
@@ -13726,7 +13874,7 @@ window.checkRateio = function() {
                 //    Sem `min-w-[210px]` no mobile: a classe é inócua quando
                 //    `w-full` já garante ~300px em qualquer smartphone real,
                 //    e removê-la evita conflito de especificidade.
-                div.className = "w-full sm:w-auto sm:min-w-[240px] snap-start flex-shrink-0 flex flex-col justify-between cursor-grab active:cursor-grabbing select-none relative rounded-xl px-5 py-4 bg-transparent hover:bg-slate-50 dark:hover:bg-[#1a2639] gap-3";
+                div.className = "w-full sm:w-auto sm:min-w-[240px] snap-start flex-shrink-0 flex flex-col justify-between cursor-grab active:cursor-grabbing select-none relative rounded-xl px-5 py-4 bg-white dark:bg-[#0b1120] gap-3";
                 // 🎯 Transition espelhando o menu lateral. Adicionamos
                 //    `background-color` à lista para que a troca de fundo
                 //    no hover seja animada (mesma cadência do menu).
@@ -13771,13 +13919,11 @@ window.checkRateio = function() {
                     };
 
                     if (isTouch) {
-                        // 📱 Feedback visual imediato: card "ergue" ao toque.
-                        div.style.transform = hoverTransform;
-                        div.style.boxShadow = hoverShadow;
+                        // 📱 Feedback visual imediato: realce da sombra no toque.
+                        div.classList.add('conta-card-hovered');
                         setTimeout(() => {
                             if (!dragState || dragState.card !== div) {
-                                div.style.transform = repousoTransform;
-                                div.style.boxShadow = repousoShadow;
+                                div.classList.remove('conta-card-hovered');
                             }
                         }, 350);
 
@@ -13812,21 +13958,18 @@ window.checkRateio = function() {
                 // Desktop: mouseenter/mouseleave.
                 // Mobile : pointerdown, some em 350ms.
                 // Drag   : neutralizado — o `ativarDrag` sobrescreve.
-                const hoverTransform = 'translateY(-1px)';
-                const hoverShadow    = '0 5px 12px -5px rgba(15, 23, 42, 0.16)';
-                const repousoTransform = '';
-                const repousoShadow    = '';
-
+                // 🎯 Hover via CLASSE (não inline style) para que a sombra
+                // permaneça sensível ao tema. Também NÃO translada o card
+                // para cima — o `overflow-x-auto` implícito do container
+                // recortaria o topo da borda (o "some a linha superior").
                 div.addEventListener('mouseenter', () => {
                     if (!dragState && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-                        div.style.transform = hoverTransform;
-                        div.style.boxShadow = hoverShadow;
+                        div.classList.add('conta-card-hovered');
                     }
                 });
                 div.addEventListener('mouseleave', () => {
                     if (!dragState || dragState.card !== div) {
-                        div.style.transform = repousoTransform;
-                        div.style.boxShadow = repousoShadow;
+                        div.classList.remove('conta-card-hovered');
                     }
                 });
 
