@@ -27,11 +27,7 @@
                 }
             } catch(e) {}
         })();
-        // 🎨 2) CONFIGURA O TAILWIND ANTES DO CDN.
-        // 🚨 ESSENCIAL: o CDN lê `window.tailwind.config` na inicialização.
-        // Se a config for setada DEPOIS, ele gera as variantes `dark:` como
-        // `@media (prefers-color-scheme: dark)` e o toggle por classe
-        // (`document.documentElement.classList.add('dark')`) não funciona.
+        // Configura Tailwind antes do CDN (necessário para darkMode: 'class').
         window.tailwind = window.tailwind || {};
         window.tailwind.config = {
             darkMode: 'class'
@@ -39,9 +35,7 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // 🎯 3) REFORÇO PÓS-CDN — redundância defensiva.
-        // Se por algum motivo o passo (2) não surtiu efeito (ordem de
-        // carregamento, cache, extensão), reaplica a config agora.
+        // Reforça darkMode: 'class' caso o passo anterior não tenha surtido efeito.
         try {
             if (typeof tailwind !== 'undefined' && tailwind.config) {
                 tailwind.config.darkMode = 'class';
@@ -277,10 +271,7 @@
             .loader-titulo { font-size: 1rem; }
         }
 
-        /* ========================================================== */
-        /* OVERRIDE: FOCO DISCRETO E MINIMALISTA NOS CAMPOS           */
-        /* ========================================================== */
-        /* Adiciona suavidade extrema na entrada e saída do foco */
+        /* Foco discreto nos campos (transição suave). */
         input, button, textarea, select, .focus-within\:ring-\[\#003366\] {
             transition: all 0.3s ease !important;
         }
@@ -310,9 +301,7 @@ select:focus, select:focus-visible {
             background-color: transparent !important; 
             box-shadow: none !important;
         }
-                /* ========================================================== */
-        /* 📱 MOBILE OPTIMIZATION PACK — iPhone / Safari / Android     */
-        /* ========================================================== */
+        /* Mobile optimization pack (iPhone / Safari / Android). */
 
         /* 1. Safe Area Variables (notch, Dynamic Island, home indicator) */
         :root {
@@ -520,12 +509,7 @@ select:focus, select:focus-visible {
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* ========================================================== */
-        /* 🎨 DARK MODE — REDE DE SEGURANÇA (não depende do Tailwind)  */
-        /* ========================================================== */
-        /* Mesmo que o CDN do Tailwind não gere as variantes `.dark`   */
-        /* corretamente, estas regras garantem que o tema escuro se    */
-        /* aplique visualmente em toda a interface.                    */
+        /* Dark mode como rede de segurança (não depende do Tailwind CDN). */
         html.dark { color-scheme: dark; }
         html.dark body { background-color: #0b1120 !important; color: #e5e7eb !important; }
         html.dark header#mainHeader { background-color: #121b2b !important; border-bottom-color: #1e2a40 !important; }
@@ -576,17 +560,7 @@ select:focus, select:focus-visible {
            o desalinhamento se acumular a cada linha. */
         .flex > label.block.text-\[11px\] { margin-bottom: 0 !important; }
 
-        /* ========================================================== */
-        /* 🎨 Dark mode — Sistema unificado de bordas                  */
-        /* ========================================================== */
-        /* Toda a interface escura usa UMA família de borda sólida e   */
-        /* neutra. Campos e cards ficam com a mesma "gramática"        */
-        /* visual — nem "inacabado" nem "cheio de caixas". A cor       */
-        /* `#2a3850` é o tom de definição: mais claro que o fundo      */
-        /* profundo, mais escuro que o cinza dos botões.               */
-
-        /* 🎯 Botões do header e do tipo "chip" continuam SEM contorno */
-        /*    (mantém o aspecto do olho/lupa).                          */
+        /* Dark mode: sistema unificado de bordas neutras (#2a3850). */
         html.dark button[class*="dark:bg-[#1a2639]"],
         html.dark button[class*="dark:bg-[#2a3850]"],
         html.dark a[class*="dark:bg-[#1a2639]"],
@@ -633,12 +607,7 @@ select:focus, select:focus-visible {
             border-color: #1e2a40 !important;
         }
 
-        /* ========================================================== */
-        /* 🎨 TEMA — Fade global suave ao alternar Claro/Escuro        */
-        /* ========================================================== */
-        /* Durante 400ms após a troca, TODOS os elementos ganham
-           transição de cor. Isso cria um "fade" bonito entre temas,
-           como se a tela inteira se dissolvesse suavemente. */
+        /* Fade suave ao trocar de tema (400ms). */
         html.theme-transitioning,
         html.theme-transitioning *,
         html.theme-transitioning *::before,
@@ -679,14 +648,7 @@ select:focus, select:focus-visible {
             transition: none !important;
         }
 
-        /* ========================================================== */
-        /* 🎯 Campos de Busca — linguagem oficial do site              */
-        /* ========================================================== */
-        /* Todo input de busca segue a mesma linguagem visual do       */
-        /* Seletor de Meses: borda sólida neutra (#1e2a40 no dark),    */
-        /* sem glow roxo, sem efeito neon. O foco é discreto — só o    */
-        /* cursor denuncia o estado ativo. Aplicar a MESMA regra a     */
-        /* qualquer novo campo de busca que venha a ser adicionado.    */
+        /* Busca: linguagem visual neutra, sem glow. */
         html.dark #buscaExtrato {
             background-color: #0b1120 !important;
             border-color: #1e2a40 !important;
@@ -711,16 +673,7 @@ select:focus, select:focus-visible {
             box-shadow: none !important;
         }
 
-        /* ========================================================== */
-        /* ✨ GLOW AZUL — Hover premium para botões primários          */
-        /* ========================================================== */
-        /* Botões com fundo #4D6BFE ganham "inflar + brilhar" no       */
-        /* hover. O botão "+" do header é excluído (já tem efeito).    */
-        /*                                                            */
-        /* 🎯 Hover isolado em @media (hover: hover) para evitar o     */
-        /*    "sticky hover" do iOS/Android — quando o usuário toca,   */
-        /*    o browser simula :hover e ele fica grudado no botão.     */
-        /* ========================================================== */
+        /* Glow + scale no hover dos botões primários (sem sticky hover no mobile). */
         button[class*="bg-[#4D6BFE]"]:not(#btnAcaoPrincipal):not(:disabled),
         a[class*="bg-[#4D6BFE]"]:not(:disabled) {
             transition: box-shadow 0.25s ease,
@@ -745,31 +698,7 @@ select:focus, select:focus-visible {
             }
         }
 
-        /* ========================================================== */
-        /* ✨ INFLAR — Efeitos de hover/active em botões do app         */
-        /* ========================================================== */
-        /* Estrutura consolidada: HOVER só em desktop (com mouse       */
-        /* real) e ACTIVE em qualquer dispositivo. Isso elimina o      */
-        /* "sticky hover" do iOS/Android — quando o usuário toca num   */
-        /* botão, o browser simula :hover e ele fica grudado até tocar */
-        /* em outro lugar.                                             */
-        /*                                                            */
-        /* Hierarquia dos seletivos (do mais forte ao mais fraco):     */
-        /*   1. Fixes 9A/11A/12A/13A — ancorados em ID/onclick        */
-        /*   2. Fix 7A — ancorado em [class*="bg-[#4D6BFE]"]           */
-        /*   3. Fix 9A chips — ancorado em [data-chip-extrato]         */
-        /*   4. Fix 15A (global) — :where(), especificidade zero       */
-        /*                                                            */
-        /* Exceções (opt-out):                                         */
-        /*   • `.check-anim` — bolinhas verde/âmbar do Extrato,        */
-        /*     já têm scale próprio no hover/active.                   */
-        /*   • `.no-inflate` — classe manual para blindar um botão     */
-        /*     específico no futuro, sem editar o CSS.                 */
-        /*   • `:disabled` — botões desabilitados não reagem.          */
-        /*   • `.card-tilt` — já tem efeito próprio (cards do painel). */
-        /* ========================================================== */
-
-        /* ---------- Transitions (aplicam em todos os dispositivos) ----- */
+        /* Hover (desktop) e active (touch) unificados para botões do app. */
         button[data-chip-extrato],
         button[id^="btnMenu"],
         #btnTabProjecao,
