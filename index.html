@@ -4079,20 +4079,7 @@ select:focus, select:focus-visible {
             window.temaAtual = tema;
             localStorage.setItem('temaApp', tema);
 
-            // 🎬 Detecta se há modal aberto. A escolha do modo de transição
-            //    depende disso:
-            //
-            //    • SEM modal → fade global suave (400ms). É o efeito
-            //      "premium" que o usuário aprovou.
-            //
-            //    • COM modal → troca instantânea em TUDO. O modal já é
-            //      instantâneo (por exceção do CSS); sem isso, o body
-            //      clarearia em ~300ms enquanto o modal trocava na hora,
-            //      criando o "flash preto" atrás do modal.
-            //
-            //    A checagem cobre tanto modais com `class="hidden"` (a
-            //    maioria) quanto o calendário grande, que controla abertura
-            //    via `style.display = 'flex'`.
+            // Se há modal aberto, troca instantânea (evita "flash preto").
             const temModalAberto = Array.from(document.querySelectorAll('[id^="modal"]'))
                 .some(m => !m.classList.contains('hidden') && m.style.display !== 'none');
 
@@ -4112,11 +4099,7 @@ select:focus, select:focus-visible {
 
             atualizarBotoesTema();
 
-            // 🎨 Redesenha os gráficos com as cores do novo tema.
-            //    Chart.js lê as cores no momento da criação — sem isso, os
-            //    gráficos ficariam com cores antigas (texto cinza-claro no
-            //    light, por exemplo). O delay de 450ms cobre a transição
-            //    global (400ms) antes de redesenhar.
+            // Redesenha os gráficos (Chart.js lê as cores só na criação).
             if (typeof window.renderizarGraficos === 'function'
                 && !document.getElementById('abaGraficos')?.classList.contains('hidden')) {
                 setTimeout(() => window.renderizarGraficos(), 450);
@@ -4146,31 +4129,7 @@ select:focus, select:focus-visible {
             marcar(btnEscuro, window.temaAtual === 'dark');
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 WATCHDOG DO SCROLL — blinda o body contra travamentos
-        // ═══════════════════════════════════════════════════════════════
-        // Por que existe: a troca de tema adiciona classes globais ao
-        // `<html>` (`theme-transitioning` / `theme-transitioning-instant`)
-        // que disparam um reflow completo do layout, aplicam transições
-        // com `!important` em TODOS os elementos, e podem — em raras
-        // combinações com abertura/fechamento de modais — deixar o
-        // `<body>` preso com `overflow: hidden` (bloqueando todo o scroll
-        // da página) ou um modal "fantasma" com `opacity: 0` que continua
-        // interceptando eventos mesmo depois de fechado.
-        //
-        // Este watchdog roda em background e é a última linha de defesa:
-        //   • A cada 500ms, remove modais que estão com opacity ≈ 0 há
-        //     mais de 3 ciclos (1.5s) sem receber `hidden`. São
-        //     "fantasmas" — fecharam visualmente mas ficaram presos no DOM.
-        //   • Verifica se `body.style.overflow` está `hidden` sem nenhum
-        //     modal realmente visível — e libera o scroll se for o caso.
-        //
-        // Custo: 2 `querySelectorAll` a cada 500ms (~0.3ms por tick).
-        // Ganho: o app nunca fica travado por estado residual de tema/modal.
-        //
-        // ⚠️ Se algum dia surgir um bug do tipo "o modal abre e some após
-        //    1.5s sozinho", o suspeito é este watchdog — ele só deve
-        //    agir em modais com opacity < 0.05, não em modais normais.
+        // Watchdog: limpa modais "fantasma" e destrava o scroll do body.
         setInterval(() => {
             // ─── 1) Limpa modais "fantasma" ──────────────────────────
             document.querySelectorAll('[id^="modal"]').forEach(m => {
@@ -7952,26 +7911,8 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
         // ===================== MOTOR DE OCULTAR SALDOS =====================
         let saldosOcultos = false;
 
-        // 🎯 Cache das larguras reais das barras de consumo. Cada entrada
-        //    tem `{ pct, classe }` com o valor REAL calculado no último
-        //    `atualizarBarraConsumo()`. O botão "ocultar saldos" usa este
-        //    cache para zerar/restaurar as barras com transição suave.
         const _largurasBarrasCache = {};
 
-        // 🎯 Máscara de bolinhas para valores sensíveis.
-        //    Substitui o conteúdo textual por "•" (bullet), preservando o
-        //    valor real em `data-valor-real` para restaurar depois.
-        //
-        //    • O comprimento da máscara é proporcional ao texto original
-        //      (entre 5 e 12 bolinhas), mantendo o layout estável quando
-        //      o usuário alterna entre oculto/visível.
-        //
-        //    • Funciona para DESKTOP e MOBILE — a máscara é textual, não
-        //      visual; tamanho e alvo de toque são os mesmos em qualquer
-        //      dispositivo.
-        //
-        //    • Idempotente: pode ser chamada múltiplas vezes sem acumular
-        //      estado. Se o elemento já está mascarado, não duplica.
         window.aplicarMascaraValores = function() {
             document.querySelectorAll('.valor-sensivel').forEach(el => {
                 if (saldosOcultos) {
@@ -8062,31 +8003,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 recolherBarra(barraSal);
                 recolherBarra(barraVale);
             } else {
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 Restaurar — Web Animations API, ISOLADA da CSS transition
-                // ═══════════════════════════════════════════════════════════
-                // O bug "sobe, zera e sobe" era causado por COMPETIÇÃO entre
-                // duas animações atuando no mesmo `width`:
-                //
-                //   • CSS transition (`#barraConsumoSalario, #barraConsumoVale
-                //     { transition: width 1.2s ... }`) — disparada quando o
-                //     `style.width = '0%'` alterava o valor, e mantida "viva"
-                //     em background enquanto a WAAPI rodava por cima.
-                //
-                //   • WAAPI (`element.animate()`, 3s) — com prioridade maior,
-                //     mas que ao ser cancelada no `onfinish` fazia o navegador
-                //     "reavaliar" a CSS transition ainda em background. Era
-                //     esse retorno que causava a segunda subida.
-                //
-                // A solução é DESLIGAR a CSS transition enquanto a WAAPI
-                // estiver ativa (`barra.style.transition = 'none'`) e
-                // devolvê-la ao `style` inline no `onfinish`. Assim só
-                // existe UMA animação por vez — sem competição.
-                //
-                // O `_animAtual` é uma trava defensiva: se o usuário clicar
-                // em seguida (ocultar → mostrar → ocultar → mostrar), cada
-                // chamada cancela a animação anterior antes de criar a nova,
-                // evitando que múltiplas WAAPIs coexistam na mesma barra.
+                // Restaura a barra via WAAPI (CSS transition desligada durante a animação).
                 const restaurarBarra = (barra) => {
                     if (!barra) return;
                     const cache = _largurasBarrasCache[barra.id];
@@ -8128,14 +8045,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             }
         });
 
-        // 🎯 Observer global: mantém a máscara sincronizada quando o app
-        //    reconstrói partes do DOM (ex: cards do carrossel de contas são
-        //    recriados a cada render). Sem isso, um valor atualizado
-        //    enquanto o usuário está com "ocultar" ativo apareceria visível
-        //    por alguns instantes até o próximo toggle.
-        //
-        //    Custo: o handler só roda quando há mutação DOM E `saldosOcultos`
-        //    é true. Em estado "visível" (padrão), é um no-op imediato.
+        // Reaplica a máscara quando o DOM é reconstruído (ex: carrossel).
         const observadorMascara = new MutationObserver(() => {
             if (!saldosOcultos) return;
             window.aplicarMascaraValores();
@@ -8984,22 +8894,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 }
             });
 
-            // ═══════════════════════════════════════════════════════════
-            // 💰 ORÇAMENTO — quais categorias estouraram o teto neste mês?
-            // ═══════════════════════════════════════════════════════════
-            // Calculado UMA vez por render (não por linha). Constrói um Set
-            // com os nomes das categorias que atingiram 100%+ do teto
-            // definido em `orcamentosGlobais`. Depois, cada linha do
-            // Extrato consulta esse Set em O(1) para decidir se mostra
-            // o chip vermelho.
-            //
-            // Motivo de pré-calcular: em meses com 100+ lançamentos, chamar
-            // `asCalcularStatusOrcamentos` dentro do loop seria O(n × m) —
-            // desnecessário quando o resultado é o mesmo para todas as
-            // linhas da mesma categoria.
-            //
-            // Modo 'todos' (inclui pendentes): coerente com a barra de
-            // consumo do Resumo, que também mostra "como o mês vai fechar".
+            // Set de categorias que estouraram o teto neste mês (chip no Extrato).
             let catsEstouradas = new Set();
             try {
                 const _status = asCalcularStatusOrcamentos('todos');
@@ -9059,26 +8954,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
 
                 let arrayTransacoes = Object.values(transacoesAgrupadas);
                 arrayTransacoes.sort((a, b) => {
-                    // ═══════════════════════════════════════════════════════════
-                    // 🎯 ORDENAÇÃO EM DUAS CAMADAS — Pendentes × Efetivadas
-                    // ═══════════════════════════════════════════════════════════
-                    // Critérios, em ordem de prioridade:
-                    //
-                    //   1. `pago` ASC — pendentes (0) ANTES de efetivadas (1).
-                    //
-                    //   2. Data de referência:
-                    //      • PENDENTE → ASC (mais próximo primeiro)
-                    //        02/10 acima de 05/10. É o que VAI acontecer; o
-                    //        mais urgente fica mais visível.
-                    //      • EFETIVADA → DESC (mais recente primeiro)
-                    //        28/09 acima de 25/09. É histórico — lido de trás
-                    //        para frente, do mais fresco ao mais antigo.
-                    //
-                    //   3. `transacaoId` DESC — desempate estável por "lançado
-                    //      mais recentemente". Vale para os dois grupos: se
-                    //      duas contas vencem no mesmo dia, a cadastrada por
-                    //      último aparece acima.
-                    // ═══════════════════════════════════════════════════════════
+                    // Pendentes primeiro (data ASC), efetivadas depois (data DESC).
                     const aPago = a.pago ? 1 : 0;
                     const bPago = b.pago ? 1 : 0;
                     if (aPago !== bPago) return aPago - bPago;
@@ -9531,24 +9407,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
         //    acumulado entre meses" foi desligado por decisão de produto
         //    (cada mês é independente).
 
-        // ═══════════════════════════════════════════════════════════════
-        // 💼 CARD DE BUCKETS NO MODO PJ/AUTÔNOMO
-        // ═══════════════════════════════════════════════════════════════
-        // O regime PJ não tem "Salário" nem "Vale" — o modelo é:
-        //
-        //     Faturamento Bruto + Bônus − Custos do Mês = Líquido
-        //
-        // Fonte dos dados: `configHoleriteGlobal[chave]` ou a simulação
-        // viva do Simulador (`simulacaoAtualGlobal`), ambos com os mesmos
-        // campos (bruto, bonusVal, despesasPJ). Herda o override manual
-        // de salário (mesmo formato do CLT), permitindo "fixar" o
-        // líquido do mês.
-        //
-        // Cards atualizados:
-        //   • Hero (Total)         → Líquido (Faturamento − Custos)
-        //   • Card "Faturamento"   → Bruto + Bônus
-        //   • Card "Despesas"      → já é atualizado fora desta função
-        //   • Barra de consumo     → usa "Custos do Simulador"
+        // Modo PJ: Hero = Líquido, Faturamento = Bruto + Bônus, Barra = Custos.
         function atualizarCardsSaldoPJ(totalDespesasDoMes) {
             const chave = window.chaveMes(dataFiltro);
             const cfgPJ = configHoleriteGlobal[chave] || {};
@@ -9664,31 +9523,10 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             let baseVale = 0; 
             let baseSalario = 0; 
             
-            // 🎯 REGRA: o Valor Base dos cards é EXATAMENTE o do holerite:
-            //   • Salário → Líquido a Receber (Total Proventos − Total Descontos)
-            //   • Vale    → Vale (Adiantamento) — a linha de desconto do holerite
-            // O 13º já compõe o Líquido a Receber (é provento), então NÃO é movido
-            // para o bucket do Vale. Cada card bate com sua linha no holerite.
-            //
-            // 🎯 PRIORIDADE: se a simulação VIVA (`simulacaoAtualGlobal`) for do
-            // MESMO mês visualizado, usamos ela — assim os cards refletem edições
-            // feitas no holerite que AINDA NÃO foram salvas. Elimina a divergência
-            // entre o "Líquido a Receber" do simulador e o "Valor Base" do Resumo.
+            // Base = Líquido do Simulador do mês (usa simulação viva se for o mês visualizado).
             let chave = window.chaveMes(dataFiltro);
 
-            // 🐛 Correção: `simulacaoAtualGlobal` é MEMÓRIA DE TRABALHO do
-            //    Simulador — ela fica preenchida sempre que o usuário passa
-            //    por aquela aba, mesmo sem ter salvado nada. Se o card do
-            //    Resumo a usasse sem checar, o mês exibiria valores do
-            //    perfil como se fossem "simulação salva" — e continuaria
-            //    exibindo mesmo depois de "Zerar Simulação" (porque
-            //    `carregarOuCalcularFolha()` repopula a variável logo em
-            //    seguida).
-            //
-            //    A checagem correta: o mês só tem simulação "viva" se existe
-            //    ALGO salvo — a config completa (`configHoleriteGlobal`) ou
-            //    a base mensal (`saldoBaseMensalGlobal`, que também guarda
-            //    override de salário).
+            // Só conta como simulação "viva" se houver config ou base mensal salva.
             const mesTemSimulacaoSalva = !!(configHoleriteGlobal[chave] || saldoBaseMensalGlobal[chave]);
             const mesSimulacaoBate = mesTemSimulacaoSalva && simulacaoAtualGlobal &&
                 simulacaoAtualGlobal.ano === dataFiltro.getFullYear() &&
@@ -9699,21 +9537,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             // então conceitualmente pertence ao caixa do Vale, não do salário.
             // `valor13` já é o líquido (proventos − INSS − IRRF), então a
             // subtração de `salarioLiquido` não deixa resíduo tributário.
-            // ═══════════════════════════════════════════════════════════════
-            // 🎯 13º SALÁRIO: em qual bucket ele cai?
-            // ═══════════════════════════════════════════════════════════════
-            // O destino depende de QUANDO o 13º é pago em relação ao vale
-            // (que cai sempre no dia 20). O 13º vive no ciclo do mês em que
-            // efetivamente entra na conta.
-            //
-            //   • NOVEMBRO: 1ª parcela paga ATÉ 30/nov — DEPOIS do vale
-            //     (dia 20). Chega no "fim do mês" → bucket VALE.
-            //
-            //   • DEZEMBRO: 2ª parcela paga ATÉ 20/dez — no mesmo dia ou
-            //     antes do vale. Chega no "começo do mês" → bucket SALÁRIO.
-            //
-            //   • OUTROS MESES: sem 13º, regra não se aplica.
-            // ═══════════════════════════════════════════════════════════════
+            // Nov: 13º cai no bucket Vale. Dez: cai no bucket Salário.
             const ehDez = dataFiltro.getMonth() === 11;
             const valor13VaiParaSalario = ehDez;
 
@@ -9735,15 +9559,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 valor13Base = parseFloat(saldoBaseMensalGlobal[chave].valor13 || 0);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 ZERA O VALE QUANDO O USUÁRIO NÃO RECEBE VALE
-            // ═══════════════════════════════════════════════════════════
-            // Se o usuário trocou "Recebe Vale?" de Sim para Não, a config
-            // antiga continua com `valeAdiantamento` > 0. Sem este zero,
-            // esse valor vira um "vale fantasma": o bucket do Vale some
-            // da UI (wrapVale oculto), mas continua somando no Total do
-            // Mês — o Total fica inflado e diverge do valor mostrado no
-            // modal de reajuste (que lê `saldoSalarioAtualCalculado`).
+            // Sem vale: zera o bucket do Vale (evita "vale fantasma" no Total).
             const semVale = (meuPerfil.temVale === 'Não');
             if (semVale) {
                 valeAdiantamentoBase = 0;
@@ -9769,54 +9585,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             // O `alvoComposicao` distribui cada ajuste para o card certo
             // (Vale / Salário / Extra), inclusive os silenciosos.
             //
-            // ═══════════════════════════════════════════════════════════════
-            // 🎯 MODELO MENTAL — LEIA ANTES DE MEXER NESTE FILTRO
-            // ═══════════════════════════════════════════════════════════════
-            //
-            // O app tem DOIS tipos de "saldo", e eles NÃO usam o mesmo filtro:
-            //
-            //   1. SALDO DE PROJEÇÃO (cards no topo do Resumo):
-            //      · Saldo do Salário / Saldo do Vale / Saldo Total do Mês
-            //      · Responde: "como meu mês VAI FECHAR?"
-            //      · INCLUI pendentes — são a previsão do mês.
-            //      · Um boleto agendado para o dia 28 JÁ reduz esse saldo,
-            //        porque ele vai sair. O card precisa refletir o "norte".
-            //
-            //   2. SALDO REAL (cards no carrossel "Saldos das Contas"):
-            //      · Itaú, Cofrinho, etc.
-            //      · Responde: "quanto tenho na conta AGORA?"
-            //      · SÓ conta pagos (`d.pago === true`).
-            //      · O cálculo mora em `renderizarCarrosselContas` e
-            //        `renderTabelaContasTela` — NÃO aqui.
-            //
-            // 👉 A regra do filtro abaixo é INTENCIONALMENTE sem `d.pago`
-            //    porque estes cards são PROJEÇÃO. Se um dia parecer "bug"
-            //    que uma pendente está mexendo nesses cards, é FALSA
-            //    impressão — é o comportamento correto.
-            // ═══════════════════════════════════════════════════════════════
-            // 🎯 TRANSFERÊNCIAS na projeção:
-            //    Uma transferência é o movimento de dinheiro entre contas.
-            //    Ela cria DOIS lançamentos espelhados — uma saída (visível)
-            //    e uma entrada (oculta, `ocultoExtrato`). Aqui só a SAÍDA
-            //    entra:
-            //      • Reduz o saldo do bucket de origem (o dinheiro "saiu"
-            //        do fluxo do mês, foi guardado em outro lugar).
-            //      • A ENTRADA fica de fora. Se entrasse, anularia o
-            //        efeito (mesmo dinheiro dos dois lados), e o card não
-            //        refletiria a "poupança do mês".
-            //    Esse comportamento vale para transferência PENDENTE e
-            //    EFETIVADA — a diferença entre elas é tratada no saldo
-            //    real das contas (carrossel + aba Contas), que só conta
-            //    as pagas.
-            // ═══════════════════════════════════════════════════════════════
-            // 🎯 FILTRO DE TRANSFERÊNCIAS NOS CARDS PROJETADOS
-            // ═══════════════════════════════════════════════════════════════
-            // • Entre contas próprias → NÃO mexe nos cards. É dinheiro
-            //   andando de um bolso seu para outro; não muda quanto você
-            //   tem no fim do mês.
-            // • Para/de terceiros → SIM mexe nos cards. É dinheiro saindo
-            //   (despesa) ou entrando (receita) de verdade no seu mundo.
-            // ═══════════════════════════════════════════════════════════════
+            // Cards usam pendentes (projeção). Transferência própria fica fora; terceiro entra.
             const visiveis = despesasFiltradas.filter(d => {
                 if (!d.isTransferencia) return true;
                 return !!d.isTerceiro;
@@ -10047,31 +9816,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
 
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 💰 CARD DE ORÇAMENTO NO RESUMO
-        // ═══════════════════════════════════════════════════════════════
-        // Renderiza o painel "Orçamento do Mês" ao lado de Saldos Projetados
-        // e Saldos das Contas. Depende de `asCalcularStatusOrcamentos`,
-        // que já é usado pela Assistente — mesma fonte de verdade, sem
-        // duplicação de regras.
-        //
-        // Comportamento:
-        //   • Sem orçamentos definidos → esconde o painel inteiro
-        //     (evita o "R$ 0,00 de R$ 0,00" que só ocupa espaço)
-        //   • Com orçamentos → mostra:
-        //       - Gasto total + teto total no topo
-        //       - Barra consolidada (verde/âmbar/vermelho)
-        //       - Top 4 categorias por consumo (mais críticas primeiro)
-        //       - "+ N categorias" no rodapé, se houver mais
-        //
-        // Cores das barras por categoria:
-        //   • Verde    → até 70% do teto
-        //   • Âmbar    → 70-99%
-        //   • Vermelho → 100%+ (estourou)
-        //
-        // Modo de leitura: 'todos' (inclui pendentes) — coerente com a
-        // barra de consumo do Salário/Vale, que também mostra como o mês
-        // vai FECHAR, não só o que já foi pago.
+        // Painel "Orçamento do Mês" do Resumo (oculto quando não há tetos).
         function atualizarCardOrcamentoResumo() {
             const card = document.getElementById('cardOrcamentoResumo');
             if (!card) return;
@@ -10145,24 +9890,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
 
             lista.innerHTML = html;
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 REALINHAMENTO — recalcula o padding-top do conteúdo
-            // ═══════════════════════════════════════════════════════════
-            // O card de orçamento APARECE ou DESAPARECE conforme o
-            // usuário tem (ou não) tetos configurados. Isso muda a altura
-            // total do Resumo — e o `alinharConteudoComMenu()`, que
-            // calcula o padding-top dinâmico para alinhar o primeiro card
-            // com o botão "Resumo" da sidebar, fica com um valor
-            // desatualizado.
-            //
-            // Resultado visível: o "Saldos Projetados" flutua para cima ou
-            // para baixo, deixando um vão grande em um dos lados. Não é
-            // um bug de padding fixo — é o padding DINÂMICO que perdeu
-            // a referência.
-            //
-            // `requestAnimationFrame` garante que o DOM já pintou o novo
-            // layout (com ou sem o card) antes de a gente medir de novo.
-            // Sem isso, a medição ainda veria o layout antigo.
+            // Realinha o conteúdo: aparecer/sumir este card muda a altura do Resumo.
             if (typeof window.alinharConteudoComMenu === 'function') {
                 requestAnimationFrame(() => window.alinharConteudoComMenu());
             }
