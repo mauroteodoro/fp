@@ -1046,10 +1046,6 @@ select:focus, select:focus-visible {
             </form>
         </div>
         <div id="loaderInicial" class="absolute inset-0 bg-[#F7F8FB] dark:bg-[#0b1120] z-10 flex flex-col items-center justify-center transition-opacity duration-300">
-            <!-- 🐷 Porquinho que recebe moedas caindo. Símbolo universal de
-                 "guardar dinheiro" — descontraído e óbvio no contexto do app.
-                 As 3 moedas caem em sequência e desaparecem na ranhura,
-                 transmitindo "abastecendo o cofrinho". -->
             <div class="piggy-loader" aria-hidden="true">
                 <svg class="piggy-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -1137,9 +1133,6 @@ select:focus, select:focus-visible {
             </div>
         </div>
 
-        <!-- 🎯 MODAL DE CALENDÁRIO GRANDE — versão à prova de balas.
-             Usa 100% de estilos INLINE, sem Tailwind, sem classe global.
-             O `display` é controlado direto pelo JS via style.display. -->
         <div id="modalCalendarioGrande" style="display: none;" class="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-[99999] items-center justify-center p-4">
             <div id="cardCalendarioGrande" class="bg-white dark:bg-[#121b2b] p-5 rounded-3xl w-full max-w-[360px] shadow-[0_20px_60px_rgba(0,0,0,0.35)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.7)] border border-slate-200 dark:border-[#1e2a40] relative">
                 <div class="flex justify-between items-center mb-4">
@@ -2519,43 +2512,16 @@ select:focus, select:focus-visible {
                             <div class="flex items-center justify-between mb-2 px-5 md:px-6">
                                 <h2 class="text-[11px] font-bold text-slate-900 font-montserrat uppercase tracking-[0.15em]">Saldos das Contas</h2>
                             </div>
-                            <!-- 🎯 `scroll-pl-6 md:scroll-pl-8` — o `scroll-padding-left`
-                                 casa com o `px-6 md:px-8` do próprio container. Sem ele,
-                                 ao dar snap no card 2, o navegador alinha o snap-start
-                                 dele contra a BORDA (x=0), fazendo o card colar na
-                                 esquerda e deixando um vão vazio na direita.
-                                 Com o scroll-padding, o snap respeita o respiro
-                                 lateral e o card aterrissa na posição natural. -->
                                  <div id="containerContas" class="flex gap-3 overflow-x-auto no-scrollbar pb-3 px-6 md:px-8 snap-x scroll-pl-6 md:scroll-pl-8 stagger-cards items-stretch">
                                     <!-- Cards renderizados via JS -->
                                 </div>
     
-                                <!-- 🎯 NAVEGAÇÃO MOBILE — dots + setas. Só aparece
-                                     em <768px e com 2+ contas. O `hidden` inicial
-                                     é decisivo: `configurarNavContasMobile()`
-                                     decide se troca por `flex`. -->
-                                <!-- 🎯 `display: none` INLINE em vez de classe `hidden`.
-                                 Motivo: o Tailwind CDN gera `.hidden { display: none }` e
-                                 `.flex { display: flex }` com a MESMA especificidade — quem
-                                 vence é a ordem de injeção no <head>, que varia por cache,
-                                 extensão e ordem de carregamento. `style.display` é inline,
-                                 determinístico, e ganha de qualquer classe. -->
                                  <div id="navContasMobile" style="display: none;" class="items-center justify-center gap-3 px-6 pb-3 pt-1"></div>
                             </div>
 
                         <!-- PAINEL 2: Saldo Total + 3 indicadores (superfície única) -->
                         <div class="anim-fade-up bg-white dark:bg-[#121b2b] rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.06)] overflow-hidden">
 
-                            <!-- Título da seção — espelha "Saldos das Contas"
-                                 do painel logo acima. Mesma tipografia,
-                                 mesmo tracking, mesmo tom de cor.
-                                 🎯 Ritmo profissional:
-                                   • `pt-5` (20px) — o título respira do topo
-                                     da caixa, sem colar na borda.
-                                   • `pb-3` (12px) + `mb-2` (8px) do hero
-                                     abaixo = ~20px entre o título de seção
-                                     e o rótulo do hero. Hierarquia clara:
-                                     seção → rótulo → valor. -->
                             <div class="flex items-center justify-between px-5 md:px-6 pt-5 pb-3">
                                 <h2 class="text-[11px] font-bold text-slate-900 font-montserrat uppercase tracking-[0.15em]">Saldos Projetados</h2>
                             </div>
@@ -2645,13 +2611,6 @@ select:focus, select:focus-visible {
                             </div>
                         </div>
 
-                        <!-- ═══════════════════════════════════════════════════════ -->
-                        <!-- PAINEL 3: Orçamento do Mês                                 -->
-                        <!-- ═══════════════════════════════════════════════════════ -->
-                        <!-- Visão consolidada dos tetos por categoria definidos em
-                             Gráficos → Orçamentos. O painel fica oculto quando o
-                             usuário não tem nenhum orçamento configurado — evita
-                             um card vazio que não serve para nada.            -->
                         <div id="cardOrcamentoResumo" class="anim-fade-up bg-white dark:bg-[#121b2b] rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.06)] overflow-hidden hidden">
                             <div class="flex items-center justify-between px-5 md:px-6 pt-5 pb-3">
                                 <h2 class="text-[11px] font-bold text-slate-900 font-montserrat uppercase tracking-[0.15em]">Orçamento do Mês</h2>
@@ -3288,18 +3247,7 @@ select:focus, select:focus-visible {
       </div>
     </div>
     <!-- ===================== SCRIPT DO SISTEMA ===================== -->
-    <!-- ═══════════════════════════════════════════════════════════════
-         📊 Chart.js via UMD (não-ESM) — carrega ANTES do módulo principal
-         ═══════════════════════════════════════════════════════════════
-         Por que UMD e não ES module:
-           • O `import Chart from '.../+esm'` era FRÁGIL — a resolução de
-             dependências internas do Chart.js às vezes falhava, e o
-             import quebrava TODO o `<script type="module">`.
-           • Como o Firebase, a auth e todos os listeners vivem nesse
-             mesmo módulo, um import quebrado = site inteiro não abre.
-           • O script UMD clássico (`<script src>`) coloca o Chart no
-             `window.Chart` e NÃO interfere no módulo. Se o CDN falhar,
-             só a aba Gráficos fica inoperante — o resto do app segue. -->
+    <!-- Chart.js via UMD (window.Chart) — carrega antes do módulo principal. -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script>
         // 🚀 Registra o Service Worker para acelerar aberturas futuras
@@ -3330,33 +3278,7 @@ select:focus, select:focus-visible {
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🚫 GUARDA CONTRA FOCO AUTOMÁTICO — iOS Safari / Autofill
-        // ═══════════════════════════════════════════════════════════════
-        // Problema: iOS Safari detecta o form de login (email/senha) e
-        // auto-foca o primeiro campo SEM interação do usuário — só para
-        // oferecer "Senhas Salvas". O loader da tela de login é apenas um
-        // overlay visual: o campo continua focável por baixo, e a barra
-        // de acessório do teclado (↑ ↓ ✓) aparece na tela antes mesmo do
-        // usuário tocar em qualquer coisa.
-        //
-        // Correção: enquanto o usuário não interagiu (touchstart,
-        // mousedown ou keydown), qualquer `focusin` em input é desfeito
-        // com `blur()`. O flag `_usuarioInteragiu` vira `true` na
-        // primeira interação real e o guard nunca mais bloqueia nada —
-        // o usuário toca no campo e o teclado abre normalmente.
-        //
-        // Cobre também `autofocus` caso alguém adicione no futuro.
-        //
-        // Notas técnicas:
-        //   • `focusin` (não `focus`) porque borbulha — funciona com
-        //     listener no `document` sem precisar de capture a cada input.
-        //   • `setTimeout(blur, 0)` garante que o blur acontece DEPOIS
-        //     do iOS terminar o próprio ciclo de focusin. Blur síncrono
-        //     às vezes era desfeito pelo sistema no mesmo tick.
-        //   • `touchstart`/`mousedown`/`keydown` com `once: true` —
-        //     registram a interação e se autoremovem. Zero overhead
-        //     depois do primeiro toque.
+        // Evita que iOS Safari auto-foque inputs de login antes da 1ª interação.
         let _usuarioInteragiu = false;
         const _marcarInteracao = () => { _usuarioInteragiu = true; };
         document.addEventListener('touchstart', _marcarInteracao, { once: true, passive: true });
