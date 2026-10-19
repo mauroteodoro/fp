@@ -77,9 +77,6 @@
         @keyframes fadeDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         .dropdown-anim { animation: fadeDown 0.15s ease-out forwards; }
 
-        /* ========================================================== */
-        /* 🎬 MOTION — Micro-interações discretas                     */
-        /* ========================================================== */
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -112,15 +109,8 @@
         /* Fade do conteúdo ao trocar de mês */
         .trocando-mes { opacity: 0.5; transition: opacity 0.2s ease-out; }
 
-        /* 🎯 Barras de consumo — SEM CSS transition.
-           Toda animação é feita por Web Animations API (`element.animate`),
-           tanto para RECOLHER (ao ocultar) quanto para CRESCER (ao mostrar).
-           Motivo: quando CSS transition e WAAPI coexistem no mesmo
-           elemento, alguns navegadores mobile disparam a CSS transition
-           em paralelo — e ao fim da WAAPI, a transition "recupera" o
-           controle, causando o efeito "sobe, zera, sobe".
-           Com um único motor de animação, o bug é impossível. */
-           #barraConsumoSalario, #barraConsumoVale {
+        /* Barras de consumo: animadas só por WAAPI (ver JS). */
+        #barraConsumoSalario, #barraConsumoVale {
             background-color: transparent; /* nenhuma transition */
         }
         
@@ -202,20 +192,7 @@
         .spinner { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top-color: #4D6BFE; animation: spin 1s ease-in-out infinite; width: 24px; height: 24px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ========================================================== */
-        /* 🐷 LOADER INICIAL — Porquinho com moedas caindo             */
-        /* ========================================================== */
-        /* Cena em SVG + CSS puro, sem imagens externas. O porquinho   */
-        /* balança levemente, enquanto 3 moedas douradas caem em       */
-        /* sequência e desaparecem na ranhura. Puro charme, zero peso. */
-        /*                                                            */
-        /* • Animação das moedas usa `translateY` (não `top`) — mais   */
-        /*   performático, mantém a animação 100% na GPU.              */
-        /* • `will-change` só na moeda; no porquinho, o wiggle é curto */
-        /*   e não compensa o custo de memória.                        */
-        /* • Totalmente responsivo: em telas ≤400px, encolhe sem       */
-        /*   perder legibilidade.                                      */
-        /* ========================================================== */
+        /* Loader inicial: porquinho SVG com moedas caindo. */
         .piggy-loader {
             position: relative;
             width: 120px;
@@ -345,14 +322,6 @@ select:focus, select:focus-visible {
             --safe-left: env(safe-area-inset-left, 0px);
             /* Header mobile tem 2 linhas compactas (identidade + botões). */
             --header-h: 6rem;
-            /* 🎯 Fundo do card DURANTE O DRAG (arrastar para reordenar).
-               • Light: cinza-claro levemente fora do branco — dá a sensação
-                 de "levantado" sem virar um bloco destacado.
-               • Dark: tom elevado acima do painel (#121b2b), sem competir
-                 com as bordas (#1e2a40).
-               • Definido como variável para que o JS nunca precise checar
-                 tema. Se um novo tema for adicionado no futuro, basta
-                 sobrescrever a variável no escopo dele. */
             --drag-card-bg: #F8FAFC;
         }
         html.dark { --drag-card-bg: #1a2639; }
@@ -460,26 +429,7 @@ select:focus, select:focus-visible {
             }
         }
 
-                /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 ALINHAMENTO DO CONTEÚDO COM O MENU LATERAL               */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Fonte única de verdade: `--aside-pad-top` define o respiro
-           interno do menu lateral (do topo do aside até o topo do 1º
-           botão). O wrapper do conteúdo consome a MESMA variável em
-           `padding-top` — os dois nascem alinhados e permanecem
-           alinhados mesmo se o valor precisar mudar no futuro.
-           
-           Geometria resultante:
-             • Aside    : top = --header-h + --safe-top
-                          pt  = --aside-pad-top
-                          → 1º botão em (--header-h + --safe-top) + --aside-pad-top
-             • Conteúdo : padding-top = --header-h + --safe-top + --aside-pad-top
-                          → 1º card em (--header-h + --safe-top) + --aside-pad-top
-           
-           As duas regras usam `!important` para vencer o Tailwind
-           CDN (que injeta utilitários depois do nosso <style>) e
-           neutralizar o conflito `md:p-3` × `md:pt-6` que ficava no
-           atributo `class` do próprio <aside>. */
+        /* Respiro interno do menu lateral (usado também pelo conteúdo). */
         :root { --aside-pad-top: 1.5rem; }
 
         @media (min-width: 640px) {
@@ -553,9 +503,7 @@ select:focus, select:focus-visible {
                 transition-duration: 0.01ms !important;
                 scroll-behavior: auto !important;
             }
-            /* EXCEÇÃO: Spinners, o porquinho do loader e as moedas
-               continuam animando — são feedback essencial de "app em
-               execução". Sem eles, o loader pareceria travado. */
+            /* Exceção: spinners e loader continuam animando (feedback). */
             .spinner,
             .spinner::before,
             .spinner::after,
@@ -955,33 +903,7 @@ select:focus, select:focus-visible {
             }
         }
 
-        /* ========================================================== */
-        /* 🎯 TRACKING — ajuste global de polimento                    */
-        /* ========================================================== */
-        /* Os rótulos em CAPS do app usam `letter-spacing` alto        */
-        /* (0.15em, 0.22em, widest) para dar "ar premium". Na prática, */
-        /* o olho lê letra por letra e perde a palavra — o texto vira  */
-        /* um "sussurro espalhado". Reduzimos todos para valores       */
-        /* discretos que mantêm a elegância sem sacrificar a leitura.  */
-        /*                                                            */
-        /* A hierarquia ficou:                                         */
-        /*   • Hero ("Saldo Total do Mês")      → 0.08em (levemente    */
-        /*     mais aberto, mantém o ar de "título principal")         */
-        /*   • Seções e headers em geral        → 0.05em (polido)      */
-        /*   • widest (categoria em mobile etc) → 0.05em (alinhado)    */
-        /*   • Subtítulo do loader              → 0.06em               */
-        /*                                                            */
-        /* O `!important` é necessário porque o CDN do Tailwind gera   */
-        /* as classes com a mesma especificidade (0,1,0) e injeta      */
-        /* depois do nosso <style>, vencendo por ordem de carregamento. */
-        /*                                                            */
-        /* Seleção por `[class*=...]` cobre qualquer elemento que      */
-        /* carregue a classe — inclusive os criados via JS (células   */
-        /* do Extrato, itens do carrossel, etc). Se um dia quiser      */
-        /* escapar de alguma regra específica, é só usar `tracking-`  */
-        /* com um valor diferente (ex: 0.12em) — a nova classe não     */
-        /* é atingida pelos seletores abaixo.                          */
-        /* ========================================================== */
+        /* Reduz `letter-spacing` alto em rótulos para valores legíveis. */
         [class*="tracking-[0.22em]"] {
             letter-spacing: 0.08em !important;
         }
@@ -998,27 +920,7 @@ select:focus, select:focus-visible {
             letter-spacing: 0.06em !important;
         }
 
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 ALINHAMENTO — Menu lateral × Conteúdo (regra final)      */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Fonte ÚNICA de verdade: `--gap-menu-conteudo` é o respiro   */
-        /* entre o header e o primeiro item do menu. O conteúdo do     */
-        /* main consome a MESMA variável em seu `padding-top`, então   */
-        /* os dois nascem na mesma linha horizontal — em qualquer      */
-        /* viewport, em qualquer aba (Resumo, Extrato, Contas, etc),   */
-        /* sem depender da ordem em que o Tailwind CDN injeta classes. */
-        /*                                                              */
-        /* Por que esta regra funciona:                                 */
-        /*   • Está no FIM absoluto do <style> → vence por ordem de    */
-        /*     carregamento contra qualquer declaração anterior.        */
-        /*   • Usa `#conteudoPrincipal` (ID) → especificidade (1,1,0),  */
-        /*     superior ao `.conteudo-principal` (0,1,0) e ao           */
-        /*     `md:pt-6` do Tailwind (0,1,0).                           */
-        /*   • Usa `!important` para neutralizar o `!important` de      */
-        /*     regras conflitantes anteriores (o que tem ID vence).     */
-        /*                                                              */
-        /* ⚠️ Se um dia quiser afrouxar/apertar o vão entre header e    */
-        /*    menu, basta mudar `--gap-menu-conteudo` num único lugar.  */
+        /* Respiro entre header e primeiro item do menu/conteúdo. */
         :root { --gap-menu-conteudo: 24px; }
 
         @media (min-width: 768px) {
@@ -1034,54 +936,12 @@ select:focus, select:focus-visible {
                 padding-top: calc(var(--header-h) + var(--safe-top) + var(--gap-menu-conteudo)) !important;
             }
         }
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 ALINHAMENTO FINAL — Controle entregue ao JavaScript     */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Regra de ÚLTIMA PALAVRA no CSS: em desktop (≥768px), zera  */
-        /* o `padding-top` do wrapper de conteúdo. O valor real é     */
-        /* calculado em runtime por `alinharConteudoComMenu()` — que  */
-        /* mede a posição REAL do primeiro botão do menu lateral e    */
-        /* aplica como padding no conteúdo.                           */
-        /*                                                            */
-        /* Por que JS e não `calc(--header-h)` — o motivo das 2       */
-        /* tentativas anteriores terem falhado:                       */
-        /*   • `--header-h` é DECLARAÇÃO, não altura REAL. Fontes     */
-        /*     custom (Plus Jakarta, Inter) carregadas pelo Google    */
-        /*     Fonts chegam DEPOIS do primeiro paint e crescem a      */
-        /*     linha do header. O flex-wrap pode ativar em larguras   */
-        /*     intermediárias. Zoom do SO (125%, 150%) altera tudo.   */
-        /*   • O Tailwind CDN injeta estilos com especificidade       */
-        /*     idêntica à do nosso <style>, e a ordem de carregamento */
-        /*     varia conforme cache/extensões. Duas fontes de verdade */
-        /*     = divergência silenciosa.                              */
-        /*   • Medir via getBoundingClientRect() lê o que o browser   */
-        /*     PINTou — imune a todas as variáveis acima.             */
-        /*                                                            */
-        /* No mobile (<768px) esta regra não se aplica: o menu        */
-        /* lateral não existe, o `padding-top` permanece o original. */
+        /* Em desktop, o padding-top real é calculado por alinharConteudoComMenu(). */
         @media (min-width: 768px) {
             #conteudoPrincipal.conteudo-principal { padding-top: 0 !important; }
         }
 
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 COR-MARCA — Bottom nav ativo + Assistente (roxo #4D6BFE) */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Regra de ÚLTIMA PALAVRA. O `!important` vence qualquer      */
-        /* utilitário do Tailwind CDN (que injeta CSS depois do nosso  */
-        /* <style>) e qualquer regra html.dark específica. Garante    */
-        /* que os dois pontos fiquem SEMPRE no roxo-marca do app —     */
-        /* nunca em cyan/azul.                                         */
-        /*                                                              */
-        /* Alvos:                                                       */
-        /*   1. `.bottom-nav-btn.is-active-bottom` — o item selecionado */
-        /*      no menu inferior mobile. A classe é adicionada por JS   */
-        /*      em `abrirTela()`. Atinge o SVG do ícone e o <span> do   */
-        /*      rótulo (ambos herdam, mas forçamos por segurança).      */
-        /*                                                              */
-        /*   2. `#mainHeader button[title="Assistente"]` — o botão ✨   */
-        /*      no header mobile. Uso o atributo `title` porque é o     */
-        /*      identificador mais estável e não colide com nenhum      */
-        /*      outro botão do header.                                  */
+        /* Bottom nav ativo + ícone da Assistente sempre em #4D6BFE. */
         .bottom-nav-btn.is-active-bottom,
         .bottom-nav-btn.is-active-bottom svg,
         .bottom-nav-btn.is-active-bottom span,
@@ -1089,17 +949,7 @@ select:focus, select:focus-visible {
         #mainHeader button[title="Assistente"] svg {
             color: #4D6BFE !important;
         }
-                /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 CONTRASTE ADAPTATIVO — Logos que precisam inverter      */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Regra geral para logos que são naturalmente escuros        */
-        /* (C6 Bank, e futuramente outros). No modo claro, o SVG      */
-        /* branco é invertido para preto. No modo escuro, permanece    */
-        /* branco — visível sobre o fundo #0b1120.                     */
-        /*                                                            */
-        /* A classe `.logo-invert-light` é adicionada via JS pelo      */
-        /* `renderBankLogo()` quando o objeto do banco tem a flag     */
-        /* `logoEscuro: true`.                                         */
+                /* Logos escuros ganham inversão no light (flag `logoEscuro`). */
         .logo-invert-light {
             filter: invert(1);
         }
@@ -1107,17 +957,7 @@ select:focus, select:focus-visible {
             filter: none;
         }
 
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 FUNDO CONDICIONAL POR TEMA — só no dark mode            */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Usado por bancos cuja marca é naturalmente escura (ex:     */
-        /* C6 Bank — círculo preto + "C6" branco). Em LIGHT, o logo   */
-        /* flutua sem moldura (o card já é branco, contraste perfeito).*/
-        /* Em DARK, o círculo preto se fundiria com o card escuro, e  */
-        /* o logo sumiria — então o wrapper ganha um fundo branco     */
-        /* sólido (lido de `--bg-fixo-cor`, injetada inline pelo JS   */
-        /* via `b.bgFixoDark`). O resultado é o mesmo "selo branco    */
-        /* arredondado" que o Mercado Pago já exibe no dark.          */
+        /* Wrapper ganha fundo sólido apenas no dark (bancos escuros). */
         .banco-bg-fixo-dark {
             background-color: transparent;
         }
@@ -1125,37 +965,7 @@ select:focus, select:focus-visible {
             background-color: var(--bg-fixo-cor, #ffffff);
         }
 
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 🎯 SUBSTITUIÇÃO CROMÁTICA — ciano → roxo-marca (#4D6BFE)   */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Toda a paleta de destaques em dark mode estava em `cyan-400` */
-        /* / `cyan-500` do Tailwind — um ciano azulado que NÃO faz      */
-        /* parte da identidade do app (que é roxo-marca #4D6BFE).       */
-        /*                                                              */
-        /* Em vez de caçar cada ocorrência de `dark:text-cyan-*` no     */
-        /* HTML/JS (são dezenas, e futuras adições esqueceriam da        */
-        /* troca), esta regra UNIFICA tudo num único ponto. Qualquer    */
-        /* elemento que hoje ou amanhã carregar uma classe `dark:*cyan*` */
-        /* cai automaticamente no roxo.                                  */
-        /*                                                              */
-        /* Como funciona: `[class*="..."]` casa qualquer elemento cuja  */
-        /* lista de classes CONTenha a substring. O `html.dark` na      */
-        /* frente garante que só atua no tema escuro — em light mode    */
-        /* nada muda. O `!important` vence o Tailwind CDN, que injeta   */
-        /* os utilitários DEPOIS do nosso <style>.                       */
-        /*                                                              */
-        /* Cobertura:                                                    */
-        /*   • text-cyan-400/500 (+ variantes de opacidade)             */
-        /*   • hover:text-cyan-400/500                                  */
-        /*   • active:text-cyan-400                                     */
-        /*   • border-cyan-400/500                                      */
-        /*   • bg-cyan-500/10, bg-cyan-500/20                           */
-        /*   • focus:ring-cyan-500 (neutro já tratado em outra regra)   */
-        /*                                                              */
-        /* Não cobre: decoration-cyan, accent-cyan, from/to-cyan — se   */
-        /* um dia aparecerem, adicione o padrão aqui.                   */
-
-        /* 1) Cor de TEXTO em repouso, hover e active */
+        /* Substitui cyan por roxo-marca (#4D6BFE) em classes dark:*cyan*. */
         html.dark [class*="dark:text-cyan-400"],
         html.dark [class*="dark:text-cyan-500"],
         html.dark [class*="dark:hover:text-cyan-400"]:hover,
@@ -1176,17 +986,7 @@ select:focus, select:focus-visible {
         html.dark [class*="dark:bg-cyan-500/20"] {
             background-color: rgba(77, 107, 254, 0.12) !important;
         }
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 🔄 LINHA DE TRANSFERÊNCIA — destaque âmbar                  */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* As transferências ganham uma barra lateral âmbar + fundo    */
-        /* sutil para se destacarem visualmente dos lançamentos        */
-        /* normais de receita/despesa. O âmbar é a mesma cor do ícone  */
-        /* ↔ usado no menu "Nova Ação" — reforça a identidade.        */
-        /*                                                            */
-        /* `!important` garante que a cor prevaleça sobre o            */
-        /* `hover:bg-slate-50 dark:hover:bg-[#1a2639]` que o Tailwind  */
-        /* aplica em todas as linhas — precisa vencer nos dois temas.  */
+        /* Transferências: destaque âmbar na linha do Extrato. */
         .linha-extrato.transferencia-row {
             border-left: 3px solid #F59E0B;
             background-color: rgba(245, 158, 11, 0.05) !important;
@@ -1201,25 +1001,7 @@ select:focus, select:focus-visible {
             background-color: rgba(245, 158, 11, 0.15) !important;
         }
 
-        /* ═══════════════════════════════════════════════════════════ */
-        /* 📱 CARROSSEL DE CONTAS — PAGINAÇÃO REAL EM MOBILE          */
-        /* ═══════════════════════════════════════════════════════════ */
-        /* Um card por "página", estilo carrossel de banco.           */
-        /*                                                            */
-        /* Por que o `!important`: o Tailwind CDN injeta `.snap-x`    */
-        /* como `scroll-snap-type: x var(--tw-scroll-snap-strictness)` */
-        /* — com a variável indefinida quando nem `snap-mandatory`    */
-        /* nem `snap-proximity` estão presentes. O navegador rejeita  */
-        /* a regra como inválida e o resultado é "sem snap nenhum".   */
-        /* O `!important` aqui vence tanto o CDN quanto qualquer      */
-        /* inline style que a gente tenha aplicado antes.             */
-        /*                                                            */
-        /* `flex: 0 0 100%` — o card ocupa 100% da largura do         */
-        /* scroll port (largura do container menos os paddings).      */
-        /* Com `scroll-snap-align: start`, cada card ancora na        */
-        /* esquerda do viewport. Combinado com `scroll-snap-stop:     */
-        /* always`, o carrossel PARA em cada card mesmo num swipe     */
-        /* rápido — nunca pula dois de uma vez.                       */
+        /* Mobile: um card por página no carrossel de contas. */
         @media (max-width: 767px) {
             #containerContas {
                 scroll-snap-type: x mandatory !important;
@@ -1233,34 +1015,6 @@ select:focus, select:focus-visible {
             }
         }
 
-        /* ========================================================== */
-        /* 🪶 SUAVIZAÇÃO DE PESOS — polimento visual                  */
-        /* ========================================================== */
-        /* Reduz a "carga" tipográfica do app em um nível único,      */
-        /* uniforme e reversível. Motivos:                           */
-        /*                                                            */
-        /*   1. O uso massivo de `font-bold` (700) em quase todo      */
-        /*      elemento com destaque anulava a hierarquia — quando   */
-        /*      tudo é bold, nada é bold.                             */
-        /*                                                            */
-        /*   2. O Figtree é carregado apenas em 400/500/600/700.     */
-        /*      `font-extrabold` (800) caía em fallback silencioso    */
-        /*      para 700 ou, pior, em faux bold sintético do          */
-        /*      navegador — que engrossa o traço e suja a leitura.    */
-        /*      Mapeando `extrabold` para 700, o peso se torna        */
-        /*      real e nítido (fonte verdadeira, não sintetizada).    */
-        /*                                                            */
-        /* Escala resultante:                                          */
-        /*   extrabold → 700  (era 800/faux)                           */
-        /*   bold      → 600  (era 700)                                */
-        /*   semibold  → 600  (intocado)                                */
-        /*   medium    → 500  (intocado)                                */
-        /*                                                            */
-        /* O `!important` é necessário porque o Tailwind CDN injeta   */
-        /* os utilitários depois do nosso <style>; sem ele, a ordem   */
-        /* de carregamento poderia variar entre cache/extensões.      */
-        /* ========================================================== */
-        /* ========================================================== */
         /* 🪶 SUAVIZAÇÃO DE PESOS v2 — calibração fina                 */
         /* ========================================================== */
         /* Objetivo: aproximar o visual do app de referências de banco */
@@ -2770,47 +2524,7 @@ select:focus, select:focus-visible {
             </div>
         </nav>
 
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- 🔔 SINO FLUTUANTE DE VENCIMENTOS                          -->
-        <!--    Fica visível enquanto houver conta atrasada, vencendo   -->
-        <!--    hoje ou amanhã. Some sozinho quando o usuário resolve   -->
-        <!--    (paga ou apaga) todas. Clique reabre o modal.           -->
-        <!--    Posição: canto inferior-direito no mobile (acima da     -->
-        <!--    barra de navegação) e canto superior-direito no         -->
-        <!--    desktop (abaixo do header).                             -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- 🎯 Posição: logo abaixo do header, canto superior direito.
-             Usa `--header-h + --safe-top` (as variáveis do próprio app)
-             para se ancorar embaixo do header em qualquer viewport.
-             Visual: fundo claro com blur, borda fina, sombra mínima.
-             A "cor forte" fica reservada ao badge (contagem) e ao
-             tom do ícone — que muda para âmbar/vermelho conforme a
-             gravidade do cenário. -->
-        <button type="button" id="btnAlertaVencimento" onclick="abrirAlertaVencimentoManual()" title="Contas a vencer" aria-label="Contas a vencer"
-                style="display: none; top: calc(var(--header-h) + var(--safe-top) + 0.5rem);"
-                class="fixed z-[400] right-3 md:right-6 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/95 dark:bg-[#121b2b]/95 backdrop-blur-sm border border-slate-200/80 dark:border-[#2a3850]/80 shadow-[0_2px_8px_rgba(15,23,42,0.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] flex items-center justify-center transition-all active:scale-90">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-[18px] md:w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            <span id="badgeAlertaVenc" class="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white dark:border-[#121b2b] leading-none">0</span>
-        </button>
-
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- 🎈 FAB — ASSISTENTE FLUTUANTE (mobile)                     -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- Substitui o antigo botão de Assistente no header mobile.    -->
-        <!-- Comportamento:                                              -->
-        <!--   • Sempre visível em mobile (`md:hidden`).                 -->
-        <!--   • Posição inicial: lado direito, ~60% da altura.          -->
-        <!--   • Arrastável em qualquer direção.                         -->
-        <!--   • Ao soltar, encaixa na lateral mais próxima (esq/dir).   -->
-        <!--   • Posição persiste entre sessões (localStorage).          -->
-        <!--   • Toque curto (sem arrastar) abre a aba Assistente.       -->
-        <!--                                                              -->
-        <!-- `touch-none` impede o navegador de interpretar o arraste    -->
-        <!-- como scroll/pan da página. `pointer-events-none` no <svg>   -->
-        <!-- garante que o alvo do pointerdown seja sempre o <button>.   -->
+        <!-- FAB flutuante da Assistente (mobile). Arrastável; toque curto abre a aba. -->
         <button type="button" id="fabAssistente" title="Assistente" aria-label="Abrir Assistente"
                 class="md:hidden fixed z-[350] w-12 h-12 rounded-full flex items-center justify-center text-white touch-none select-none"
                 style="left: 0; top: 0; will-change: transform; background: linear-gradient(135deg, rgba(107, 133, 255, 0.72) 0%, rgba(77, 107, 254, 0.72) 55%, rgba(58, 86, 224, 0.72) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 24px -6px rgba(77, 107, 254, 0.5), 0 4px 10px -4px rgba(77, 107, 254, 0.35);">
