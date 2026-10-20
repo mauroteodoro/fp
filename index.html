@@ -11836,16 +11836,6 @@ window.checkRateio = function() {
             dragState.offsetX = e.clientX - rect.left;
             dragState.offsetY = e.clientY - rect.top;
 
-            // 🎯 Âncoras para a histerese do reposicionamento (ver pointermove):
-            //   • `origIndex` = índice de partida do card arrastado, contando
-            //     TODOS os cards (com ele).
-            //   • `lastTarget` = índice-alvo do placeholder entre os OUTROS
-            //     cards (excluindo o arrastado). Começa idêntico ao origIndex
-            //     porque, no início, o placeholder está exatamente na posição
-            //     original do card.
-            // Esses dois valores permitem que o `pointermove` detecte para
-            // onde o usuário está querendo mover com folga, eliminando a
-            // trepidação na fronteira entre dois cards.
             const _allCards = Array.from(container.querySelectorAll('[data-conta-id]'));
             const _origIdx = _allCards.indexOf(div);
             dragState.origIndex = _origIdx >= 0 ? _origIdx : 0;
@@ -11884,9 +11874,7 @@ window.checkRateio = function() {
             div.classList.remove('card-tilt');
             div.style.transition = 'none';
 
-            // ⬇️ CORREÇÃO: reparenta para o <body>. Sem isso, qualquer ancestral com
-            // transform (ex: .anim-fade-up) transforma o position:fixed em
-            // "relativo ao pai", jogando o card pra fora da viewport durante o drag.
+            // Reparenta para o <body> (ancestral com transform quebraria position:fixed).
             document.body.appendChild(div);
 
             // Aplica o estado flutuante (agora sim, ancorado na viewport)
@@ -11899,17 +11887,9 @@ window.checkRateio = function() {
             div.style.zIndex = '9999';
             div.style.pointerEvents = 'none';
             div.style.cursor = 'grabbing';
-            // 🎯 Escala 1.08 (era 1.04) + rotação 2deg — o card fica
-            // visivelmente "acima" dos outros durante o arrasto. Junto com
-            // a sombra dupla profunda abaixo, é imediato perceber QUEM está
-            // sendo movido e quem está sendo empurrado.
             div.style.transform = 'scale(1.08) rotate(2deg)';
             div.style.boxShadow = '0 16px 32px -10px rgba(0, 0, 0, 0.22), 0 28px 56px -16px rgba(0, 0, 0, 0.28)';
-            // 🎯 Fundo do drag vem de uma CSS variable que respeita o tema
-            // vigente. Antes era o literal `#F8FAFC`, que no dark mode
-            // criava texto claro sobre fundo claro — invisível. A variável
-            // resolve sozinha no render, sem o JS precisar checar tema.
-            div.style.background = 'var(--drag-card-bg)';
+            div.style.background = 'var(--drag-card-bg)';   
         }
 
         function restaurarCard(div, estavaArrastando) {
@@ -11998,24 +11978,6 @@ window.checkRateio = function() {
                     div.style.left = (e.clientX - dragState.offsetX) + 'px';
                     div.style.top = (e.clientY - dragState.offsetY) + 'px';
 
-                    // ═══════════════════════════════════════════════════════════
-                    // 🎯 REPOSICIONAMENTO DO PLACEHOLDER — COM HISTERESE
-                    // ═══════════════════════════════════════════════════════════
-                    // Antes, cada micro-movimento do cursor cruzando o ponto
-                    // médio de um card reordenava o DOM e reanimava o FLIP.
-                    // Se o cursor oscilasse 1-2px na fronteira, isso disparava
-                    // dezenas de vezes por segundo — a "trepidação".
-                    //
-                    // Agora só reordena quando o cursor cruza o ponto médio
-                    // COM FOLGA (24px). A folga é aplicada simetricamente:
-                    //   • Card ainda NÃO passado → exige midX + FOLGA
-                    //   • Card JÁ passado         → desfazer exige midX - FOLGA
-                    // Zona morta de 48px: o cursor pode oscilar ali sem
-                    // reordenar nada.
-                    //
-                    // O índice-alvo é calculado em uma passada única (sem
-                    // `break` no primeiro match), e só dispara reordenação
-                    // quando ele MUDA em relação ao último aplicado.
                     const otherCards = Array.from(container.querySelectorAll('[data-conta-id]'))
                         .filter(el => el !== div);
                     const FOLGA = 24;
@@ -12058,11 +12020,6 @@ window.checkRateio = function() {
                             const newLeft = el.getBoundingClientRect().left;
                             const dxFlip = oldLeft - newLeft;
                             if (Math.abs(dxFlip) > 1) {
-                                // 🎯 Duração 380ms (era 260ms) + curva com
-                                // overshoot suave (1.15): o card vai um
-                                // pouquinho além do destino e volta — dá
-                                // a sensação de "peso" do card sendo empurrado,
-                                // bem mais claro do que um deslize seco.
                                 el.animate(
                                     [{ transform: `translateX(${dxFlip}px)` }, { transform: 'translateX(0)' }],
                                     { duration: 380, easing: 'cubic-bezier(0.34, 1.15, 0.64, 1)', fill: 'none' }
@@ -12073,10 +12030,7 @@ window.checkRateio = function() {
                 }
             }, { passive: true });
 
-            // 📱 Enquanto o arrasto está ativo (ou o long-press já disparou),
-            // bloqueia o scroll do carrossel/página no touchmove. Isso só
-            // acontece DEPOIS que o usuário segurou o card — então o swipe
-            // normal pra rolar continua funcionando perfeitamente.
+            // Só bloqueia o touchmove depois que o drag começou (long-press já disparou).
             document.addEventListener('touchmove', (e) => {
                 if (dragState && (dragState.active || dragState.longPressReady)) {
                     e.preventDefault();
@@ -12111,9 +12065,7 @@ window.checkRateio = function() {
             const wasActive = dragState.active;
             const container = document.getElementById('containerContas');
 
-            // 🎯 Se o long-press disparou mas o arrasto nem chegou a começar
-            // (usuário soltou o dedo logo após o "pronto"), limpa o feedback
-            // visual para o card voltar ao estado normal.
+            // Long-press sem arraste: limpa o feedback visual do card.
             if (!wasActive && div) {
                 div.style.transform = '';
                 div.style.transition = '';
@@ -12151,29 +12103,7 @@ window.checkRateio = function() {
             dragState = null;
         }
 
-                // ═══════════════════════════════════════════════════════════════
-        // 🎯 NAVEGAÇÃO MOBILE — dots + setas para o carrossel de contas
-        // ═══════════════════════════════════════════════════════════════
-        // Regras de exibição:
-        //   • Só aparece em <768px (mobile).
-        //   • Aparece até com 1 conta — o dot único + setas desabilitadas
-        //     comunicam "aqui estão suas contas". Esconder a barra com 1
-        //     conta deixaria a área vazia e sem contexto visual.
-        //
-        // Comportamento:
-        //   • Dots: um por conta. O ativo é um TRAÇO roxo (`w-7 h-2.5`),
-        //     os inativos são BOLINHAS cinzas (`w-2.5 h-2.5`). Padrão
-        //     Nubank/Inter/iFood.
-        //   • Clique no dot → salto animado até a conta correspondente.
-        //   • Setas ‹ › → pulam uma conta por vez. Esmaecem nas pontas.
-        //   • Scroll manual do usuário atualiza o dot ativo em tempo real.
-        //
-        // Sobre o listener de scroll: guardado em variável de módulo
-        // (`_navContasScrollHandler`) e REMOVIDO antes de re-registrar.
-        // Sem isso, cada re-render adicionaria um handler novo ao
-        // container — após 10 renders, o scroll dispararia 10× o mesmo
-        // callback por frame, causando jank em mobile.
-        let _navContasScrollHandler = null;
+                let _navContasScrollHandler = null;
 
         function configurarNavContasMobile() {
             const nav = document.getElementById('navContasMobile');
@@ -12183,10 +12113,7 @@ window.checkRateio = function() {
             const isMobile = window.innerWidth < 768;
             const totalContas = contasGlobais.length;
 
-            // 🎯 `style.display` inline em vez de classes Tailwind.
-            //    O CDN gera `.hidden` e `.flex` com mesma especificidade,
-            //    e a ordem de injeção no <head> varia — bug real de
-            //    "escondido que aparece". Inline é determinístico.
+            // style.display inline evita conflito de especificidade do Tailwind.
             if (!isMobile || totalContas < 1) {
                 nav.style.display = 'none';
                 return;
@@ -12246,16 +12173,7 @@ window.checkRateio = function() {
                 if (nextBtn) nextBtn.disabled = (idx === totalContas - 1);
             };
 
-            // 🎯 Animação customizada de 450ms com easeOutCubic.
-            //
-            // Ponto crítico: enquanto a animação roda, o container fica
-            // com `scroll-snap-type: none !important` inline — senão o
-            // snap `mandatory` do CSS RE-SNAPA a cada frame, e o card
-            // não desliza; só "troca" de repente no fim.
-            //
-            // A restauração do snap é feita 40ms após o último frame,
-            // dando tempo do browser pintar a posição final antes de
-            // reativar o snap (senão ele pode "puxar" 1-2px de volta).
+            // Snap desligado durante a animação; religa 40ms após o último frame.
             let _animAtual = null;
             let _snapRestoreTimer = null;
             let _snapScrollendListener = null;
@@ -12296,14 +12214,8 @@ window.checkRateio = function() {
                     });
                 };
 
-                // 🎯 NATIVE SMOOTH SCROLL — GPU-acelerado no iOS/Android.
-                // Mesmo motor do "arrastar com o dedo", por isso fica tão
-                // suave quanto. O browser cuida do easing, do vsync e da
-                // composição na GPU — zero trabalho da main thread.
+                // Native smooth scroll (GPU). scrollend restaura o snap no momento exato.
                 if ('scrollBehavior' in document.documentElement.style) {
-                    // `scrollend` avisa quando o scroll REALMENTE terminou
-                    // (iOS 16.4+, Chrome 114+). Restaura o snap no momento
-                    // exato — sem timer chutado.
                     if ('onscrollend' in window) {
                         _snapScrollendListener = restaurarSnap;
                         container.addEventListener('scrollend', _snapScrollendListener, { once: true });
@@ -12332,30 +12244,7 @@ window.checkRateio = function() {
                 }
             };
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 HARD SNAP — rede de segurança cirúrgica
-            // ═══════════════════════════════════════════════════════════
-            // Só age em UM cenário: o usuário soltou o dedo e o carrossel
-            // parou VISIVELMENTE fora do lugar (> 25% da largura do card
-            // de distância do snap point mais próximo).
-            //
-            // Duas decisões importantes para eliminar a tremedeira:
-            //
-            //   1. Threshold de 25% — antes, qualquer desvio > 2px era
-            //      "corrigido". Isso empurrava 2-5px durante o ajuste
-            //      fino do snap nativo, criando o efeito "tremendo".
-            //      Agora, ajustes menores que 25% são deixados pra o
-            //      navegador, que já resolve bem.
-            //
-            //   2. Debounce de 300ms — antes eram 180ms. Em iOS, o
-            //      momentum scroll pode continuar disparando eventos
-            //      depois do `touchend`, e 180ms ainda pegava o
-            //      navegador no meio do encaixe. 300ms dá folga pra
-            //      ele terminar em paz.
-            //
-            // Quando o snap nativo funciona, este enforcer é no-op
-            // quase sempre — o `if (bestDist < cardWidth * 0.25) return`
-            // barra até 25% de desvio, e o snap nativo deixa 0-3px.
+            // Enforcer: só age em desvio > 25% do card, com debounce de 300ms.
             let _snapDebounceId = null;
             let _isDragging = false;
 
@@ -12378,15 +12267,8 @@ window.checkRateio = function() {
                     }
                 });
 
-                // 🎯 Só age em desvio GROSSEIRO. Abaixo disso, o snap
-                //    nativo já cuida — e mexer aqui é o que causava a
-                //    tremedeira.
                 if (bestDist < cardWidth * 0.25) return;
 
-                // Desliga o snap durante o empurrão — mesma razão da
-                // seta: com snap `mandatory` ativo, cada escrita em
-                // `scrollLeft` reativa um re-snap, e o resultado vira
-                // cabo de guerra quadro a quadro.
                 container.style.setProperty('scroll-snap-type', 'none', 'important');
 
                 const startScroll = container.scrollLeft;
