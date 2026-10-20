@@ -10544,27 +10544,6 @@ window.checkRateio = function() {
             return new Date(ano, mes, dia);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 DIA EFETIVO DO VALE — último dia útil ≤ 20
-        // ═══════════════════════════════════════════════════════════════
-        // Regras:
-        //   • Sábado CONTA como dia útil (o usuário pode receber via PIX
-        //     agendado ou crédito automático do banco que opera sábado).
-        //   • Domingo NÃO conta — volta para o sábado anterior.
-        //   • Feriado NÃO conta — volta para o dia útil anterior.
-        //   • Dia 20 sendo útil → 20 mesmo.
-        //
-        // Exemplos:
-        //   • 20 = sábado              → 20
-        //   • 20 = domingo             → 19 (sáb)
-        //   • 20 = segunda, feriado    → 18 (sáb)
-        //   • 20 = quarta, feriado     → 19 (ter)
-        //
-        // Usada em 3 pontos:
-        //   1. `determinarOrigem` — define se um lançamento vai pro bucket
-        //      Salário ou Vale (o "corte" migra de 20 para o dia efetivo).
-        //   2. `calcularMotorFolha` — label de data do vale no Simulador.
-        //   3. `asRespDataSalario` / `asRespValorBase` — Assistente.
         function getDiaValeEfetivo(ano, mes) {
             const feriados = obterFeriados(ano, meuPerfil.cidade || 'Iperó - SP').map(f => f.data);
             let dia = 20;
@@ -10580,24 +10559,6 @@ window.checkRateio = function() {
             return new Date(ano, mes, 20);
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 MOTIVO DO VALE — por que não caiu no dia 20?
-        // ═══════════════════════════════════════════════════════════════
-        // Retorna uma string humana explicando por que o vale foi
-        // antecipado — ou `null` quando o dia 20 já é útil (caso normal).
-        //
-        // Caminha do dia 20 para trás, exclusivo no dia efetivo. Cada
-        // dia pulado entra na lista com o motivo específico (domingo ou
-        // nome do feriado). É essa lista que vira a frase final:
-        //
-        //   • 20 é domingo            → "⚠️ dia 20 cai no domingo — antecipado."
-        //   • 20 é feriado            → "⚠️ dia 20 é Natal — antecipado."
-        //   • 20 e 19 ambos não úteis → "⚠️ dia 20 cai no domingo e dia 19 é Natal — antecipado."
-        //
-        // Usada em 3 lugares:
-        //   1. `calcularMotorFolha`   — label no Simulador (aviso âmbar)
-        //   2. `asRespDataSalario`    — Assistente ("Quando cai?")
-        //   3. `asRespValorBase`      — Assistente ("Quanto vou receber?")
         function getMotivoValeEfetivo(ano, mes) {
             const feriados = obterFeriados(ano, meuPerfil.cidade || 'Iperó - SP');
             const feriadosMap = {};
@@ -10627,23 +10588,14 @@ window.checkRateio = function() {
         }
 
         function determinarOrigem(dataStr, natureza = 'Despesa', override = null) {
-            // 🎯 Override manual: se o usuário escolheu explicitamente a origem no
-            // modal, respeitamos a escolha dele — mesmo que a auto-classificação
-            // sugerisse outra (ex: vale caiu antes do dia 20).
             if (override && override !== 'Auto') return override;
             if (meuPerfil.regime === 'PJ') return natureza === 'Receita' ? 'Recebimento' : 'Caixa';
             if (meuPerfil.temVale === 'Não') return 'Salário';
-            // 🎯 Origem SEMPRE pela data (Salário ou Vale). Sem "Extra".
-            // Guardas contra datas vazias ou malformadas: caem em Salário (fallback seguro).
             if (!dataStr || typeof dataStr !== 'string') return 'Salário';
             const p = dataStr.split('/');
             if (p.length !== 3) return 'Salário';
             const dV = new Date(p[2], p[1] - 1, p[0]);
             if (isNaN(dV.getTime())) return 'Salário';
-            // 🎯 O "corte" entre Salário e Vale acompanha o dia efetivo do
-            //    vale (não mais o literal 20). Se em Dez/2026 o vale cai no
-            //    dia 19 (sáb), então um lançamento no dia 19 já pertence ao
-            //    bucket Vale — o dinheiro está disponível desde aquela data.
             const qDU = getQuintoDiaUtil(p[2], p[1] - 1);
             const diaValeEfetivo = getDiaValeEfetivo(p[2], p[1] - 1).getDate();
             return (parseInt(p[0]) >= diaValeEfetivo || dV < qDU) ? 'Vale' : 'Salário';
@@ -10861,11 +10813,7 @@ window.checkRateio = function() {
                 if (inputHolDespesasPJ) inputHolDespesasPJ.value = '';
             }
 
-            // 🎯 SINCRONIZA O TOGGLE DE FÉRIAS com o que foi SALVO para este mês.
-            // Sem isso, o toggle fica ligado de um mês para o outro e o cálculo
-            // de férias "vaza" para todos os meses seguintes.
-            // Regra: se o mês tem `temFerias: true` salvo → liga + preenche dias/início.
-            // Senão → desliga + esconde os campos.
+            // Sincroniza o toggle de férias com o que foi salvo para o mês.
             const feriasSalvasDoMes = hol && hol.temFerias;
             if (feriasSalvasDoMes) {
                 chkFerias.checked = true;
@@ -10884,9 +10832,6 @@ window.checkRateio = function() {
                 document.getElementById('holDiaInicioFerias').value = 1;
             }
 
-            // 🎯 Ao recarregar (troca de mês ou volta à aba), o formulário é
-            // repopulado com o que está SALVO. Qualquer edição pendente foi
-            // descartada — então o aviso de "não salvo" deve sumir.
             simulacaoTemAlteracoesNaoSalvas = false;
 
             calcularMotorFolha();
@@ -10899,17 +10844,6 @@ window.checkRateio = function() {
         // não altera o recibo, não altera o líquido.
         // O novo mecanismo será reconstruído do zero em uma etapa futura.
 
-        // 🎯 Helper: quantos dias o funcionário trabalhou em um dado mês.
-        // Regra de prioridade:
-        //   1) Config salvo com `diasTrabalhadosNoMes` → usa.
-        //   2) Senão, deriva do spillover do MÊS ANTERIOR: se o mês anterior
-        //      teve férias que "vazaram" (spillover), este mês trabalha
-        //      apenas (30 - spillover) dias.
-        //   3) Senão, 30 dias (mês normal).
-        // É auto-suficiente: funciona mesmo quando o usuário só VISUALIZA
-        // um mês (sem clicar em Salvar Projeção). Ex: Fevereiro precisa saber
-        // que Janeiro trabalhou 25 dias porque Dezembro teve férias com
-        // spillover de 5 — sem precisar que Janeiro tenha sido salvo.
         function getDiasTrabalhadosDoMes(mesRef) {
             // 🎯 PRIORIDADE 1: spillover de férias do MÊS ANTERIOR.
             //    Se o mês anterior teve férias que "vazaram" para este mês,
@@ -10951,12 +10885,6 @@ window.checkRateio = function() {
             const dPJ = dPJEl ? valorFloat(dPJEl.value) : 0;
             
             // ===== CÁLCULO DE FÉRIAS (CLT) =====
-            // Modelo: "o que cai na conta neste mês".
-            //  - Mês do início da viagem: mostra salário CHEIO + férias + 1/3.
-            //  - Mês seguinte: mostra salário PROPORCIONAL aos dias trabalhados no mês
-            //    anterior (a.d.t. afastamento por férias), lido do configHoleriteGlobal.
-            //  - Mês após o retorno: idem, baseado no spillover.
-            // Mês comercial = 30 dias (padrão trabalhista brasileiro).
             let sB_mes = sB;
             let diasFeriasCalc = 0;
             let labelSalarioBase = 'Salário Base';
@@ -10974,11 +10902,6 @@ window.checkRateio = function() {
             const configAnt = configHoleriteGlobal[chaveAnt];
             const nomeMesAnterior = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesAnt.getMonth()];
 
-            // 🎯 Dias trabalhados no MÊS APURADO (o mês anterior ao visualizado).
-            // Usa o helper para DERIVAR o valor quando o mês apurado não tem
-            // config salvo — ex: Fevereiro precisa saber que Janeiro trabalhou
-            // 25 dias porque Dezembro teve férias com spillover de 5, mesmo
-            // sem o usuário ter salvo Janeiro.
             const diasTrabApurado = getDiasTrabalhadosDoMes(mesAnt);
             if (diasTrabApurado < 30) {
                 const chaveApurado = window.chaveMes(mesAnt);
@@ -11023,23 +10946,7 @@ window.checkRateio = function() {
                 vH = sB / hM; vH50 = vH * 1.5 * he50; vH100 = vH * 2.0 * he100; tE = vH50 + vH100; 
                 dsr = (dU > 0 && tE > 0) ? (tE / dU) * dNU : 0;
                 tP_Trib += tE + dsr;
-                // ===== VALE (adiantamento) =====
-                // Regra: o vale aparece como PROVENTO apenas no MÊS SEGUINTE
-                // às férias. Motivo: em dezembro o funcionário estava de férias
-                // e não recebeu o adiantamento do dia 20. Então em janeiro esse
-                // adiantamento "atrasado" é creditado (40% do salário de janeiro).
-                // Em TODOS os outros meses, o vale é APENAS desconto:
-                //   - O funcionário recebe o vale no dia 20 do próprio mês;
-                //   - E desconta o vale que recebeu no dia 20 do mês anterior.
-                //   - Como entradas e saídas se anulam, o holerite só mostra
-                //     o DESCONTO (que é o que "pesa" no salário do mês).
                 if (meuPerfil.temVale === 'Sim') {
-                    // 🎯 VALE (adiantamento) — modelo simplificado:
-                    // O vale é creditado todo dia 20 (ou antes, se cair em
-                    // fim de semana/feriado) = 40% × (dias trabalhados no mês
-                    // anterior / 30 × bruto do mês anterior). NUNCA aparece como
-                    // provento na folha — apenas como DESCONTO no mês seguinte,
-                    // quando o salário é pago e o adiantamento é abatido.
                     const diasTrabAntCalc = getDiasTrabalhadosDoMes(mesAnt);
                     const brutoAntCalc = parseFloat(configAnt?.bruto) || sB;
                     valeDescontado = (brutoAntCalc / 30) * diasTrabAntCalc * 0.40;
@@ -11047,9 +10954,6 @@ window.checkRateio = function() {
                 }
                 inss = calcularINSS(tP_Trib); 
                 irrf = calcularIRRF(tP_Trib, meuPerfil.dependentes); 
-                // 🎯 Fretado incide sobre o salário REAL do mês (proporcional
-                // aos dias trabalhados quando há férias/spillover). Ex: em
-                // janeiro, trabalhou 6 dias em Dezembro → 4,4% × (6/30 × bruto).
                 fret = sB_mes * (fP / 100); 
             } else {
                 descC = dPJ; 
@@ -11072,12 +10976,6 @@ window.checkRateio = function() {
                     if (inssFerias > 0) addRow('INSS (Férias)', false, inssFerias);
                     if (irrfFerias > 0) addRow('IRRF (Férias)', false, irrfFerias);
                     if(isDez) addRow('INSS (Sobre 13º Salário)', false, inss13); if(isDez) addRow('IRRF (Sobre 13º Salário)', false, irrf13); 
-                    // Vale tem dois papéis por mês:
-                    //   • Vale (Adiantamento) → PROVENTO, o que foi creditado
-                    //     no dia 20 deste mês (40% do salário do mês).
-                    //   • Vale (Desconto) → o que foi creditado no MÊS ANTERIOR
-                    //     e agora precisa ser descontado do salário.
-                    // Cada linha aparece apenas quando tem valor (> 0).
                     if (valeDescontado > 0) addRow('Vale (Adiantamento)', false, valeDescontado);
                     addRow('Fretado', false, fret); addRow('Convênio Médico', false, tempCm); addRow('Convênio Odontológico', false, tempCo); 
                     addRow(dn1 || 'Desconto 1', false, dv1); addRow(dn2 || 'Desconto 2', false, dv2); addRow(dn3 || 'Desconto 3', false, dv3); addRow(dn4 || 'Desconto 4', false, dv4); addRow(dn5 || 'Desconto 5', false, dv5);
@@ -12798,46 +12696,11 @@ window.checkRateio = function() {
                 let b = BANCOS[c.banco || 'carteira'] || BANCOS['outros'];
 
                 let div = document.createElement('div');
-                // 🎯 Card em estilo "ITEM DO MENU LATERAL" — mesma linguagem
-                //    visual do aside, replicada literalmente:
-                //      • `rounded-lg`            → mesmo raio dos botões do menu
-                //      • `px-3.5 py-2.5`         → mesmo respiro interno
-                //      • `bg-transparent`        → sem fundo próprio no repouso
-                //      • `hover:bg-slate-50 dark:hover:bg-[#1a2639]` →
-                //        o mesmo hover de fundo dos botões do menu
-                //      • sem borda, sem sombra base — idêntico aos inativos
-                // 🎯 `w-full sm:w-auto sm:min-w-[240px]`: no mobile, cada card
-                //    ocupa 100% da largura visível (sem cortes laterais). A
-                //    partir de 640px, volta ao comportamento de carrossel
-                //    com cards de tamanho fixo (240px mínimo), mostrando
-                //    vários lado a lado.
-                //    Sem `min-w-[210px]` no mobile: a classe é inócua quando
-                //    `w-full` já garante ~300px em qualquer smartphone real,
-                //    e removê-la evita conflito de especificidade.
                 div.className = "w-full sm:w-auto sm:min-w-[240px] snap-start flex-shrink-0 flex flex-col justify-between cursor-grab active:cursor-grabbing select-none relative rounded-xl px-5 py-4 bg-transparent hover:bg-slate-50 dark:hover:bg-[#1a2639] gap-3";
-                // 🎯 Transition espelhando o menu lateral. Adicionamos
-                //    `background-color` à lista para que a troca de fundo
-                //    no hover seja animada (mesma cadência do menu).
                 div.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, background-color 0.2s ease';
                 div.dataset.contaId = c.id;
-                // 🎯 `scroll-snap-stop: always` — o carrossel PARA em cada
-                //    card mesmo num swipe rápido. Sem isso, um deslize forte
-                //    pode pular 2-3 contas de uma vez, e o usuário perde
-                //    a do meio. Com o stop, cada card ancora o movimento.
-                //    É o comportamento padrão de qualquer carrossel de banco.
-                //    Aplicado via `style` porque o Tailwind CDN não tem
-                //    utilitário pra `scroll-snap-stop`.
                 div.style.scrollSnapStop = 'always';
 
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 HANDLER ÚNICO DE `pointerdown` — consolidação
-                // ═══════════════════════════════════════════════════════════
-                // Antes havia DOIS listeners no mesmo evento: um para o
-                // long-press (drag) e outro para o feedback visual
-                // (levantar o card). Isso gerava dois setTimeout paralelos
-                // e deixava closures presas mesmo após o carrossel
-                // re-renderizar. Agora é um único handler com as duas
-                // responsabilidades — mais leve e sem estado residual.
                 div.addEventListener('pointerdown', (e) => {
                     if (e.button !== 0) return;
                     if (e.target.closest('button')) return;
@@ -12869,10 +12732,6 @@ window.checkRateio = function() {
                             }
                         }, 350);
 
-                        // 📱 LONG-PRESS — 200ms (era 400ms). Rápido o bastante
-                        // para parecer natural, curto o bastante para não
-                        // competir com o swipe horizontal do carrossel
-                        // (qualquer deslize antes cancela e libera o scroll).
                         dragState.longPressTimer = setTimeout(() => {
                             if (!dragState || dragState.card !== div) return;
                             dragState.longPressReady = true;
@@ -12886,20 +12745,6 @@ window.checkRateio = function() {
                     }
                 });
 
-                // 🎯 Hover espelhando o MENU LATERAL — mesmo padrão de
-                //    "levantar" que o app já usa nos itens de navegação:
-                //    · transform: translateY(-1px)
-                //    · box-shadow: neutra suave (mesma cor do menu lateral)
-                //    · SEM troca de cor de borda
-                //
-                //    Resultado: sensação de "sutil realce" em vez de
-                //    "destaque agressivo". A borda estática do card
-                //    (adicionada no Fix 23A) continua visível no hover
-                //    — só não muda de cor.
-                //
-                // Desktop: mouseenter/mouseleave.
-                // Mobile : pointerdown, some em 350ms.
-                // Drag   : neutralizado — o `ativarDrag` sobrescreve.
                 const hoverTransform = 'translateY(-1px)';
                 const hoverShadow    = '0 5px 12px -5px rgba(15, 23, 42, 0.16)';
                 const repousoTransform = '';
@@ -12917,10 +12762,6 @@ window.checkRateio = function() {
                         div.style.boxShadow = repousoShadow;
                     }
                 });
-
-                // 🎯 O feedback visual de "levantar no toque" foi
-                // consolidado dentro do handler único de `pointerdown`
-                // acima — sem listener duplicado.
 
                 div.innerHTML = `
                     <div class="flex items-center justify-between gap-2">
@@ -12941,32 +12782,11 @@ window.checkRateio = function() {
                 container.appendChild(div);
             });
 
-            // 🎯 Scroll horizontal "inteligente": só existe quando as contas
-            //    REALMENTE estouram a largura do container. Enquanto elas
-            //    couberem (caso do usuário com 1 ou 2 contas), a área fica
-            //    100% estática — sem micro-rolagens no toque e sem "puxão"
-            //    ao interagir com um card.
-            //
-            //    Por que JS e não CSS puro? `overflow-x: auto` já esconde a
-            //    barra quando o conteúdo cabe, mas o navegador ainda permite
-            //    o arrasto da área. Combinado com `scroll-snap`, isso gera
-            //    um pequeno deslocamento ao tocar. Desligando `overflow-x` e
-            //    `scroll-snap-type` quando o conteúdo cabe, o movimento some.
-            //
-            //    `requestAnimationFrame` garante que o browser já calculou o
-            //    layout dos cards (scrollWidth medido com precisão) antes de
-            //    aplicarmos os estilos. A tolerância de 2px evita falsos
-            //    negativos por arredondamento de sub-pixel.
+            // Scroll horizontal só se o conteúdo estourar a largura disponível.
             requestAnimationFrame(() => {
                 const precisaRolar = container.scrollWidth > container.clientWidth + 2;
                 if (precisaRolar) {
                     container.style.overflowX = 'auto';
-                    // 🎯 `snap-mandatory` no mobile força o carrossel a
-                    //    SEMPRE aterrissar com um card inteiro visível —
-                    //    nunca num estado "meio card, meio nada". No
-                    //    desktop mantemos `proximity` (comportamento
-                    //    antigo), porque lá o usuário costuma ter mouse
-                    //    e a rolagem livre é mais natural.
                     const isMobile = window.innerWidth < 768;
                     container.style.scrollSnapType = isMobile ? 'x mandatory' : 'x proximity';
                 } else {
@@ -12978,11 +12798,6 @@ window.checkRateio = function() {
             renderDropdownContas('listaContaDropdown', 'contaSelecionada', 'lblConta', 'menuConta');
             renderDropdownContas('listaEditContaDropdown', 'editContaSelecionada', 'lblEditConta', 'menuEditConta');
 
-            // 🎯 Constrói (ou reconstrói) a navegação mobile. Roda a cada
-            //    render porque o número de contas pode ter mudado — nova
-            //    conta, conta apagada, reordenação via drag. O container
-            //    de navegação é 100% reconstruído; nenhum listener antigo
-            //    fica pendurado.
             configurarNavContasMobile();
         }
 
