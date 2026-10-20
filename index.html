@@ -4385,24 +4385,7 @@ select:focus, select:focus-visible {
             window.abrirTela('projecao');
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 📊 GRÁFICOS — Chart.js com tema adaptativo
-        // ═══════════════════════════════════════════════════════════════
-        // Estado e ciclo de vida:
-        //   • `_periodoGraficos` — 6 ou 12 meses de histórico
-        //   • `_charts`          — cache dos gráficos para destruir antes
-        //                          de recriar (exigência do Chart.js)
-        //   • Paleta fixa para categorias (nunca aleatória — garante
-        //     consistência entre sessões)
-        //   • Cores lidas do tema em runtime — funciona no dark e no light
-
         window._periodoGraficos = 6;
-        // 🎯 Modo de leitura dos gráficos:
-        //   • 'real'      → SÓ movimentações efetivadas (fotografia do que
-        //                   já aconteceu). Corresponde a `pago === true`.
-        //   • 'projetado' → inclui PENDENTES (o que ainda vai acontecer).
-        //                   Mesma regra dos cards do Resumo — a visão
-        //                   "como meu mês vai fechar".
         window._modoGraficos = 'real';
         window._charts = {};
 
@@ -4444,10 +4427,6 @@ select:focus, select:focus-visible {
         }
 
         window.renderizarGraficos = function() {
-            // 🎯 Chart.js agora chega como global (`window.Chart`), carregado
-            //    por um <script src> UMD fora do módulo. Referenciamos por
-            //    uma constante local — mesmo uso, sem dependência de import.
-            //    Se o CDN falhar, retorna limpo e o resto do app segue.
             const Chart = window.Chart;
             if (typeof Chart === 'undefined') return;
 
@@ -4463,38 +4442,12 @@ select:focus, select:focus-visible {
 
             const PALETA_CAT = ['#4D6BFE', '#059669', '#D97706', '#E11D48', '#8b5cf6', '#06b6d4', '#94a3b8'];
 
-            // ─── 1) EVOLUÇÃO MENSAL (linha + área com gradiente) ──────
-            // 🎯 Lê o modo atual — 'real' usa SÓ pagas; 'projetado' inclui
-            //    pendentes. `asCalcularTotaisMes` já aceita esse parâmetro
-            //    no 3º argumento.
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 LEITURA POR MODO — duas fontes diferentes de verdade
-            // ═══════════════════════════════════════════════════════════
-            // • REAL      → `asCalcularTotaisMes(mes, ano, 'pago')`
-            //   Só transações efetivadas do bancoDeDados. Sem projeção.
-            //   Mostra o que de fato aconteceu.
-            //
-            // • PROJETADO → `asCalcularSaldoBucket(mes, ano, 'Total')`
-            //   Mesma fonte dos cards do Resumo:
-            //     · base   = Salário Líquido + Vale (do Simulador)
-            //     · rec    = receitas com "Compor Projeção" ligado
-            //     · desp   = todas as despesas (pagas + pendentes)
-            //   Sem isso, o gráfico mostrava R$ 0,00 de receitas mesmo
-            //   com o usuário tendo simulação salva — porque o lançamento
-            //   do salário mora no Simulador, não no Extrato.
+            // Real: só efetivadas. Projetado: base do Simulador + pendentes.
             const ehProjetado = window._modoGraficos !== 'real';
 
-            // 🎯 `modoCalc` continua sendo usado pelos outros dois gráficos
-            //    (doughnut de categorias e saldo por conta). Removê-lo agora
-            //    quebrava `renderizarGraficos` no meio — o gráfico de evolução
-            //    já tinha sido desenhado, mas os dois abaixo ficavam vazios
-            //    por causa do ReferenceError. Mantendo as duas variáveis,
-            //    cada bloco usa a que faz sentido.
             const modoCalc = ehProjetado ? 'todos' : 'pago';
 
-            // ═══════════════════════════════════════════════════════════
-            // 📊 KPIs — 4 números-chave com delta vs mês anterior
-            // ═══════════════════════════════════════════════════════════
+            // KPIs — 4 números-chave com delta vs mês anterior.
             const mesAtual = dataFiltro.getMonth();
             const anoAtual = dataFiltro.getFullYear();
             const prevDt = new Date(anoAtual, mesAtual - 1, 1);
@@ -4510,8 +4463,7 @@ select:focus, select:focus-visible {
                 totPrev  = asCalcularTotaisMes(prevDt.getMonth(), prevDt.getFullYear(), 'pago');
             }
 
-            // Helper: calcula delta vs mês anterior e a cor semântica.
-            // `inverte` = true para Despesas (subir é ruim).
+            // `inverte: true` para Despesas (subir é ruim).
             const criarDelta = (atual, prev, inverte) => {
                 if (prev <= 0.005) return { txt: '—', cor: 'text-slate-400 dark:text-gray-500' };
                 const pct = ((atual - prev) / Math.abs(prev)) * 100;
@@ -4549,14 +4501,7 @@ select:focus, select:focus-visible {
                 ? ((totAtual.receitas - totAtual.despesas) / totAtual.receitas) * 100
                 : null;
 
-            // 🎯 LIMIAR DE "DADOS SUSPEITOS" — despesas ≥ 3× receitas.
-            // Quando as despesas ultrapassam esse patamar, é MUITO mais
-            // provável que o salário do mês ainda não foi salvo no
-            // Simulador do que um mês real de gastos descontrolados.
-            // Nesse cenário, os KPIs e insights trocam a mensagem de
-            // "rever gastos" por "verifique o Simulador" — muito mais
-            // útil para o usuário, que quase sempre descobriu na hora
-            // que esqueceu de salvar a projeção.
+            // Despesas ≥ 3× receitas costuma significar "salário não salvo no Simulador".
             const faltaDadosReceita = taxa !== null && taxa < -200;
 
             const elTaxa = document.getElementById('kpiTaxa');
@@ -4567,8 +4512,7 @@ select:focus, select:focus-visible {
                 elTaxaHint.textContent = 'Sem receitas no mês';
                 elTaxaHint.className = 'text-[10px] font-semibold mt-1 text-slate-400 dark:text-gray-500';
             } else if (faltaDadosReceita) {
-                // 🎯 Cor ÂMBAR em vez de VERMELHO: informa com neutralidade,
-                // não alarma. O problema é dado faltando, não descontrole.
+                // Âmbar: informa, não alarma. Problema é dado faltando.
                 elTaxa.textContent = taxa.toFixed(0) + '%';
                 elTaxa.style.color = '#D97706';
                 elTaxaHint.textContent = 'Salário do mês ainda não salvo?';
@@ -4590,20 +4534,14 @@ select:focus, select:focus-visible {
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 💡 INSIGHTS — frases automáticas a partir dos dados
-            // ═══════════════════════════════════════════════════════════
+            // Insights automáticos a partir dos dados.
             const insights = [];
 
             // Insight 1 — saldo do mês (positivo ou negativo)
             if (totAtual.receitas > 0.005) {
                 if (taxa < 0) {
                     if (faltaDadosReceita) {
-                        // 🎯 Receita muito menor que despesa → provável
-                        // falta de dados. Em vez de sugerir "rever gastos"
-                        // (que não resolve nada se o salário não foi salvo),
-                        // orienta o usuário para o Simulador. O multiplicador
-                        // ("20×") dá contexto visual imediato.
+                        // Receita << despesa: orienta a salvar o Simulador, não a "rever gastos".
                         const multiplicador = (totAtual.despesas / totAtual.receitas).toFixed(1).replace('.', ',');
                         insights.push({
                             icone: '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
@@ -4646,12 +4584,7 @@ select:focus, select:focus-visible {
                 }
             }
 
-            // Insight 3 — ritmo do mês (só no modo Real)
-            // 🎯 Guarda extra: quando `faltaDadosReceita` é true (despesas
-            // 3× ou mais que receitas), o cálculo de "2021% do que ganhou"
-            // NÃO faz sentido como alerta de ritmo — o problema é a BASE
-            // de dados, não a velocidade de gasto. O Insight 1 já cobre
-            // esse cenário com a mensagem correta ("salário não salvo").
+            // Ritmo do mês: só no modo Real e sem faltaDadosReceita (Insight 1 já cobre).
             if (!ehProjetado && !faltaDadosReceita && totAtual.receitas > 0.005 && totAtual.despesas > 0.005) {
                 const diaHoje = new Date().getDate();
                 const ultimoDia = new Date(anoAtual, mesAtual + 1, 0).getDate();
@@ -4690,7 +4623,6 @@ select:focus, select:focus-visible {
                 }
             }
 
-            // Atualiza o subtítulo — deixa explícito o que está sendo medido.
             const subEvol = document.getElementById('subGrafEvolucao');
             if (subEvol) {
                 subEvol.textContent = ehProjetado
@@ -4705,8 +4637,6 @@ select:focus, select:focus-visible {
                 labels.push(nomeMeses[d.getMonth()].substring(0, 3) + '/' + String(d.getFullYear()).substring(2));
 
                 if (ehProjetado) {
-                    // Modo Projetado — receitas = base do Simulador + receitas
-                    // que compõem a projeção. Despesas = todas (pagas e pendentes).
                     const proj = asCalcularSaldoBucket(d.getMonth(), d.getFullYear(), 'Total');
                     dadosRec.push((proj.base || 0) + (proj.rec || 0));
                     dadosDesp.push(proj.desp || 0);
@@ -4747,11 +4677,6 @@ select:focus, select:focus-visible {
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { position: 'top', align: 'end', labels: { boxWidth: 9, boxHeight: 9, padding: 14, font: { size: 11, weight: 600 }, usePointStyle: true, pointStyle: 'circle' } },
-                        // 🎯 Marcadores do tooltip em CÍRCULO (não quadrado).
-                        // `usePointStyle: true` faz o Chart.js usar a forma
-                        // do dataset (o dataset de linha tem `pointStyle`
-                        // default 'circle'). Reduzi `boxWidth/Height` para
-                        // 7px — discreto, mas visível.
                         tooltip: {
                             backgroundColor: cores.tooltipBg, borderColor: cores.tooltipBorda, borderWidth: 1,
                             padding: 12, cornerRadius: 10,
@@ -4795,27 +4720,7 @@ select:focus, select:focus-visible {
                 const totalCat = topCats.reduce((s, [, v]) => s + v, 0);
                 document.getElementById('totalGrafCategorias').textContent = formatMoeda(totalCat);
 
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 DOUGHNUT SEM TOOLTIP + HOVER INTERATIVO COM A LEGENDA
-                // ═══════════════════════════════════════════════════════════
-                // Por que desligar o tooltip:
-                //   • O tooltip nativo aparece próximo ao cursor. Como o
-                //     cursor fica DENTRO do buraco da rosca, o balão caía no
-                //     centro, colidindo com o texto "Total" que vive ali.
-                //   • A legenda à direita JÁ mostra nome, % e valor — o
-                //     tooltip é 100% redundante.
-                //
-                // O que o usuário ganha no lugar:
-                //   • `onHover` escuta a fatia em foco e DESTACA a linha
-                //     correspondente na legenda (opacidade cheia + leve
-                //     shift para a direita). As outras linhas esmaecem.
-                //   • Ao tirar o cursor, tudo volta ao normal.
-                //   • Funciona em mobile também — o toque dispara o hover.
-                //
-                // `layout.padding` + `hoverOffset: 8` (era 14): a fatia
-                // cresce para fora ao passar o mouse. Com 14px, ela batia
-                // contra a borda do canvas (180×180) e era cortada. Com
-                // 8px + padding de 6px, sobra espaço para o efeito.
+                // Tooltip desligado (legenda já mostra tudo). Hover destaca a linha correspondente.
                 window._charts.categorias = new Chart(document.getElementById('graficoCategorias'), {
                     type: 'doughnut',
                     data: {
@@ -4857,41 +4762,7 @@ select:focus, select:focus-visible {
                     }
                 });
 
-                // 🎯 `transition-all duration-200` na linha da legenda:
-                //    sem isso, o realce/esmaecimento do `onHover` do doughnut
-                //    seria instantâneo (piscada seca). Com a transição, a
-                //    resposta ao hover vira um fade suave.
-                                // ═══════════════════════════════════════════════════════════
-                // 🎯 LINHAS DA LEGENDA — contínuas, hoveráveis, bidirecionais
-                // ═══════════════════════════════════════════════════════════
-                // Cada linha:
-                //   • `px-2 py-2 -mx-2` → estende a área de toque 8px para
-                //     cada lado, cobrindo até a coluna de rótulos. O cursor
-                //     em QUALQUER ponto horizontal da linha ativa o hover.
-                //   • `rounded-lg` + `hover:bg-*` → feedback imediato.
-                //   • `cursor-pointer` → indica que é interativo.
-                //
-                // Sem gaps verticais (o container perdeu o `space-y-2`),
-                // a coluna inteira é uma faixa contínua. Não há mais
-                // "terra de ninguém" entre uma categoria e outra.
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 LEGENDA COM ORÇAMENTO — barra de progresso por categoria
-                // ═══════════════════════════════════════════════════════════
-                // Quando a categoria tem um teto definido em `orcamentosGlobais`,
-                // adiciona uma segunda linha na legenda com barra de progresso:
-                //
-                //   [dot] Alimentação          48%    R$ 670,00
-                //         ▓▓▓▓▓▓▓▓▓▓░░░░  84% de R$ 800,00
-                //
-                // Cor da barra e do texto variam conforme o quanto já foi gasto:
-                //   • Verde      → abaixo de 70% do teto (tranquilo)
-                //   • Âmbar      → 70% a 90%            (atenção)
-                //   • Vermelho   → acima de 90%         (no limite)
-                //   • Vermelho + negrito → estourou 100% (excesso)
-                //
-                // Categorias sem orçamento ficam com a linha simples, como antes.
-                // O cálculo de pct da primeira linha permanece igual (% do
-                // total visível no doughnut).
+                // Legenda: linha simples, ou linha + barra de progresso se a categoria tiver teto.
                 document.getElementById('legendaCategorias').innerHTML = topCats.map((c, i) => {
                     const pct = totalCat > 0 ? (c[1] / totalCat) * 100 : 0;
                     const orcamento = orcamentosGlobais[c[0]] || 0;
@@ -4930,18 +4801,7 @@ select:focus, select:focus-visible {
                     </div>`;
                 }).join('');
 
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 HOVER BIDIRECIONAL — legenda → doughnut
-                // ═══════════════════════════════════════════════════════════
-                // O caminho inverso (doughnut → legenda) já existe via
-                // `onHover` no Chart.js. Aqui completamos o ciclo:
-                // passar o mouse na linha da legenda destaca a fatia
-                // correspondente e esmaece as demais linhas.
-                //
-                // `chart.setActiveElements` é a API oficial do Chart.js 4
-                // para controlar o estado ativo programaticamente — dispara
-                // o mesmo efeito visual do hover nativo (fatia se desloca
-                // para fora + opacidade ajustada).
+                // Hover inverso: legenda → doughnut (via setActiveElements).
                 document.querySelectorAll('[data-cat-row]').forEach(row => {
                     const idx = parseInt(row.dataset.catRow);
                     row.addEventListener('mouseenter', () => {
@@ -4966,7 +4826,6 @@ select:focus, select:focus-visible {
                     });
                 });
 
-                // Adiciona interatividade à legenda (tocar no nome ilumina o gráfico e os valores)
                 const legendRows = document.querySelectorAll('#legendaCategorias > div');
                 legendRows.forEach((row, i) => {
                     const activate = (e) => {
@@ -5008,15 +4867,8 @@ select:focus, select:focus-visible {
                 });
             }
 
-            // ─── 3) SALDO POR CONTA (barras horizontais) ──────────────
-            // 🎯 Respeita o modo:
-            //   • 'real'      → saldo real (só pagas), igual ao carrossel
-            //                    do Resumo.
-            //   • 'projetado' → saldo após incluir pendentes (o que a conta
-            //                    terá quando todas as contas forem quitadas).
+            // Saldo por conta: real (só pagas) ou projetado (inclui pendentes do mês).
             const nomes = [], saldos = [], coresBar = [];
-            // 🎯 Chave do mês visualizado (MM/AAAA) para limitar o que entra
-            //    no modo Projetado.
             const chaveMesGraf = window.chaveMes(dataFiltro);
 
             contasGlobais.forEach(c => {
@@ -5025,15 +4877,9 @@ select:focus, select:focus-visible {
                     if ((d.contaId || 'c_padrao') !== c.id) return;
 
                     if (window._modoGraficos === 'real') {
-                        // REAL: só movimentações efetivadas. Soma qualquer
-                        // data — é o saldo que EXISTE agora na conta.
                         if (!d.pago) return;
                     } else {
-                        // PROJETADO: efetivadas + pendentes DESTE MÊS.
-                        // Pendentes de meses futuros distantes NÃO entram —
-                        // senão o saldo mostraria o efeito de parcelas de
-                        // 2027, deixando o número artificialmente negativo
-                        // (ou positivo).
+                        // Projetado: só pendentes DESTE mês (parcelas futuras distantes não entram).
                         if (!d.pago) {
                             const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
                             if (!dataRef || dataRef.length !== 10) return;
@@ -5057,11 +4903,6 @@ select:focus, select:focus-visible {
                     ? 'Saldo real atual'
                     : 'Saldo se as pendências deste mês forem quitadas';
             }
-
-            // 🎯 O subtítulo do card "Saldo por Conta" é atualizado logo
-            //    abaixo, junto com o cálculo das barras. Este bloco antigo
-            //    foi removido porque declarava `subContas` de novo no mesmo
-            //    escopo — o JavaScript não permite redeclarar `const`.
 
             const wrapContas = document.getElementById('wrapGrafContas');
             const emptyContas = document.getElementById('emptyGrafContas');
@@ -6603,33 +6444,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             reader.readAsText(file);
         });
         // ===================== BACKUPS / CHECKPOINTS =====================
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 COTAS — por que separar automáticos dos demais
-        // ═══════════════════════════════════════════════════════════════
-        // O `criarBackup` é chamado por 6 origens diferentes:
-        //   1. Manual   (botão "Criar Checkpoint Agora")
-        //   2. Automático (a cada 24h)
-        //   3. Segurança antes de restaurar
-        //   4. Antes de importar
-        //   5. Antes do Hard Reset
-        //   6. Antes de Restaurar Salário
-        //
-        // Antes, todas competiam pela mesma cota de 10. Com isso, 3-4
-        // dias de uso ativo já poderiam empurrar todos os checkpoints
-        // manuais de uma vez — porque os automáticos + os de segurança
-        // sozinhos consumiam as 10 vagas.
-        //
-        // Nova regra em duas camadas:
-        //   • Automáticos têm cota própria: 3. Ao passar de 3, os mais
-        //     antigos automáticos saem. Preserva os últimos 3 estados
-        //     automáticos, que é o suficiente para "voltar 3 passos".
-        //   • Cota dura total continua 10. Se, MESMO depois de limitar
-        //     os automáticos a 3, o conjunto passar de 10, aí sim
-        //     remove os mais antigos (qualquer tipo) até voltar a 10.
-        //
-        // Resultado na prática: os manuais e de segurança só são
-        // despejados quando a cota dura total é estourada de fato —
-        // cenário raro, que exige 8+ checkpoints preciosos coexistindo.
+        // Automáticos têm cota própria (3); manuais e de segurança cabem na cota total (10).
         const MAX_BACKUPS = 10;
         const MAX_AUTOMATICOS = 3;
         const INTERVALO_AUTO_BACKUP_MS = 24 * 60 * 60 * 1000; // 24h
@@ -6660,15 +6475,12 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             const lista = await carregarBackups();
             const idsParaRemover = new Set();
 
-            // ─── Camada 1: limitar automáticos a MAX_AUTOMATICOS ───
             const automaticos = lista.filter(b => b.nome === 'Automático');
             if (automaticos.length > MAX_AUTOMATICOS) {
                 automaticos.slice(MAX_AUTOMATICOS).forEach(b => idsParaRemover.add(b.id));
             }
 
-            // ─── Camada 2: cota dura total ───
-            // Considera apenas os que NÃO foram marcados na camada 1 —
-            // senão contaria em dobro e removeria cedo demais.
+            // Considera apenas os que não foram marcados na camada 1 (evita contar em dobro).
             const restantes = lista.filter(b => !idsParaRemover.has(b.id));
             if (restantes.length > MAX_BACKUPS) {
                 restantes.slice(MAX_BACKUPS).forEach(b => idsParaRemover.add(b.id));
@@ -6739,11 +6551,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             container.innerHTML = '';
             lista.forEach(b => {
                 const div = document.createElement('div');
-                // 🎯 `data-backup-id` — âncora para o `apagarBackup` remover
-                //    o card direto do DOM (remoção otimista, sem re-fetch).
-                //    Sem esse atributo, o apagar precisaria chamar
-                //    `renderListaBackups` de novo, que dependia de `getDocs`
-                //    e podia travar em "Carregando…".
                 div.dataset.backupId = b.id;
                 div.className = "bg-white dark:bg-[#121b2b] border border-slate-200 dark:border-[#1e2a40] p-3.5 rounded-xl flex flex-col gap-2.5 shadow-sm";
                 div.innerHTML = `
@@ -6780,14 +6587,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             try {
                 await deleteDoc(doc(db, "userData", currentUserUID, "backups", id));
 
-                // 🎯 Remoção OTIMISTA — apaga o card direto do DOM, sem
-                //    refazer o `getDocs`. Dois motivos:
-                //      1. Evitava a lista "presa" em "Carregando…" quando
-                //         o re-fetch demorava ou travava.
-                //      2. É instantâneo — o usuário vê a remoção no mesmo
-                //         frame, sem spinner.
-                //    O Firestore já confirmou o `deleteDoc`, então o
-                //    estado do DOM reflete o estado do servidor.
+                // Remoção otimista: card sai do DOM direto (sem refetch).
                 const card = document.querySelector(`[data-backup-id="${id}"]`);
                 if (card) card.remove();
 
@@ -6811,10 +6611,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
         };
 
         window.restaurarBackup = async function(id) {
-            // 🎯 O confirm deixa explícito o que VAI e o que NÃO VAI ser
-            //    restaurado. Sem isso, o usuário poderia esperar que o
-            //    saldo inicial das contas voltasse ao do checkpoint —
-            //    e ficaria surpreso quando não voltasse.
             if (!confirm(
                 "Restaurar este checkpoint?\n\n" +
                 "✅ Lançamentos, simulações, categorias e perfil serão restaurados.\n" +
@@ -6833,23 +6629,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 if (!snap.exists()) { window.mostrarAviso("Checkpoint não encontrado.", "erro"); return; }
                 const dados = JSON.parse(snap.data().dados);
                 
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 RESTAURAR NÃO TOCA NAS CONTAS
-                // ═══════════════════════════════════════════════════════════
-                // Contas são a "realidade" do usuário — o saldo inicial
-                // de cada uma foi ajustado manualmente, com base no extrato
-                // do banco. Restaurar backup é sobre o DADO HISTÓRICO
-                // (lançamentos + simulações), não sobre a base material.
-                //
-                // Se restaura-ssemos `contasGlobais`, os saldos iniciais
-                // voltariam ao valor do momento do checkpoint — desfazendo
-                // qualquer ajuste manual feito depois. E o usuário teria que
-                // reajustar tudo à mão após cada restore.
-                //
-                // O snapshot continua GUARDANDO `contasGlobais` (para
-                // compatibilidade), mas o restore ignora esse campo.
-                // Para mudar um saldo, o caminho é o lápis de cada conta.
-                
+                                // Restaurar NÃO toca em contas: saldos iniciais preservados.
                 // 3. Apaga do Firestore atual (EXCETO contas)
                 for (const d of bancoDeDados) await apagarDespesaFirestore(d.id);
                 for (const c of categoriasGlobais) await apagarCategoriaFirestore(c.id);
@@ -7853,19 +7633,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             if(document.getElementById('headerNome')) document.getElementById('headerNome').textContent = nomeCompleto;
             ajustarFonteNomeHeader(nomeCompleto);
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 CARD DE BUCKET — VISIBILIDADE E LAYOUT POR REGIME
-            // ═══════════════════════════════════════════════════════════
-            // Cada card do grid tem `data-card-bucket` (salario | vale |
-            // despesas). Localizamos os WRAPPERS diretamente — nunca
-            // usamos `.closest('.bg-white')`, que subia até o painel
-            // "Saldos Projetados" inteiro e escondia o Total junto.
-            //
-            // O grid `sm:grid-cols-3` se adapta ao número de cards
-            // visíveis:
-            //   • CLT com Vale  → 3 colunas (Salário + Vale + Despesas)
-            //   • CLT sem Vale  → 2 colunas (Salário + Despesas)
-            //   • PJ            → 2 colunas (Faturamento + Despesas)
             const wrapSalario = document.querySelector('[data-card-bucket="salario"]');
             const wrapVale = document.querySelector('[data-card-bucket="vale"]');
             const wrapDespesas = document.querySelector('[data-card-bucket="despesas"]');
@@ -7875,20 +7642,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             const lblVale = document.getElementById('lblSaldoVale');
             const lblDespesas = document.getElementById('lblDespesasMes');
 
-            // 🎯 Grid SEMPRE em 3 colunas. Não reduzimos para 2 quando o
-            //    card de Vale some — em vez disso, deixamos o slot dele
-            //    vazio (o `hidden` = display:none faz o CSS Grid ignorar
-            //    esse filho, e os 2 visíveis ocupam as colunas 1 e 2).
-            //    Resultado: os cards mantêm a mesma largura de 1/3 em
-            //    TODOS os modos, sem esticar nem empurrar.
-            //
-            //    Antes tentávamos `sm:grid-cols-2`, e os dois cards se
-            //    espichavam para preencher 50% cada — o "esticado" que
-            //    o usuário reprovou. Além disso, a barra de consumo
-            //    (que é `w-full` do card) também esticava junto.
-            // 🎯 Referência à linha compacta de despesas do hero (novo
-            //    elemento). Aparece APENAS nos regimes sem divisão
-            //    Salário/Vale — substitui o grid inteiro.
+            // Hero compacto de despesas: só em regimes sem Salário/Vale.
             const heroLinha = document.getElementById('heroLinhaDespesas');
             const ocultarGrid = (ocultar) => {
                 if (!gridCards) return;
@@ -7920,17 +7674,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 ocultarGrid(false);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 SINCRONIZA CHIPS DE ORIGEM (Novo Lançamento + Edição)
-            // ═══════════════════════════════════════════════════════════
-            // Esconde o chip "Vale" dos modais quando o usuário não
-            // recebe vale (CLT) OU quando está em PJ/Autônomo. Sem isso,
-            // o usuário continuava vendo uma opção que não faz sentido
-            // pro perfil dele — e podia marcar "Vale" num lançamento
-            // que depois ficaria órfão de bucket.
-            //
-            // Cobre os 2 conjuntos de chips (novo + edição) via
-            // `data-origem-valor="Vale"`, que já existe no HTML.
+            // Chip "Vale" oculto em PJ e CLT-sem-vale (não faz sentido no perfil).
             const ocultarVale = (meuPerfil.regime === 'PJ') || (meuPerfil.temVale === 'Não');
             document.querySelectorAll('[data-origem-valor="Vale"]').forEach(btn => {
                 btn.classList.toggle('hidden', ocultarVale);
@@ -8020,35 +7764,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 window.fecharModalGenerico('modalPerfil');
             }
 
-            // ═══════════════════════════════════════════════════════════════
-        // 🔄 MIGRAÇÃO AUTOMÁTICA — Tem Vale? Sim ↔ Não
-        // ═══════════════════════════════════════════════════════════════
-        // Quando o usuário troca o perfil de vale, TODOS os meses salvos
-        // precisam ser recalculados — porque o `salarioLiquido` guardado
-        // carrega a decisão de "recebo vale" da época em que foi salvo.
-        //
-        // Matemática:
-        //   • Salvo com vale:  salarioLiquido = bruto − INSS − IRRF − vale
-        //   • Sem vale (correto): salarioLiquido = bruto − INSS − IRRF
-        //
-        //   Sim → Não: devolve o vale ao salário
-        //             novoSalarioLiquido = salarioLiquido + valeAdiantamento
-        //
-        //   Não → Sim: recalcula o vale (mesma fórmula do motor) e subtrai
-        //             novoVale = (bruto_anterior / 30) × dias_trab_anterior × 0.40
-        //             novoSalarioLiquido = salarioLiquido − novoVale
-        //
-        // O que NÃO é tocado: bruto, horas, HE, bônus, convênios, fretado,
-        // descontos avulsos, férias, 13º. Esses são INDEPENDENTES do vale
-        // e continuam exatamente como estavam em cada mês.
-        //
-        // O que É tocado em saldoBaseMensalGlobal: os espelhos `salario` e
-        // `vale` (mesma matemática). `valor13` fica intacto — a alocação
-        // dele entre Salário/Vale é decisão de runtime, não de armazenamento.
-        //
-        // O override manual do Salário (`overrideSalario`) também NÃO é
-        // tocado: o usuário fixou aquele valor, ele não participa do
-        // cálculo do vale.
+            // Sim→Não devolve o vale ao líquido. Não→Sim recalcula e subtrai. Resto intacto.
         function migrarProjecoesPorVale(temValeAntes, temValeDepois) {
             if (temValeAntes === temValeDepois) return 0;
 
@@ -8115,28 +7831,13 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
         }
 
         document.getElementById('btnSalvarPerfil').addEventListener('click', () => {
-            // 🎯 Detecta se o salário bruto mudou ANTES de sobrescrever meuPerfil.
-            // Se mudou, propaga o novo valor para todas as simulações salvas
-            // a partir do MÊS SEGUINTE ao mês visualizado no header.
-            // O mês atual e os anteriores ficam intactos (regra histórica).
             const salarioAntigo = valorFloat(meuPerfil.salario);
             const salarioNovo = valorFloat(document.getElementById('perfilSalario').value);
             const salarioMudou = Math.abs(salarioNovo - salarioAntigo) > 0.005;
 
-            // 🆕 Captura o perfil de vale ANTES de sobrescrever, para detectar
-            //    mudança e disparar a migração em massa logo abaixo.
             const temValeAntes = meuPerfil.temVale || 'Sim';
             const regimeAntes = meuPerfil.regime || 'CLT';
 
-            // 🎯 Trocar o perfil é decisão de APRESENTAÇÃO. Não toca em
-            //    dado nenhum (lançamentos, overrides, ajustes continuam
-            //    intactos). Só a UI se ajusta: esconder/mostrar o card
-            //    do Vale, os chips, e o filtro de origem — todos via
-            //    `aplicarPerfilVisual()` e reconstruções de dropdown.
-            //
-            //    Se o usuário quiser limpar dados antigos (overrides,
-            //    ajustes manuais), existem ações dedicadas para isso.
-            //    Trocar perfil NÃO é uma delas.
             meuPerfil = {
                 nome: document.getElementById('perfilNome').value,
                 regime: document.getElementById('perfilRegime') ? document.getElementById('perfilRegime').value : 'CLT',
@@ -8148,13 +7849,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 email: '', foto: '' 
             };
 
-            // ═══════════════════════════════════════════════════════════
-            // 🔄 MIGRAÇÃO DE VALE — dispara se "Recebe Vale?" mudou
-            // ═══════════════════════════════════════════════════════════
-            // Só atua quando AMBOS os estados são CLT. Em PJ o conceito de
-            // vale não existe — migrar não faz sentido, e a troca CLT↔PJ
-            // é uma mudança estrutural que merece seu próprio fluxo (não
-            // está no escopo desta migração).
+            // Migração de vale só entre CLT↔CLT (PJ não tem o conceito).
             if (regimeAntes === 'CLT' && meuPerfil.regime === 'CLT'
                 && temValeAntes !== meuPerfil.temVale) {
                 const meses = migrarProjecoesPorVale(temValeAntes, meuPerfil.temVale);
@@ -8173,11 +7868,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             }
 
             if (salarioMudou) {
-                // 🎯 Alvo: mês SEGUINTE ao mês VISUALIZADO no header (dataFiltro).
-                // Ex: se estou vendo Set/2026 quando clico em Configurações, o
-                // alvo é Out/2026 — todos os meses a partir de Out/2026 recebem
-                // o novo bruto. O mês visualizado e todos os anteriores ficam
-                // intactos (histórico preservado).
+                // Alvo: mês seguinte ao visualizado (histórico fica intacto).
                 const mesAlvo = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() + 1, 1);
                 const mesAlvoNum = mesAlvo.getFullYear() * 100 + (mesAlvo.getMonth() + 1);
 
@@ -12735,11 +12426,6 @@ const inputDesc = document.getElementById('descricao');
                 }
                 if (pago) return;
 
-                // 🎯 Recorrentes têm dois mecanismos de "sumir do mês":
-                //    • `mesesOcultos` → o usuário apagou SÓ aquela ocorrência
-                //    • `encerradoEm` → a série foi encerrada a partir do mês X
-                // Sem estas guardas, uma recorrente apagada continuava
-                // aparecendo no alerta — exatamente o bug que o usuário viu.
                 const partes = dataRef.split('/');
                 const anoMesNum = parseInt(partes[2]) * 100 + parseInt(partes[1]);
                 if (d.mesesOcultos && d.mesesOcultos.includes(anoMesNum)) return;
@@ -12769,7 +12455,6 @@ const inputDesc = document.getElementById('descricao');
             });
 
             // Atrasadas: as mais antigas primeiro (mais críticas).
-            // Hoje/amanhã: alfabéticas — estáveis e previsíveis.
             atrasadas.sort((a, b) => b.diasAtraso - a.diasAtraso);
             hojeItens.sort((a, b) => a.descricao.localeCompare(b.descricao));
             amanhaItens.sort((a, b) => a.descricao.localeCompare(b.descricao));
@@ -12778,9 +12463,7 @@ const inputDesc = document.getElementById('descricao');
         }
 
         window.verificarAlertasVencimento = function(forcar) {
-            // 🎯 Só mostra uma vez por dia (a menos que `forcar` seja true).
-            // Usa data LOCAL (não `toISOString()` que devolve UTC — no
-            // Brasil, isso fazia o alerta "renovar" às 21h).
+            // Data LOCAL (não toISOString, que devolveria UTC).
             const hj = new Date();
             const hojeStr = `${hj.getFullYear()}-${String(hj.getMonth()+1).padStart(2,'0')}-${String(hj.getDate()).padStart(2,'0')}`;
             if (!forcar && localStorage.getItem('alertaVencimentosDia') === hojeStr) return;
@@ -12801,8 +12484,7 @@ const inputDesc = document.getElementById('descricao');
             const tituloEl = document.getElementById('tituloAlertaVenc');
             const subEl = document.getElementById('subtituloAlertaVenc');
 
-            // 🎯 Cabeçalho assume o tom do item MAIS CRÍTICO presente:
-            // atrasadas > hoje > amanhã. Nada de cores contraditórias.
+            // Cabeçalho assume o tom do item mais crítico: atrasadas > hoje > amanhã.
             if (atrasadas.length > 0) {
                 iconeEl.className = 'w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
                 iconeEl.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>';
@@ -12878,21 +12560,7 @@ const inputDesc = document.getElementById('descricao');
             }, 320);
         };
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🔔 ÍCONE FLUTUANTE PERSISTENTE
-        // ═══════════════════════════════════════════════════════════════
-        // Um sino flutuante que fica visível enquanto existir qualquer
-        // conta atrasada, vencendo hoje ou vencendo amanhã. Some sozinho
-        // quando o usuário paga (ou apaga) todas.
-        //
-        // Chamado em dois pontos:
-        //   1. No boot, logo após `bancoDeDados` ser carregado
-        //   2. No fim de `atualizarTabela()`, que roda a cada mudança de
-        //      estado (pagar, apagar, editar, trocar de mês, etc.)
-        //
-        // `style.display` inline em vez de classe Tailwind: o CDN injeta
-        // `.hidden` e `.flex` com a MESMA especificidade, e a ordem de
-        // carregamento varia. Inline é determinístico.
+        // Sino do header: neutro sem pendências, âmbar + badge quando há.
         window.atualizarIconeAlertaVencimento = function() {
             const btn = document.getElementById('btnAlertaVencimento');
             const badge = document.getElementById('badgeAlertaVenc');
@@ -12901,22 +12569,14 @@ const inputDesc = document.getElementById('descricao');
             const { atrasadas, hojeItens, amanhaItens } = _alertasVencimentoColetar();
             const total = atrasadas.length + hojeItens.length + amanhaItens.length;
 
-            // 🎯 Base de classes: idêntica à do header. O que muda entre
-            //    os dois estados é só a paleta de cores e o badge.
             const baseClasses = 'order-2 sm:order-5 ml-auto sm:ml-0 w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-full flex items-center justify-center shadow-sm transition active:scale-90 relative';
 
             if (total === 0) {
-                // ── Estado NEUTRO (cinza) ────────────────────────────
-                // Mesmo tom dos outros botões do header — passa
-                // despercebido no dia a dia.
+                // Estado neutro (cinza): passa despercebido.
                 btn.className = baseClasses + ' bg-slate-100 dark:bg-[#1a2639] border border-slate-200 dark:border-[#1e2a40] hover:bg-slate-200 dark:hover:bg-[#2a3850] text-slate-500 dark:text-gray-400';
                 badge.classList.add('hidden');
             } else {
-                // ── Estado ATIVO (âmbar + badge com contagem) ────────
-                // A distinção atrasada × hoje/amanhã fica no badge:
-                // vermelho para atrasadas, âmbar para hoje/amanhã.
-                // O botão em si mantém o mesmo amarelo "de notificação"
-                // nos dois casos — a leitura é "tem coisa pra ver".
+                // Estado ativo (âmbar): badge vermelho se há atrasada, âmbar caso contrário.
                 btn.className = baseClasses + ' bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-800/50 hover:bg-amber-200 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400';
 
                 badge.textContent = total > 99 ? '99+' : String(total);
@@ -12927,10 +12587,7 @@ const inputDesc = document.getElementById('descricao');
             }
         };
 
-        // 🎯 Clique no sino: reabre o modal mesmo que já tenha sido
-        // mostrado hoje. Se não houver nada pendente (usuário clicou no
-        // sino cinza por curiosidade), mostra um toast informativo em
-        // vez de silêncio absoluto — feedback melhor que "nada acontece".
+        // Clique no sino: reabre o modal mesmo que já tenha sido mostrado hoje.
         window.abrirAlertaVencimentoManual = function() {
             const { atrasadas, hojeItens, amanhaItens } = _alertasVencimentoColetar();
             const total = atrasadas.length + hojeItens.length + amanhaItens.length;
@@ -13032,24 +12689,7 @@ const inputDesc = document.getElementById('descricao');
             executarBuscaGlobal(this.value.trim());
         });
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 DESTAQUE + SCROLL ATÉ UM LANÇAMENTO NO EXTRATO
-        // ═══════════════════════════════════════════════════════════════
-        // Chamada pela busca global após navegar para o Extrato. Localiza
-        // a linha pelo `data-transacao-id` e:
-        //   1. Rola suavemente até ela (block: 'center' — a linha fica no
-        //      meio da tela, com contexto acima e abaixo).
-        //   2. Pulsa um brilho roxo por 2.4s — comunica "é ESSE aqui",
-        //      sem mudar o layout permanentemente.
-        //
-        // O pulso usa Web Animations API (`element.animate`) em vez de
-        // uma classe CSS. Motivo: a linha já tem `anim-fade-in` na
-        // `classList`. Como CSS só permite UM valor de `animation`, uma
-        // classe nova sobrescreveria o fade-in. Com WAAPI, as duas
-        // animações coexistem (elas tocam propriedades diferentes).
-        //
-        // Polling defensivo: se a linha ainda não existe (tabela em
-        // processo de render), tenta até 12× com 100ms de intervalo.
+        // Rola até a linha e pulsa um brilho roxo (WAAPI: coexiste com fade-in).
         window.destacarLancamentoNoExtrato = function(id, tentativa) {
             tentativa = tentativa || 0;
             const el = document.querySelector(`[data-transacao-id="${id}"]`);
@@ -13059,9 +12699,7 @@ const inputDesc = document.getElementById('descricao');
             }
             if (!el) return;
 
-            // 🎯 320ms de respiro antes de rolar e pulsar. O modal de busca
-            //    leva 280ms para fechar (fade-out + scale-down); aguardamos
-            //    esse tempo para a tela estar limpa quando o pulso começar.
+            // 320ms: espera o modal de busca fechar (280ms) antes de rolar.
             setTimeout(() => {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 el.animate(
@@ -13097,13 +12735,7 @@ const inputDesc = document.getElementById('descricao');
             // Alterna
             if (!estavaAberto) {
                 alvo.classList.remove('hidden');
-                // 🎯 Sobe a linha inteira acima das irmãs. As linhas do
-                // Extrato estão em `z-index: 0` (default), a faixa sticky
-                // de datas em `z-[5]` e o menu interno em `z-[9999]` — mas
-                // esse z interno só vale DENTRO do stacking context da
-                // própria linha. Por isso o `z-index` inline abaixo: ele
-                // promove a LINHA toda, permitindo que o menu (que vive
-                // dentro dela) seja pintado por cima das demais linhas.
+                // Promove a linha inteira: o z-[9999] do menu só vale dentro dela.
                 const linha = alvo.closest('.linha-extrato');
                 if (linha) linha.style.zIndex = '40';
             }
@@ -13254,8 +12886,6 @@ const inputDesc = document.getElementById('descricao');
 
         // ---------- HELPERS DE DADOS ----------
 
-        // Calcula totais (receitas, despesas, saldo, por categoria)
-        // para um mês específico. Mesma lógica de filtro do Extrato.
         function asCalcularTotaisMes(mes, ano, modo = 'todos') {
             const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
             const alvoNum = ano * 100 + (mes + 1);
@@ -13266,10 +12896,6 @@ const inputDesc = document.getElementById('descricao');
                 if (d.ocultoExtrato || d.isAjuste) return;
                 // 🎯 Terceiro entra como receita/despesa real; próprio fica fora.
                 if (d.isTransferencia && !d.isTerceiro) return;
-                // 🎯 Modo (gastar vs gastei):
-                //   'todos'    → pagos + pendentes
-                //   'pago'     → só efetivados (passado)
-                //   'pendente' → só a pagar (futuro)
                 if (modo === 'pago' && !d.pago) return;
                 if (modo === 'pendente' && d.pago) return;
                 const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
