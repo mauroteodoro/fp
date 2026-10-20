@@ -3650,27 +3650,14 @@ select:focus, select:focus-visible {
             if (!modal) return;
             const content = idConteudo ? document.getElementById(idConteudo) : modal.children[0];
             
-            // 🎯 TELEPORTE: move o modal para o <body> na primeira abertura.
-            // Isso é essencial porque o conteúdo principal vive num wrapper com
-            // "relative z-[90]", que cria um stacking context isolado. Qualquer z-index
-            // dentro dele fica PRESO abaixo da faixa sticky de datas. Movendo o modal
-            // para o <body>, ele escapa do contexto e sobrepõe tudo — mobile e desktop.
+            // Move o modal para o <body> (escapa do stacking context do wrapper).
             if (modal.parentElement !== document.body) {
                 document.body.appendChild(modal);
             }
             
             travarScroll();
             
-            // 🎬 TRANSIÇÃO SUAVE (Fade + Scale)
-            // O problema anterior: `hidden` = `display: none`, que não aceita
-            // transição. Quando o JS removia a classe, o browser pulava de
-            // "invisível" para "visível" no mesmo frame — a transição nunca
-            // rodava. Mesmo com o `setTimeout(10)`, 10ms é menos que 1 frame
-            // em 60Hz (16,6ms), então o timing variava a cada abertura.
-            //
-            // A solução: DUPLO `requestAnimationFrame`. O 1º garante que o
-            // browser pintou o estado inicial (opacity 0 + scale 0.96). O 2º
-            // aplica o estado final. Só então a transição dispara de verdade.
+            // Fade + scale: duplo requestAnimationFrame garante a transição.
             const ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
             const dur = '280ms';
             
@@ -3701,10 +3688,6 @@ select:focus, select:focus-visible {
             if (!modal) return;
             const content = idConteudo ? document.getElementById(idConteudo) : modal.children[0];
             
-            // 🎬 Saída espelhando a entrada: fade-out + scale-down, mesma
-            //    duração (280ms) e mesma curva. Como os inline styles foram
-            //    aplicados na abertura, a transição já está pronta — só
-            //    invertemos os valores.
             modal.style.opacity = '0';
             if (content) {
                 content.style.transform = 'scale(0.96)';
@@ -3724,9 +3707,7 @@ select:focus, select:focus-visible {
                     content.style.transition = '';
                 }
                 
-                // 🎯 Só destrava o scroll do body se NÃO houver mais nenhum
-                // modal aberto. Sem isso, fechar o calendário (que está sobre
-                // o Novo Lançamento) "soltava" o scroll da página por engano.
+                // Só destrava o scroll se não houver mais nenhum modal aberto.
                 const restantes = Array.from(document.querySelectorAll('[id^="modal"]'))
                     .filter(m => m.id !== idModal
                               && m.classList.contains('fixed')
@@ -3743,8 +3724,6 @@ select:focus, select:focus-visible {
         window.mostrarAviso = function(mensagem, tipo = 'sucesso') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div');
             let corFundo = tipo === 'sucesso' ? 'bg-[#4D6BFE] dark:bg-[#4338CA]' : (tipo === 'info' ? 'bg-slate-600 dark:bg-[#1e3a8a]' : 'bg-red-500 dark:bg-red-900');
-            // 🎯 Ícones em SVG inline — 100% de compatibilidade em qualquer fonte
-            // (o caractere `ℹ` virava "tofu" em alguns sistemas por falta de glifo)
             const svgIcone = tipo === 'sucesso'
                 ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
                 : (tipo === 'info'
@@ -8531,19 +8510,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
         let filtroChipOrdem = 'recentes';
         let filtroChipOrigem = 'todas';
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 ORIGEM EFETIVA — extraída para reuso
-        // ═══════════════════════════════════════════════════════════════
-        // Antes, a normalização de origem vivia dentro do loop de render.
-        // Agora que ela também é usada pelo filtro de chips, precisa ser
-        // uma função única — assim filtro e render SEMPRE concordam sobre
-        // o que é "Salário" e o que é "Vale" para cada lançamento.
-        //
-        // Regras (idênticas ao comportamento anterior):
-        //   • PJ → Recebimento (receita) ou Caixa (despesa)
-        //   • CLT → Salário/Ajuste explícitos são respeitados; "Vale"
-        //     explícito só vale se o usuário AINDA recebe vale; senão,
-        //     deriva da data de vencimento (determinarOrigem).
         function _obterOrigemEfetiva(transacao) {
             if (transacao.isTransferencia) return '';
 
@@ -8563,9 +8529,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             return txtOrigem;
         }
 
-        // Redesenha os botões conforme o estado atual. Chamado por
-        // todos os setters e quando o perfil muda. NÃO toca na lista —
-        // só na aparência dos chips e na visibilidade do botão Origem.
         function _atualizarChipsExtrato() {
             const wrapOrigem = document.getElementById('wrapFiltroChipOrigem');
             const btnTipo  = document.getElementById('btnFiltroChipTipo');
@@ -8579,21 +8542,12 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             const ativoFlex   = 'flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-[#4D6BFE] text-white shadow-sm shadow-[#4D6BFE]/20 whitespace-nowrap';
             const inativoFlex = 'flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap';
 
-            // 🎯 Visibilidade do botão Origem:
-            //   • PJ → escondido (não existe Salário/Vale nesse regime)
-            //   • CLT sem vale → escondido (só "Salário" faria sentido, e
-            //     é redundante — todo lançamento já é Salário nesse caso)
-            //   • CLT com vale → visível
+            // Origem visível só em CLT com vale (PJ e sem-vale não têm os 2 buckets).
             const mostrarOrigem = (meuPerfil.regime !== 'PJ' && meuPerfil.temVale !== 'Não');
             if (wrapOrigem) {
                 wrapOrigem.style.display = mostrarOrigem ? '' : 'none';
             }
 
-            // 🎯 Dentro do dropdown, a opção "Vale" também fica visível só
-            // quando faz sentido. Hoje, mostrarOrigem já garante isso (a
-            // única condição em que o dropdown aparece é quando há vale),
-            // mas mantemos a guarda aqui para o caso de, no futuro, o
-            // botão passar a ser exibido para CLT sem vale também.
             if (optVale) {
                 optVale.style.display = (meuPerfil.temVale === 'Não' || meuPerfil.regime === 'PJ') ? 'none' : '';
             }
@@ -8653,13 +8607,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             atualizarTabela();
         };
 
-        // 🎯 Abre/fecha os dropdowns dos chips.
-        // Usa `position: fixed` com coordenadas calculadas na abertura —
-        // evita o clipping que aconteceria se o menu fosse `absolute`
-        // dentro do container dos chips (que tem `overflow-x-auto`).
-        // A regra "só um menu aberto por vez" é garantida fechando
-        // TODOS os menus conhecidos (TODOS_OS_MENUS + os dois chips)
-        // antes de abrir o alvo.
+        // position:fixed nas coordenadas do botão — evita clipping do overflow-x-auto.
         window.abrirMenuChipFiltro = function(menuId, btnId, e) {
             if (e) e.stopPropagation();
             const menu = document.getElementById(menuId);
