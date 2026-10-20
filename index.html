@@ -8323,31 +8323,11 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             let totalRecFiltro = 0; let totalDespFiltro = 0;
             const mesAnoFiltro = window.chaveMes(dataFiltro); labelMesTabela.textContent = mesAnoFiltro;
 
-            const anoMesFiltroNum = dataFiltro.getFullYear() * 100 + (dataFiltro.getMonth() + 1);
             const anoMesStr = `${dataFiltro.getFullYear()}${String(dataFiltro.getMonth()+1).padStart(2,'0')}`;
 
             ajustarVencimentosRecorrentes(bancoDeDados, dataFiltro);
 
-            const despesasFiltradas = bancoDeDados.filter(despesa => {
-                if (!despesa.vencimento && !despesa.vencimentoOriginal && !despesa.dataLancamento) return false;
-                if (despesa.isRecorrente) {
-                    const p = despesa.vencimentoOriginal.split('/'); const anoMesInicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (anoMesInicioNum > anoMesFiltroNum) return false; 
-                    if (despesa.encerradoEm && anoMesFiltroNum >= despesa.encerradoEm) return false; 
-                    if (despesa.mesesOcultos && despesa.mesesOcultos.includes(anoMesFiltroNum)) return false;
-                    return true;
-                } else if (despesa.totalParcelas > 1) {
-                    // Parcelado: cada parcela tem seu próprio vencimento
-                    return formatarDataComparacao(despesa.vencimento).substring(3) === mesAnoFiltro;
-                } else {
-                    // 🎯 À Vista: o mês é determinado pela DATA DE VENCIMENTO
-                    // (não pela data de lançamento). Assim, uma conta lançada em
-                    // janeiro mas com vencimento em outubro aparece no extrato
-                    // de OUTUBRO — junto com o resumo/projeção daquele mês.
-                    const dataRef = despesa.vencimento || despesa.vencimentoOriginal || despesa.dataLancamento;
-                    return formatarDataComparacao(dataRef).substring(3) === mesAnoFiltro;
-                }
-            });
+            const despesasFiltradas = bancoDeDados.filter(d => itemPertenceAoMes(d, dataFiltro.getMonth(), dataFiltro.getFullYear()));
 
             // Set de categorias que estouraram o teto neste mês (chip no Extrato).
             let catsEstouradas = new Set();
@@ -13964,7 +13944,6 @@ const inputDesc = document.getElementById('descricao');
 
         // modo: 'todas' | 'pago' | 'pendente'.
         function asCalcularTransferenciasMes(mes, ano, modo = 'todas') {
-            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
             const transferencias = [];
             let total = 0, pago = 0, pendente = 0;
 
@@ -13974,10 +13953,7 @@ const inputDesc = document.getElementById('descricao');
                 //    Terceiro: cada lado é avulso — saída E entrada entram.
                 if (!d.isTerceiro && d.direcao !== 'saida') return;
 
-                const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
-                if (!dataRef) return;
-                const noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
-                if (!noMes) return;
+                if (!itemPertenceAoMes(d, mes, ano)) return;
                 if (modo === 'pago' && !d.pago) return;
                 if (modo === 'pendente' && d.pago) return;
 
