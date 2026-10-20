@@ -6073,7 +6073,6 @@ select:focus, select:focus-visible {
 
             list.innerHTML = '';
 
-            // ─── Item "Terceiro" no topo ───────────────────────────────
             const liTerceiro = document.createElement('li');
             liTerceiro.dataset.terceiroItem = 'true';
             liTerceiro.className = "cursor-pointer px-4 py-3 hover:bg-slate-100 dark:hover:bg-[#1a2639] flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-[#1e2a40]";
@@ -6111,7 +6110,6 @@ select:focus, select:focus-visible {
             });
             list.appendChild(liTerceiro);
 
-            // ─── Contas do usuário ─────────────────────────────────────
             let primeiraDisponivel = null;
             contasGlobais.forEach(c => {
                 if (excludeId && c.id === excludeId) return;
@@ -6133,7 +6131,6 @@ select:focus, select:focus-visible {
                         </div>
                     `;
                     document.getElementById(menuId).classList.add('hidden');
-                    // 🎯 Fecha o box de terceiro se estava aberto e limpa o nome
                     const box = document.getElementById(boxTerceiroId);
                     if (box) box.classList.add('hidden');
                     const inpNome = document.getElementById(nomeTerceiroId);
@@ -6142,8 +6139,6 @@ select:focus, select:focus-visible {
                 list.appendChild(li);
             });
 
-            // 🎯 Se o input atual é a sentinela de Terceiro, mantém o label
-            //    sem sobrescrever (foi o usuário que escolheu).
             if (input.value === window.TRANSF_TERCEIRO) {
                 lbl.innerHTML = `
                     <div class="flex items-center gap-2.5 truncate">
@@ -6184,9 +6179,6 @@ select:focus, select:focus-visible {
         // null = modo "criar nova".
         let transferenciaSendoEditada = null;
 
-        // 🎯 Regra: Terceiro nunca pode estar nos dois lados ao mesmo tempo.
-        //    Esconde a opção "Terceiro" no dropdown oposto. Chamada após
-        //    qualquer render/click nos dropdowns do modal de transferência.
         window.aplicarRegraTerceiroUnico = function() {
             const origemId = document.getElementById('transfContaOrigem')?.value || '';
             const destinoId = document.getElementById('transfContaDestino')?.value || '';
@@ -6231,10 +6223,6 @@ select:focus, select:focus-visible {
                     const par = bancoDeDados.find(d => d.transferenciaId === lanc.transferenciaId && d.id !== lanc.id);
                     transferenciaSendoEditada = { saida: lanc, entrada: par || null };
 
-                    // 🎯 Descobre origem/destino — cobre 3 casos:
-                    //   1. Transferência entre contas próprias (par existe, ambos reais)
-                    //   2. Saída para terceiro (só saída, isTerceiro: true)
-                    //   3. Entrada de terceiro (só entrada, isTerceiro: true)
                     let origemReal, destinoReal;
                     const ehTerceiro = !!lanc.isTerceiro;
                     const terceiroNome = lanc.terceiroNome || '';
@@ -6300,10 +6288,6 @@ select:focus, select:focus-visible {
             });
         };
 
-        // 🎯 Abre/fecha o painel "Mais opções" do modal de transferência e,
-        //    ao abrir, rola suavemente até ele. Sem esse scroll automático,
-        //    o painel abre FORA da viewport (empurra o conteúdo para baixo),
-        //    e o usuário não percebe que o clique surtiu efeito.
         window.toggleMaisOpcoesTransf = function(btn) {
             const panel = document.getElementById('panelMaisOpcoesTransf');
             if (!panel) return;
@@ -6312,18 +6296,13 @@ select:focus, select:focus-visible {
             btn.querySelector('svg.seta-transf')?.classList.toggle('rotate-180');
 
             if (vaiAbrir) {
-                // 60ms: tempo do navegador aplicar o "hidden off" no layout
-                // e o painel ganhar altura real. Só então o scroll faz
-                // sentido — antes disso o painel ainda tem 0px de altura.
+                // 60ms: deixa o painel ganhar altura real antes de rolar até ele.
                 setTimeout(() => {
                     panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 }, 60);
             }
         };
 
-        // 🎯 Atualiza o ícone + texto do toggle "Efetivada/Pendente" do modal
-        //    de transferência. Mesmo comportamento do modal de Novo Lançamento:
-        //    efetivada → ✓ verde; pendente → ⏱ âmbar + texto esmaecido.
         function atualizarLabelTransfEfetivada() {
             const chk = document.getElementById('chkTransfEfetivada');
             const lbl = document.getElementById('lblTransfEfetivadaText');
@@ -6440,13 +6419,7 @@ select:focus, select:focus-visible {
             const estaPaga = !!document.getElementById('chkTransfEfetivada')?.checked;
             const origemEscolhida = document.getElementById('transfOrigemManual')?.value || 'Auto';
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 CASO 1 — ORIGEM É TERCEIRO (dinheiro ENTRA)
-            // ═══════════════════════════════════════════════════════════
-            // Cria UMA entrada na conta do usuário. Sem par.
-            // Efeito: soma nos cards projetados (Receita) e, quando
-            // efetivada, soma no saldo real da conta.
-            // ═══════════════════════════════════════════════════════════
+            // Caso 1: origem terceiro → entrada na conta (receita).
             if (origemEhTerceiro) {
                 const descricaoAuto = `${terceiroNome} → ${destinoObj.nome}`;
                 const lancEntrada = {
@@ -6480,13 +6453,7 @@ select:focus, select:focus-visible {
                 bancoDeDados.push(lancEntrada);
                 salvarDespesaFirestore(lancEntrada);
             }
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 CASO 2 — DESTINO É TERCEIRO (dinheiro SAI)
-            // ═══════════════════════════════════════════════════════════
-            // Cria UMA saída na conta do usuário. Sem par.
-            // Efeito: soma nos cards projetados (Despesa) e, quando
-            // efetivada, subtrai do saldo real da conta.
-            // ═══════════════════════════════════════════════════════════
+            // Caso 2: destino terceiro → saída da conta (despesa).
             else if (destinoEhTerceiro) {
                 const descricaoAuto = `${origemObj.nome} → ${terceiroNome}`;
                 const origemFinal = (origemEscolhida === 'Vale' || origemEscolhida === 'Salário')
@@ -6522,14 +6489,7 @@ select:focus, select:focus-visible {
                 bancoDeDados.push(lancSaida);
                 salvarDespesaFirestore(lancSaida);
             }
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 CASO 3 — TRANSFERÊNCIA ENTRE CONTAS PRÓPRIAS (par espelhado)
-            // ═══════════════════════════════════════════════════════════
-            // Comportamento antigo preservado: saída + entrada espelhadas.
-            // A grande diferença é o `isTerceiro: false` e o filtro em
-            // `atualizarCardsSaldo` — que passa a IGNORAR as duas pernas,
-            // para não mexer nos cards projetados.
-            // ═══════════════════════════════════════════════════════════
+            // Caso 3: entre contas próprias → par espelhado (saída + entrada).
             else {
                 const descricaoAuto = `${origemObj.nome} → ${destinoObj.nome}`;
                 const origemFinal = (origemEscolhida === 'Vale' || origemEscolhida === 'Salário')
@@ -7501,21 +7461,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
         }
         
         window.abrirModalAjuste = function(alvo = 'Geral') {
-            // 🎯 Quando o usuário não tem vale (CLT sem vale) ou está em
-            // PJ, o botão do Hero (Saldo Total) é conceitualmente o
-            // MESMO campo que o Saldo do Salário — o Vale não existe.
-            //
-            // Antes: `abrirModalAjuste('Geral')` caía no caminho
-            // incremental, que cria um lançamento de ajuste e espera
-            // que o saldo se ajuste somando esse lançamento. Mas se o
-            // usuário já tinha um `overrideSalario` gravado (feito via
-            // lápis do Saldo do Salário em algum momento), esse override
-            // IGNORA os ajustes — o saldo ficava preso no valor antigo.
-            //
-            // Agora: quando não tem vale, 'Geral' é convertido em
-            // 'Salário' antes de entrar no fluxo. Cai no mesmo caminho
-            // de override, com a mesma UI, o mesmo comportamento e o
-            // mesmo botão "Restaurar" que o CLT com vale já usa.
+            // Sem vale: 'Geral' é tratado como 'Salário' (mesmo fluxo de override).
             if (alvo === 'Geral' && (meuPerfil.temVale === 'Não' || meuPerfil.regime === 'PJ')) {
                 alvo = 'Salário';
             }
@@ -7584,48 +7530,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             window.fecharModalGenerico('modalAjuste');
         }
 
-        // 🎯 Remove TUDO que tornou o Salário "manual" e devolve o card ao
-        //    cálculo automático. Chamado pelo botão "Restaurar cálculo
-        //    automático" (só visível no modo Salário).
-        //
-        //    Dois tipos de "manual" precisam sair:
-        //
-        //      1. `overrideSalario` — o valor fixado literalmente pelo
-        //         usuário (o schema novo, com `{ valor, data, ... }`).
-        //
-        //      2. Lançamentos com `isAjuste: true` que COMPÕEM o bucket
-        //         Salário. Pela regra de composição do `atualizarCardsSaldo`,
-        //         todo ajuste cujo `alvoAjuste` NÃO seja 'Vale' cai no
-        //         Salário — é essa a fonte do "Ajustes: + R$ 0,39" que
-        //         aparecia no modal de explicação.
-        //
-        //    Sem o passo 2, o card continuava com resíduos após o Restaurar
-        //    (a promessa do botão não era cumprida).
-        //
-        //    ⚠️ Efeito colateral: se algum dos ajustes era de uma CONTA
-        //       específica (alvoAjuste = 'Conta|xxx'), o saldo dessa conta
-        //       também muda — porque o lançamento afeta ambos. O `confirm()`
-        //       abaixo lista os valores que serão removidos para o usuário
-        //       ter visibilidade.
         window.restaurarAjusteSalario = function() {
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 RESTAURAR = APENAS O OVERRIDE. NÃO TOCA EM CONTAS.
-            // ═══════════════════════════════════════════════════════════
-            // Antes: esta função também removia lançamentos `isAjuste`
-            // do bancoDeDados. Como cada tentativa antiga de ajuste do
-            // Hero criava um lançamento em `c_padrao`, restaurar apagava
-            // esses lançamentos — e os saldos das CONTAS mudavam junto.
-            //
-            // Agora: restaurar remove SOMENTE o override de Salário. Se
-            // o usuário quiser remover os lançamentos de ajuste antigos
-            // (resquícios), existe uma ação dedicada: "Limpar ajustes
-            // manuais do mês" (botão separado no próprio modal, visível
-            // só quando há ajustes detectados).
-            //
-            // Essa separação é importante porque são duas operações com
-            // impactos diferentes:
-            //   • Restaurar → só visual (próximos cálculos voltam ao normal)
-            //   • Limpar ajustes → mexe em contas (lançamentos são apagados)
             const chave = window.chaveMes(dataFiltro);
             const temOverride = !!(saldoBaseMensalGlobal[chave] && saldoBaseMensalGlobal[chave].overrideSalario !== undefined);
 
@@ -7649,23 +7554,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             window.mostrarAviso("Cálculo automático restaurado.", "info");
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 LIMPAR AJUSTES MANUAIS DO MÊS
-        // ═══════════════════════════════════════════════════════════════
-        // Ação dedicada para remover lançamentos `isAjuste` do mês
-        // visualizado. Existe para dar ao usuário uma saída segura de
-        // estados como o atual — várias tentativas antigas de ajuste
-        // criaram lançamentos em contas, e eles precisam ser limpos.
-        //
-        // Diferenças em relação a `restaurarAjusteSalario`:
-        //   • Aqui a lista é explícita (mostra cada lançamento e a conta
-        //     afetada no confirm), para o usuário saber exatamente o que
-        //     está removendo.
-        //   • Aqui SIM mexemos no saldo das contas — é o objetivo.
-        //   • `restaurarAjusteSalario` continua sem tocar em contas.
-        //
-        // Aplica filtro de segurança: só remove ajustes do MÊS VISUALIZADO
-        // (não apaga ajustes de outros meses por engano).
         window.limparAjustesDoMes = function() {
             const chaveAlvo = window.chaveMes(dataFiltro);
 
@@ -7683,34 +7571,7 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 return;
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 COMPENSAÇÃO NAS CONTAS — saldoReal NÃO MUDA
-            // ═══════════════════════════════════════════════════════════
-            // Cada ajuste é um LANÇAMENTO `pago: true` numa conta. Ele
-            // entra na soma do saldo real:
-            //
-            //   saldoReal = saldoInicial + Σ(receitas pagas) − Σ(despesas pagas)
-            //
-            // Se apagássemos os ajustes sem fazer nada, o saldoReal
-            // mudaria (perderia as receitas de ajuste, ganharia de volta
-            // as despesas de ajuste). O usuário não quer isso — ele quer
-            // limpar os RESQUÍCIOS SEM MOVER A REALIDADE DAS CONTAS.
-            //
-            // A saída: absorver o delta no `saldoInicial` de cada conta.
-            // Para cada ajuste removido:
-            //   • Receita V → saldoInicial += V  (compensa a receita que sai)
-            //   • Despesa V → saldoInicial −= V  (compensa a despesa que sai)
-            //
-            // Matemática: se antes saldoReal = S + ajustes, e depois
-            // saldoReal = (S + Δ) + (ajustes − ajustes), para manter os
-            // dois iguais: Δ = ajustes. Isto é, o saldoInicial absorve
-            // exatamente o valor dos ajustes removidos — por conta.
-            //
-            // Resultado: o saldo real da conta é EXATAMENTE o mesmo
-            // antes e depois da limpeza. A diferença é que agora ele
-            // está "consolidado" no saldoInicial em vez de espalhado em
-            // lançamentos de ajuste. Os ajustes ficam limpos do Extrato
-            // e dos cards projetados; a conta permanece intocada.
+            // Absorve o delta no saldoInicial para o saldo real das contas não mudar.
             const deltaPorConta = {};
             ajustesDoMes.forEach(d => {
                 const idC = d.contaId || 'c_padrao';
@@ -7790,18 +7651,11 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             if (isNaN(val)) val = 0;
             if (isAjusteNegativo) val = -val;
 
-            // ================================================================
-            // 🟢 MODO ESPECIAL: Salário — Override direto (sem lançamento)
-            // ================================================================
+            // Modo Salário: override direto (não cria lançamento).
             if (alvoAjusteAtual === 'Salário') {
                 let chave = window.chaveMes(dataFiltro);
                 if (!saldoBaseMensalGlobal[chave]) saldoBaseMensalGlobal[chave] = {};
 
-                // 🎯 UX: campo vazio agora vale ZERO (fixa em R$ 0,00) em vez de
-                // remover o override silenciosamente. Quem quiser voltar ao
-                // cálculo automático usa o botão dedicado "Restaurar".
-                // Antes, o usuário apagava o campo pensando em zerar, e o
-                // override era removido — deixando o card preso no valor antigo.
                 const inputEl = document.getElementById('inputAjusteBase');
                 if (!inputEl.value || inputEl.value.trim() === '') {
                     val = 0;
@@ -7835,9 +7689,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 return;
             }
 
-            // ================================================================
-            // 🔵 MODO PADRÃO: Vale / Geral / Conta — cria lançamento silencioso
-            // ================================================================
             let nomeAlvoDesc = alvoAjusteAtual.startsWith('Conta|') ? 'da Conta' : `(${alvoAjusteAtual})`;
             let desc = document.getElementById('inputAjusteDesc').value.trim() || `Ajuste Manual ${nomeAlvoDesc}`;
             
@@ -7860,21 +7711,11 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             if (Math.abs(diferenca) > 0.001) { 
                 let isReceita = diferenca > 0;
                 let valorAbsoluto = Math.abs(diferenca);
-                // 🎯 O ajuste precisa morar no MÊS VISUALIZADO — não em "hoje".
-                // Se o usuário abre o reajuste em outubro, mas o relógio marca
-                // setembro, o filtro mensal do Extrato procura o lançamento em
-                // outubro e não o acha. Ancorar no `dataFiltro` garante que ele
-                // caia sempre no mês que está na tela.
                 const diaHojeAjuste = new Date().getDate();
                 const ultimoDiaDoMesAjuste = new Date(dataFiltro.getFullYear(), dataFiltro.getMonth() + 1, 0).getDate();
                 const diaAjuste = Math.min(diaHojeAjuste, ultimoDiaDoMesAjuste);
                 const dataLanc = `${String(diaAjuste).padStart(2,'0')}/${String(dataFiltro.getMonth()+1).padStart(2,'0')}/${dataFiltro.getFullYear()}`;
                 
-                // 🎯 Em regimes sem vale, o alvo "Vale" é renomeado para
-                //    "Salário" no momento da criação. Sem isso, o ajuste
-                //    nasceria com um alvo que o motor de composição
-                //    precisaria recalcular (Fix 1 cobre, mas é mais limpo
-                //    já nascer correto).
                 const alvoNormalizado = (meuPerfil.temVale === 'Não' || meuPerfil.regime === 'PJ')
                     && alvoAjusteAtual === 'Vale'
                     ? 'Salário'
@@ -14197,21 +14038,6 @@ const inputDesc = document.getElementById('descricao');
         //      • "Qual meu saldo?" → saldo REAL das contas (o que existe hoje)
         //      • "Qual o saldo do salário?" → saldo de PROJEÇÃO do bucket
         //         (o que sobra do valor base − gastos do mês)
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 MÊS DE INÍCIO DE USO — o mais antigo com QUALQUER dado
-        // ═══════════════════════════════════════════════════════════════
-        // Antes disso, o usuário não usava o app. O fallback de estimativa
-        // (que simula salário a partir do perfil) NÃO deve inventar
-        // receitas em meses "pré-históricos" — eles ficam zerados.
-        //
-        // Ordem de prioridade para achar o início:
-        //   1. Menor chave em `configHoleriteGlobal` (simulação salva)
-        //   2. Menor chave em `saldoBaseMensalGlobal` (base do holerite)
-        //   3. Menor data em `bancoDeDados` (qualquer lançamento)
-        //   4. Nenhum dado → mês atual (não há passado para "proteger")
-        //
-        // O cálculo é dinâmico: se um dia o usuário lançar algo em agosto,
-        // agosto passa a ser o novo piso — e setembro continua funcionando.
         function _obterMesInicioUso() {
             let menorNum = Infinity;
             const considerar = (chave) => {
@@ -14222,13 +14048,6 @@ const inputDesc = document.getElementById('descricao');
             };
             for (const k in configHoleriteGlobal) considerar(k);
             for (const k in saldoBaseMensalGlobal) considerar(k);
-            // 🎯 Considera TODAS as datas do lançamento (lançamento,
-            //    vencimento, vencimentoOriginal) e pega a MENOR. Antes
-            //    o código usava `d.dataLancamento || d.vencimento` — o
-            //    que ignorava o caso de uma conta atrasada lançada em
-            //    março com vencimento em fevereiro: o início de uso
-            //    ficava errado, e o fallback de estimativa podia
-            //    inventar salário em meses "pré-históricos".
             bancoDeDados.forEach(d => {
                 [d.dataLancamento, d.vencimento, d.vencimentoOriginal].forEach(ref => {
                     if (!ref || ref.length !== 10) return;
@@ -14244,12 +14063,6 @@ const inputDesc = document.getElementById('descricao');
             return { mes: (menorNum % 100) - 1, ano: Math.floor(menorNum / 100) };
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 CALCULA o saldo de um bucket (Salário / Vale / Total) para
-        //    QUALQUER mês — sem tocar em `dataFiltro` nem no DOM.
-        //    Replica a lógica de `atualizarCardsSaldo`, mas isolada:
-        //    permite consultar outubro enquanto o header está em setembro.
-        // ═══════════════════════════════════════════════════════════════
         function asCalcularSaldoBucket(mes, ano, bucket) {
             const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
             const alvoNum = ano * 100 + (mes + 1);
@@ -14279,28 +14092,7 @@ const inputDesc = document.getElementById('descricao');
             const bmes = saldoBaseMensalGlobal[chave];
             const ehDez = mes === 11;
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 FALLBACK DE ESTIMATIVA — usa o perfil quando não há simulação
-            // ═══════════════════════════════════════════════════════════
-            // Meses futuros SEM config salva retornavam base 0, e o saldo
-            // projetado caía para receitas − gastos (geralmente negativo
-            // ou zero). Consequência: qualquer planejamento de meta em
-            // meses futuros mostrava "capacidade = R$ 0,00" e o plano
-            // nunca fechava.
-            //
-            // Solução: quando não há config nem baseMensal, ESTIMA a partir
-            // do perfil — salário bruto menos INSS/IRRF (líquido) mais vale
-            // de 40% se o usuário recebe vale. É a mesma regra usada no
-            // primeiro cálculo do Simulador quando um mês é aberto em branco.
-            //
-            // Marca `_baseEstimada = true` para o motor saber que aquele
-            // mês veio de estimativa e avisar o usuário no rodapé.
-            // 🎯 GUARDA-CHUVA — meses ANTES do início de uso do app não
-            //    recebem o fallback de estimativa. Sem isso, o app inventava
-            //    salário em julho/agosto mesmo que o usuário só tenha
-            //    começado a usar em setembro. O `configHoleriteGlobal` e o
-            //    `saldoBaseMensalGlobal` são respeitados sempre — se o
-            //    usuário salvou uma simulação naquele mês, ela vale.
+            // Fallback: estima pelo perfil em meses sem simulação (mas só a partir do início de uso).
             const inicioUso = _obterMesInicioUso();
             const mesAlvoNum = ano * 100 + (mes + 1);
             const inicioUsoNum = inicioUso.ano * 100 + (inicioUso.mes + 1);
@@ -14311,39 +14103,13 @@ const inputDesc = document.getElementById('descricao');
                 const bruto = parseFloat(meuPerfil.salario) || 0;
                 if (bruto > 0) {
                     if (meuPerfil.regime === 'PJ') {
-                        // 🎯 PJ não tem INSS/IRRF nem vale. O "bruto" do
-                        // perfil funciona como faturamento estimado; como
-                        // não sabemos os custos aqui, o líquido é o
-                        // próprio bruto (fallback grosseiro — o usuário
-                        // deve salvar uma projeção PJ para valores reais).
                         baseSalario = bruto;
                     } else if (meuPerfil.temVale === 'Não') {
-                        // 🎯 CLT sem vale: nada é descontado a título de
-                        // adiantamento. O líquido é bruto − INSS − IRRF.
-                        // Sem essa ramificação, o fallback sempre alocava
-                        // 40% do bruto no bucket do Vale — mesmo quando
-                        // o usuário declarou não receber vale.
                         const inss = calcularINSS(bruto);
                         const irrf = calcularIRRF(bruto, meuPerfil.dependentes);
                         baseSalario = bruto - inss - irrf;
                         baseVale = 0;
                     } else {
-                        // ═══════════════════════════════════════════════════════
-                        // 🎯 FALLBACK — espelho EXATO do Simulador
-                        // ═══════════════════════════════════════════════════════
-                        // O Simulador calcula o LÍQUIDO a receber como:
-                        //   Líquido = Bruto − INSS − IRRF − Vale
-                        // E o vale (40% do bruto) cai separadamente no bucket
-                        // do Vale, no dia 20.
-                        //
-                        // ANTES (bug): o vale era SOMADO no bucket do Vale
-                        // sem ser subtraído do bucket do Salário. O total
-                        // duplicava o valor do vale. Ex: bruto 3396 →
-                        // baseSalario=3099,88 + baseVale=1358,40 = 4458,28,
-                        // quando o correto é 1741,48 + 1358,40 = 3099,88.
-                        //
-                        // AGORA: o vale é subtraído do baseSalario E creditado
-                        // no baseVale. O total fecha com o Simulador.
                         const inss = calcularINSS(bruto);
                         const irrf = calcularIRRF(bruto, meuPerfil.dependentes);
                         const vale = meuPerfil.temVale === 'Sim' ? bruto * 0.40 : 0;
@@ -14372,19 +14138,10 @@ const inputDesc = document.getElementById('descricao');
                 }
             }
 
-            // 🎯 Zera o bucket do Vale quando o usuário não recebe vale.
-            //    Espelho do fix em `atualizarCardsSaldo`: sem isso, uma
-            //    config antiga de "Sim" continuaria somando R$ no Total,
-            //    e a Assistente responderia um valor diferente do card.
             const semVale = (meuPerfil.temVale === 'Não');
             if (semVale) baseVale = 0;
 
             // 3) Composição por bucket (espelho de `atualizarCardsSaldo`)
-            // 🎯 Mesma regra dos cards do Resumo: só a SAÍDA de transferência
-            //    entra na projeção (a entrada é contrapartida e anularia o
-            //    efeito). Isso mantém Assistente e Resumo perfeitamente
-            //    sincronizados — qualquer pergunta do tipo "qual meu saldo
-            //    do salário?" bate com o card na tela.
             const isRec = d => (d.tipo === 'Receita' || d.natureza === 'Receita');
             // 🎯 Espelho do filtro em `atualizarCardsSaldo`:
             //    own-account NÃO conta; terceiro conta em ambas direções.
@@ -14393,10 +14150,6 @@ const inputDesc = document.getElementById('descricao');
                 return !!d.isTerceiro;
             });
             const alvoComposicao = d => {
-                // 🎯 Espelho exato do `atualizarCardsSaldo`. Manter os dois
-                //    em sincronia é essencial: se um dia divergirem, a
-                //    Assistente responde um saldo que não bate com o card
-                //    do Resumo — bug sutil e confuso.
                 const redir = (alvo) => (semVale && alvo === 'Vale') ? 'Salário' : alvo;
                 if (d.isAjuste) {
                     if (d.alvoAjuste === 'Vale') return redir('Vale');
@@ -14420,8 +14173,6 @@ const inputDesc = document.getElementById('descricao');
             const receitaVale = visiveis.filter(d => isRec(d) && !d.isAjuste && alvoComposicao(d) === 'Vale').reduce((s, d) => s + valorFloat(d.valor), 0);
             const ajusteVale = visiveis.filter(d => d.isAjuste && alvoComposicao(d) === 'Vale').reduce((s, d) => s + (isRec(d) ? valorFloat(d.valor) : -valorFloat(d.valor)), 0);
 
-            // 🎯 Override desativado — espelha o comportamento de `atualizarCardsSaldo`.
-            //    Card e Assistente sempre mostram o mesmo número.
             const saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
             const temOverrideSal = false;
             const overrideSal = null;
@@ -14442,8 +14193,6 @@ const inputDesc = document.getElementById('descricao');
             };
         }
 
-        // 🎯 Renderiza a resposta de saldo por bucket (Salário / Vale / Total)
-        //    para qualquer mês.
         function asRespSaldoBucket(bucket, mes, ano) {
             if (mes === undefined || mes === null) mes = dataFiltro.getMonth();
             if (ano === undefined || ano === null) ano = dataFiltro.getFullYear();
@@ -14475,11 +14224,6 @@ const inputDesc = document.getElementById('descricao');
                 avisoOverride = `<p class="text-[11px] text-amber-600 dark:text-amber-400 mt-2 leading-snug">⚠️ Saldo fixado manualmente${dOv ? ' em ' + dOv : ''}.</p>`;
             }
 
-            // 🎯 Aviso de "valor estimado a partir do perfil" — usa o flag
-            // `_baseEstimada` que o motor `asCalcularSaldoBucket` retorna
-            // quando o mês não tem simulação salva. Antes esse flag era
-            // setado mas nunca consumido (dead code). Agora aparece aqui,
-            // fechando o ciclo com o que `asRespValorBase` já faz.
             let avisoEstimado = '';
             if (d._baseEstimada) {
                 avisoEstimado = `<p class="text-[11px] text-amber-600 dark:text-amber-400 mt-2 leading-snug">⚠️ Valor estimado a partir do seu perfil — não há simulação salva para ${nome}/${ano}. Abra o Simulador e salve para precisão total.</p>`;
@@ -14514,14 +14258,7 @@ const inputDesc = document.getElementById('descricao');
             `;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 VALOR BASE — quanto VOU RECEBER (líquido do salário / vale)
-        // ═══════════════════════════════════════════════════════════════
-        // Diferente de `asRespSaldoBucket`, que mostra o SALDO após gastos.
-        // Aqui é o valor BRUTO que entra na conta — sem descontar nada:
-        //   • Salário → `salarioLiquido` do config (já vem com INSS/IRRF)
-        //   • Vale    → `valeAdiantamento` (só o valor do dia 20)
-        // Bate exatamente com o "Líquido a Receber" do Simulador.
+        // Valor BRUTO a receber (salário líquido ou vale), sem descontar gastos.
         function asRespValorBase(bucket, mes, ano) {
             if (mes === undefined || mes === null) mes = dataFiltro.getMonth();
             if (ano === undefined || ano === null) ano = dataFiltro.getFullYear();
@@ -14531,12 +14268,7 @@ const inputDesc = document.getElementById('descricao');
             const cfg = configHoleriteGlobal[chave];
             const bmes = saldoBaseMensalGlobal[chave];
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 PJ — caminho separado, sem INSS/IRRF nem vale
-            // ═══════════════════════════════════════════════════════════
-            // Em PJ não existe holerite CLT: o "valor a receber" é o
-            // Faturamento Bruto + Bônus do mês. Rodar `calcularINSS` aqui
-            // produziria matemática falsa (imposto que não existe).
+            // PJ: valor a receber = Faturamento Bruto + Bônus (sem INSS/IRRF).
             if (meuPerfil.regime === 'PJ') {
                 let brutoPJ = 0, bonusPJ = 0;
                 if (cfg) {
@@ -14643,9 +14375,6 @@ const inputDesc = document.getElementById('descricao');
                 diaSemanaCredito = diasSemanaCompleto[v.getDay()];
             }
 
-            // 🎯 Motivo da antecipação — só para o Vale, e só quando o dia
-            //    20 não é útil. Mesma função do Simulador e da resposta de
-            //    "Quando cai meu salário?".
             const motivoValeResp = (bucket === 'Vale') ? getMotivoValeEfetivo(ano, mes) : null;
             const motivoHtmlResp = motivoValeResp
                 ? `<p class="text-[11px] text-amber-600 dark:text-amber-400 mt-2 leading-snug">${motivoValeResp}</p>`
@@ -14666,12 +14395,6 @@ const inputDesc = document.getElementById('descricao');
             `;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 GASTOS EXTREMOS — top N lançamentos individuais
-        // ═══════════════════════════════════════════════════════════════
-        // Diferente de `asRespMaiorGasto` (que agrupa por categoria),
-        // este lista os LANÇAMENTOS individuais ordenados por valor —
-        // o usuário vê o nome exato de cada compra: "Praia — R$ 1.000".
         function asRespExtremosGasto(mes, ano, tipo = 'maior') {
             const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
             const alvoNum = ano * 100 + (mes + 1);
@@ -15025,19 +14748,7 @@ const inputDesc = document.getElementById('descricao');
             `;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 TRANSFERÊNCIAS — perguntas e respostas
-        // ═══════════════════════════════════════════════════════════════
-        // A transferência cria DOIS lançamentos (saída + entrada) ligados
-        // por `transferenciaId`. Para listar, filtro apenas as SAÍDAS —
-        // as entradas são ocultas (`ocultoExtrato: true`) e representam o
-        // mesmo evento do outro lado. O "par" é localizado por
-        // `transferenciaId` para descobrir a conta destino.
-        //
-        // `modo` filtra por status:
-        //   • 'todas'    → pagas + pendentes
-        //   • 'pago'     → só efetivadas
-        //   • 'pendente' → só a efetivar (não movem saldos)
+        // modo: 'todas' | 'pago' | 'pendente'.
         function asCalcularTransferenciasMes(mes, ano, modo = 'todas') {
             const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
             const transferencias = [];
@@ -15060,10 +14771,6 @@ const inputDesc = document.getElementById('descricao');
                 total += val;
                 if (d.pago) pago += val; else pendente += val;
 
-                // 🎯 Rótulos de origem/destino — 3 casos:
-                //    • Próprio:        origem = conta do lançamento, destino = conta do par
-                //    • Terceiro saída: origem = conta do usuário, destino = nome do terceiro
-                //    • Terceiro entrada: origem = nome do terceiro, destino = conta do usuário
                 const par = d.isTerceiro ? null : bancoDeDados.find(x => x.transferenciaId === d.transferenciaId && x.id !== d.id);
                 const contaDoLanc = contasGlobais.find(c => c.id === (d.contaId || 'c_padrao'));
                 let origem, destino;
@@ -15273,22 +14980,12 @@ const inputDesc = document.getElementById('descricao');
         }
 
         function asExtrairParcelas(texto) {
-            // 🎯 Retorna `{ n, exato }`:
-            //    • exato=true  → o usuário DISSE o número ("em 10x", "10 vezes").
-            //      O motor testa SOMENTE esse número; se não couber, sugere menos.
-            //    • exato=false → disse só "parcelado". O motor varre de 12x
-            //      para baixo, achando o MENOR número viável.
-            //    Essa distinção importa: "em 10x" é um pedido explícito; só
-            //    "parcelado" é uma pergunta aberta.
             const m = texto.match(/(?:em\s*)?(\d{1,2})\s*(?:x|vezes|parcelas)/i);
             if (m) return { n: Math.min(12, Math.max(1, parseInt(m[1]))), exato: true };
             if (/\bparcelad[oa]\b|\bparcelar\b/i.test(texto)) return { n: 12, exato: false };
             return { n: 1, exato: true };
         }
 
-        // 🎯 Extrai um mês de início futuro de expressões como:
-        //    "a partir de outubro", "começando em dez", "a partir do mês que vem"
-        // Retorna { mes, ano } ou null se não houver gatilho.
         function asExtrairMesInicio(texto) {
             const t = texto.toLowerCase();
             const temGatilho = /a\s*partir\s*d[eoa]?\s*|come[çc]ando\s+(?:em|no|a\s+partir\s+de)\s*|in[íi]cio\s+em\s*/.test(t);
@@ -15305,6 +15002,7 @@ const inputDesc = document.getElementById('descricao');
             return null;
         }
 
+        // Extrai "sobrando X" / "manter X" / "reserva de X".
         function asExtrairReservaMinima(texto) {
             const patterns = [
                 /sobrando\s*(?:ao menos\s*)?(?:r\$\s*)?([\d.,]+)/i,
@@ -15324,32 +15022,7 @@ const inputDesc = document.getElementById('descricao');
             return m ? m[1].trim() : '';
         }
 
-        // Motor de análise: retorna { avista, parcelado } com o MELHOR cenário
-        // de cada tipo. `offset` é quantos meses à frente (0 = este mês).
-        //
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 ESTRUTURA EM DUAS FASES (importante para o fallback)
-        // ═══════════════════════════════════════════════════════════════
-        // O motor procura o parcelamento em 3 etapas, nesta ordem:
-        //
-        //   FASE 1 — Número EXATO do usuário ("em 10x"), em TODOS os
-        //            offsets futuros. Se o usuário pediu 10x e existe
-        //            QUALQUER mês de início onde 10x caiba, é aqui que
-        //            a gente encontra. Sem essa fase, uma falha no offset
-        //            atual esconderia a solução em um mês futuro.
-        //
-        //   FASE 2 — Se não houver número exato (usuário só disse
-        //            "parcelado"), busca o MAIOR número de parcelas
-        //            viável, do 12x para baixo, em cada offset.
-        //
-        //   FASE 3 — Fallback: se o exato falhou em todos os offsets,
-        //            tenta reduzir o número de parcelas. Aí sim sugere
-        //            "X parcelas máximo viável" — com aviso ao usuário.
-        //
-        // A separação em fases resolve o bug onde o fallback "bloqueava"
-        // a busca pelo exato em meses futuros (o `r.parcelado` já estava
-        // preenchido, e a guarda `r.parcelado.offset > offset` impedia
-        // testar offsets maiores).
+        // Fase 1: exato do usuário. Fase 2: maior aberto. Fase 3: fallback reduzindo parcelas.
         function asAnalisarCompra(valor, parcelasMaximas, reservaMin, opts) {
             opts = opts || {};
             const parcelasExatas = opts.parcelasExatas === true;
@@ -15359,29 +15032,6 @@ const inputDesc = document.getElementById('descricao');
             const anoBase = mesInicial ? mesInicial.ano : dataFiltro.getFullYear();
             const r = { avista: null, parcelado: null, mesInicial };
 
-            // ─── Helper local: verifica viabilidade em um offset ────
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 SALDO ACUMULADO ROLANTE — a folga de um mês compensa o outro
-            // ═══════════════════════════════════════════════════════════
-            // Antes: cada mês era testado ISOLADAMENTE (saldo - parcela >=
-            // reservaMin). Isso era injusto — um mês com muita folga não
-            // ajudava o mês seguinte com pouca.
-            //
-            // Agora: a folga de cada mês CARREGA para o próximo. Se Setembro
-            // sobrou R$ 200 além da reserva, Outubro pode usar esses R$ 200
-            // para cobrir sua parcela, mesmo que sozinho Outubro não bastasse.
-            //
-            //   disponivelMes = saldoMes + folgaAcumulada - reservaMin
-            //   sobra = disponivelMes - parcela
-            //   se sobra < 0 → mês não fecha nem com a folga → inviável
-            //   folgaAcumulada = sobra (para o próximo mês)
-            //
-            // Isso responde à pergunta do usuário: "se algum mês faltar,
-            // outro pode compensar". Sim — e agora o motor respeita isso.
-            //
-            // O retorno ganha `precisouFolga`: true quando o mês sozinho não
-            // bastaria, mas fechou com o arraste dos anteriores. Permite
-            // mensagem diferenciada.
             const verificarParcelas = (n, offset) => {
                 const parcela = valor / n;
                 let folgaAcumulada = 0;
@@ -15569,10 +15219,6 @@ const inputDesc = document.getElementById('descricao');
                 { txt: 'Ver saldo projetado', q: 'Qual meu saldo projetado?' }
             ]);
 
-            // 🎯 Guarda o contexto para permitir refinamentos encadeados.
-            //    Sem isso, "E se eu parcelar em 10x?" cairia no fallback
-            //    porque não tem valor nem verbo de compra — o parser não
-            //    saberia que o usuário está falando do MESMO item.
             asUltimoContexto = {
                 tipo: 'analise-compra',
                 valor,
@@ -16419,7 +16065,6 @@ const inputDesc = document.getElementById('descricao');
             return null;
         }
 
-        // 🎯 Engine: projeta a poupança mês a mês e devolve 3 planos.
         function asPlanejarMeta(valorMeta, valorAtual, mesAlvo, anoAlvo, pisoMensal) {
             const falta = Math.max(0, valorMeta - valorAtual);
             const mesBase = dataFiltro.getMonth();
