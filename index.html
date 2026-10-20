@@ -8100,6 +8100,30 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             return `${p[0].padStart(2,'0')}/${p[1].padStart(2,'0')}/${p[2]}`;
         }
 
+        // Retorna true se o lançamento pertence ao mês/ano (MM/AAAA).
+        // Trata recorrente, parcelado e à vista de forma unificada.
+        // Normaliza a data antes de comparar (padding defensivo).
+        function itemPertenceAoMes(item, mes, ano) {
+            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
+            const alvoNum = ano * 100 + (mes + 1);
+            const dataRef = item.vencimento || item.vencimentoOriginal || item.dataLancamento;
+            if (!dataRef) return false;
+
+            if (item.isRecorrente) {
+                if (!item.vencimentoOriginal) return false;
+                const p = item.vencimentoOriginal.split('/');
+                if (p.length !== 3) return false;
+                const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
+                if (inicioNum > alvoNum) return false;
+                if (item.encerradoEm && alvoNum >= item.encerradoEm) return false;
+                if (item.mesesOcultos && item.mesesOcultos.includes(alvoNum)) return false;
+                return true;
+            }
+
+            const dNorm = formatarDataComparacao(dataRef);
+            return dNorm.length === 10 && dNorm.substring(3) === chave;
+        }
+
         const modalEncerrar = document.getElementById('modalEncerrar'); let idRecorrenteParaEncerrar = null;
         window.encerrarRecorrencia = function(idMestre) {
             idRecorrenteParaEncerrar = idMestre;
@@ -12887,32 +12911,17 @@ const inputDesc = document.getElementById('descricao');
         // ---------- HELPERS DE DADOS ----------
 
         function asCalcularTotaisMes(mes, ano, modo = 'todos') {
-            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
-            const alvoNum = ano * 100 + (mes + 1);
             let receitas = 0, despesas = 0;
             const categorias = {};
 
             bancoDeDados.forEach(d => {
                 if (d.ocultoExtrato || d.isAjuste) return;
-                // 🎯 Terceiro entra como receita/despesa real; próprio fica fora.
+                // Terceiro entra como receita/despesa real; próprio fica fora.
                 if (d.isTransferencia && !d.isTerceiro) return;
+                // 'pago' = só efetivados; 'pendente' = só a pagar; 'todos' = ambos.
                 if (modo === 'pago' && !d.pago) return;
                 if (modo === 'pendente' && d.pago) return;
-                const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
-                if (!dataRef) return;
-
-                let noMes = false;
-                if (d.isRecorrente) {
-                    const p = d.vencimentoOriginal.split('/');
-                    const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (inicioNum > alvoNum) return;
-                    if (d.encerradoEm && alvoNum >= d.encerradoEm) return;
-                    if (d.mesesOcultos && d.mesesOcultos.includes(alvoNum)) return;
-                    noMes = true;
-                } else {
-                    noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
-                }
-                if (!noMes) return;
+                if (!itemPertenceAoMes(d, mes, ano)) return;
 
                 const val = valorFloat(d.valor);
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
