@@ -3468,32 +3468,13 @@ select:focus, select:focus-visible {
             'itau': { id: 'itau', nome: 'Itaú', domain: 'itau.com.br' },
             'nubank': { id: 'nubank', nome: 'Nubank', domain: 'nubank.com.br', customImg: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Nubank_logo_2021.svg' },
             'inter': { id: 'inter', nome: 'Inter', domain: 'bancointer.com.br', customImg: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Bancointer_oficial.png' },
-            // 🎯 Mercado Pago — PNG transparente de fonte confiável.
-            // O `referrerpolicy="no-referrer"` (aplicado no `renderBankLogo`)
-            // contorna o bloqueio de hotlink que derrubou os ícones antes.
-            // 🎯 `bgFixo: '#ffffff'` — o PNG oficial do Mercado Pago carrega o
-            // fundo branco embutido nos pixels (todos os PNGs gratuitos do MP
-            // têm esse problema). Sem tratamento, no dark mode ele aparecia
-            // como um quadrado branco brutal atravessado no meio da lista.
-            // O `bgFixo` instrui o `renderBankLogo` a envolver a <img> num
-            // wrapper com esse fundo + cantos arredondados. Resultado:
-            //   • Light theme → branco se funde com o card (invisível)
-            //   • Dark theme  → vira um "selo" branco arredondado, deliberado
+            // bgFixo: envolve o PNG em selo branco (funde no light, destaca no dark).
             'mp': { id: 'mp', nome: 'Mercado Pago', domain: 'mercadopago.com.br', customImg: 'https://logodownload.org/wp-content/uploads/2019/07/mercado-pago-logo-0.png', bgFixo: '#ffffff' },
             'bradesco': { id: 'bradesco', nome: 'Bradesco', domain: 'bradesco.com.br' },
             'santander': { id: 'santander', nome: 'Santander', domain: 'santander.com.br' },
             'bb': { id: 'bb', nome: 'B. do Brasil', domain: 'bb.com.br' },
             'caixa': { id: 'caixa', nome: 'Caixa', domain: 'caixa.gov.br', customImg: 'https://logodownload.org/wp-content/uploads/2014/02/caixa-logo-1.png' },
-            // 🎯 C6 Bank — marca naturalmente escura (círculo preto + "C6"
-            // branco). Estratégia por tema:
-            //   • LIGHT → SEM moldura. O card já é branco, e o círculo
-            //             preto contrasta perfeitamente. Zero poluição.
-            //   • DARK  → `bgFixoDark: '#ffffff'` cria um "selo branco
-            //             arredondado" atrás do logo, idêntico ao que o
-            //             Mercado Pago exibe no dark. Sem isso, o círculo
-            //             preto se fundiria com o card escuro e sumiria.
-            // A antiga flag `logoEscuro` (inversão) foi removida — era
-            // gambiarra pra contornar a ausência de um fundo condicional.
+            // bgFixoDark: fundo branco só no dark (logo escuro sumiria no fundo escuro).
             'c6': { id: 'c6', nome: 'C6 Bank', domain: 'c6bank.com.br', customImg: 'https://logodownload.org/wp-content/uploads/2020/09/c6-bank-logo-0.png', bgFixoDark: '#ffffff' },
             'sicredi': { id: 'sicredi', nome: 'Sicredi', domain: 'sicredi.com.br', customImg: 'https://logodownload.org/wp-content/uploads/2017/11/sicredi-logo.png' },
             'carteira': { id: 'carteira', nome: 'Carteira Física', isIcon: true, svg: '<svg class="w-full h-full text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>' },
@@ -3501,11 +3482,7 @@ select:focus, select:focus-visible {
         };
 
         function renderBankLogo(b) {
-            // 🎯 Logos "flutuantes" — sem círculo, sem fundo, sem sombra.
-            // O ícone/imagem é exibido em tamanho natural, apenas limitado
-            // ao tamanho do container onde foi inserido (`w-full h-full`).
-            // A separação do fundo é feita pelo próprio logo (cores, bordas
-            // naturais da marca) — não por uma "moldura" externa.
+            // Logo sem moldura — tamanho natural, limitado ao container.
 
             // 1. Ícones SVG genéricos (Carteira, Outros) — herdam a cor do próprio SVG
             if (b.isIcon) {
@@ -3521,41 +3498,15 @@ select:focus, select:focus-visible {
             const imgSource = b.customImg ? b.customImg : `https://logo.clearbit.com/${b.domain}`;
             const classeInversao = b.logoEscuro ? ' logo-invert-light' : '';
 
-            // 🎯 `referrerpolicy="no-referrer"` evita que o navegador envie
-            // o header `Referer` para o servidor de imagens. Sem isso, sites
-            // como `logodownload.org` bloqueiam o hotlink quando a página
-            // está em `file://` ou domínio não autorizado — retornando 403
-            // e fazendo o ícone cair no fallback do Google Favicon (pixelado).
+            // no-referrer evita bloqueio de hotlink em logodownload.org.
             const imgTag = `<img src="${imgSource}" referrerpolicy="no-referrer" onload="this.style.opacity='1'" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=${b.domain}&sz=128';" alt="${b.nome}" style="opacity:0; transition: opacity 0.25s ease;" class="w-full h-full object-contain${classeInversao}">`;
 
-            // 4. 🎯 Bancos com FUNDO BRANCO EMBUTIDO no PNG (ex: Mercado Pago).
-            //    O wrapper ganha um fundo sólido (`bgFixo`) + cantos arredondados,
-            //    e a <img> fica dentro com `object-contain`. Efeito por tema:
-            //      • Light → o branco do selo se funde com o card branco
-            //                (visualmente invisível, sem poluição).
-            //      • Dark  → vira um "selo" branco arredondado atrás do logo,
-            //                deliberado em vez de "quadrado branco atravessado".
-            //
-            //    `overflow-hidden` + `rounded-md` garantem que a <img> seja
-            //    clipada nos cantos — os cantos arredondados do wrapper
-            //    permanecem intactos mesmo que a imagem preencha 100%.
-            //
-            //    Extensível: qualquer banco futuro com o mesmo problema só
-            //    precisa receber `bgFixo: '#xxxxxx'` no objeto do BANCOS.
+            // PNG com fundo branco embutido → wrapper com bgFixo + cantos arredondados.
             if (b.bgFixo) {
                 return `<div class="w-full h-full rounded-md overflow-hidden flex items-center justify-center" style="background-color: ${b.bgFixo};">${imgTag}</div>`;
             }
 
-            // 5. 🎯 Fundo CONDICIONAL POR TEMA (`bgFixoDark`).
-            //    A cor do fundo só aparece no dark mode; no light o
-            //    wrapper fica transparente e o logo flutua livre.
-            //    A cor é passada via CSS custom property
-            //    (`--bg-fixo-cor`), e a classe `.banco-bg-fixo-dark`
-            //    (definida no <style>) decide quando aplicá-la,
-            //    com base na presença de `html.dark`.
-            //    Ideal para bancos cuja marca é naturalmente escura
-            //    (ex: C6 Bank — círculo preto) e que ficam invisíveis
-            //    no dark sem um fundo claro atrás.
+            // Fundo condicional por tema: cor só no dark mode.
             if (b.bgFixoDark) {
                 return `<div class="w-full h-full rounded-md overflow-hidden flex items-center justify-center banco-bg-fixo-dark" style="--bg-fixo-cor: ${b.bgFixoDark};">${imgTag}</div>`;
             }
@@ -9150,10 +9101,6 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
             //    é aqui que o usuário vê o total de despesas do mês.
             const heroDespEl = document.getElementById('heroDespesasMes');
             if (heroDespEl) heroDespEl.textContent = formatMoeda(totalDespesasDoMes);
-            // 🎯 Fixa a classe em `text-2xl` — igual aos cards Salário/Vale.
-            //    O observer global NÃO toca mais aqui (Fix 71B), então essa
-            //    classe é a fonte da verdade. Sem `valor-sensivel` reagindo,
-            //    "R$ 1.368,40" mantém o mesmo tamanho de "R$ 50,02".
             cardDespesasMes.className = 'text-2xl font-bold font-montserrat tracking-tight text-[#E11D48] valor-sensivel mb-3';
             if (totalDespesasDoMes > 0.005) cardDespesasMes.style.color = '#E11D48';
             else cardDespesasMes.style.color = '';
@@ -11409,10 +11356,7 @@ window.checkRateio = function() {
             configurarEventosMascaraMoeda(inp);
 
             if (!inp.parentNode.classList.contains('has-calc-wrapper')) {
-                // 🎯 Detecta o contexto visual do input para posicionar o botão corretamente.
-                // Inputs com border-b (layout minimalista do modal de lançamento) precisam
-                // do botão colado na borda inferior direita, sem padding-right extra.
-                // Inputs com border completa (caixas) usam o posicionamento tradicional.
+                // Inputs com border-b (minimalistas) usam posicionamento compacto.
                 const ehMinimalista = inp.classList.contains('border-b') && !inp.classList.contains('border');
 
                 const wrapper = document.createElement('div');
@@ -11614,22 +11558,7 @@ window.checkRateio = function() {
                     </div>
                     <span class="text-[7.5px] font-semibold leading-tight ${isSelected ? 'text-[#4D6BFE]' : 'text-slate-500'} truncate w-full text-center">${b.nome}</span>
                 `;
-                // ═══════════════════════════════════════════════════════════
-                // 🎯 stopPropagation evita o bug "modal fecha sozinho"
-                // ═══════════════════════════════════════════════════════════
-                // O `renderGridBancos` abaixo APAGA o grid inteiro e recria
-                // todos os botões. Isso DETACHA o botão que acabou de ser
-                // clicado do DOM.
-                //
-                // Sem `stopPropagation`, o click continua borbulhando até
-                // o backdrop do modal. Lá, `card.contains(ev.target)` checa
-                // se o alvo ainda está dentro do card — mas o alvo é o
-                // botão DESTRUÍDO. Resultado: `false` → o backdrop acha que
-                // o usuário clicou FORA do card e fecha o modal.
-                //
-                // `stopPropagation` corta o evento na raiz: ele nunca sobe
-                // até o backdrop. O modal permanece aberto, e o usuário
-                // consegue escolher o banco normalmente.
+                // stopPropagation: botão é recriado no clique — sem isso o backdrop fecharia o modal.
                 btn.onclick = (e) => {
                     if (e) e.stopPropagation();
                     document.getElementById('contaEditBanco').value = b.id;
@@ -13426,15 +13355,6 @@ const inputDesc = document.getElementById('descricao');
             const saud = asSaudacaoHora();
             const sufixo = nome ? `, ${nome}` : '';
 
-            // 🎯 Boas-vindas RICAS — em vez de um "olá" solto com muito
-            //    vazio, apresenta 6 atalhos clicáveis organizados por tema.
-            //    Três benefícios:
-            //      • Preenche o espaço vertical com conteúdo útil (não só ar).
-            //      • Descobribilidade: o usuário VÊ o que ela sabe fazer.
-            //      • Cada card dispara uma pergunta completa ao ser tocado.
-            //
-            //    Grid: 1 coluna no mobile, 2 no sm+. Cada card tem ícone
-            //    temático, título curto e subtítulo de exemplo.
             const mesAtualLower = nomeMeses[dataFiltro.getMonth()].toLowerCase();
             const atalhos = [
                 {
@@ -13446,10 +13366,6 @@ const inputDesc = document.getElementById('descricao');
                 },
                 {
                     icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
-                    // 🎯 Título e subtítulo adaptam-se ao perfil:
-                    //    • CLT com vale  → "Salário e vale"
-                    //    • CLT sem vale  → "Salário"
-                    //    • PJ/Autônomo   → "Faturamento"
                     titulo: meuPerfil.regime === 'PJ' ? 'Faturamento' : (asTemVale() ? 'Salário e vale' : 'Salário'),
                     sub: meuPerfil.regime === 'PJ' ? '"Qual meu faturamento?"' : '"Quando cai meu salário?"',
                     pergunta: meuPerfil.regime === 'PJ' ? 'Qual meu faturamento?' : 'Qual será meu salário?'
@@ -13472,8 +13388,6 @@ const inputDesc = document.getElementById('descricao');
                     sub: '"Quais meus descontos?"',
                     pergunta: 'Quais meus descontos?'
                 },
-                // (a lista é filtrada mais abaixo por `asTemVale()`,
-                //  então não precisa ramificar aqui.)
                 {
                     icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>',
                     titulo: 'Saldo das contas',
@@ -13484,11 +13398,6 @@ const inputDesc = document.getElementById('descricao');
 
             container.innerHTML = `
                 <div class="as-welcome anim-fade-in py-2">
-                    <!-- Cabeçalho compacto — só texto.
-                         🎯 O ícone da assistente já aparece no cabeçalho da
-                         própria aba (topo). Repetir na saudação criava uma
-                         "dupla identidade" visual sem propósito — dois
-                         elementos idênticos a 100px de distância. -->
                     <div class="mb-5">
                         <p class="text-base font-bold text-slate-800 dark:text-gray-100 leading-tight">${saud}${sufixo}!</p>
                         <p class="text-[12px] text-slate-500 dark:text-gray-400 leading-tight mt-1">Escolha um tema abaixo ou escreva sua pergunta.</p>
@@ -13550,22 +13459,7 @@ const inputDesc = document.getElementById('descricao');
             `;
             container.appendChild(el);
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 SCROLL INTELIGENTE pós-resposta
-            // ═══════════════════════════════════════════════════════════
-            // Se a resposta for mais alta que a área visível do chat
-            // (ex: o card Ajuda com 60+ botões), rola até o TOPO dela —
-            // assim o usuário começa a ler do começo e desce no ritmo
-            // dele. Sem isso, o navegador rolava para o FIM (scrollFinal),
-            // e o usuário via só as últimas perguntas do cardápio.
-            //
-            // Se for curta (1-2 parágrafos, cabe confortavelmente),
-            // mantém o comportamento natural de chat: rola até o fim,
-            // deixando a última mensagem totalmente visível.
-            //
-            // O `requestAnimationFrame` garante que o navegador já
-            // calculou a altura real do `el` antes de lermos `offsetHeight`
-            // — sem ele, `el.offsetHeight` pode vir 0 em alguns casos.
+            // Resposta longa: rola para o topo dela. Curta: rola para o fim.
             requestAnimationFrame(() => {
                 const msgH = el.offsetHeight;
                 const visH = container.clientHeight;
@@ -16569,10 +16463,7 @@ const inputDesc = document.getElementById('descricao');
             return primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
         }
 
-        // 🎯 Helper: o usuário tem vale ativo?
-        //    Retorna false em PJ ou quando `temVale === 'Não'`.
-        //    Usado pela Assistente para filtrar perguntas, sugestões
-        //    e atalhos que só fazem sentido para quem recebe vale.
+        // Retorna false em PJ ou quando temVale === 'Não'.
         function asTemVale() {
             return meuPerfil.regime !== 'PJ' && meuPerfil.temVale !== 'Não';
         }
@@ -16627,10 +16518,7 @@ const inputDesc = document.getElementById('descricao');
                 <p class="text-[11px] text-slate-400 dark:text-gray-500 mt-2">Ainda não sou IA generativa — respondo por regras. Mas não invento números.</p>`;
         }
 
-        // ---------- DETECÇÃO DE AMBIGUIDADE ----------
-        // Quando a pergunta é muito curta ou genérica ("salário", "vale",
-        // "mês"), devolve um cartão de desambiguação com botões — em vez
-        // de chutar ou cair em "não entendi".
+        // Pergunta genérica ("salário", "vale", "mês") → botões de desambiguação.
         function asDetectarAmbiguidade(t) {
             if (/^\s*(o\s+|a\s+)?sal[áa]rio\s*\??\s*$/.test(t)) {
                 return `
@@ -16667,9 +16555,6 @@ const inputDesc = document.getElementById('descricao');
             return null;
         }
 
-        // 🎯 Contexto de follow-up: guarda o último "assunto" para permitir
-        //    perguntas encadeadas como "Quanto gastei no salário de outubro?"
-        //    seguida de "E no vale?" (que herda o mês/ano implícitos).
         let asUltimoContexto = null;
 
         // ---------- PARSER (interpreta a pergunta) ----------
@@ -17230,13 +17115,7 @@ const inputDesc = document.getElementById('descricao');
         //    Se um dia quiser voltar a ter chips rápidos, o motor está
         //    preservado nos botões `.as-suggestion` do cartão de Ajuda.
 
-        // Inicializa a aba. Re-renderiza as boas-vindas SEMPRE que a conversa
-        // está "zerada" (só boas-vindas, sem histórico) — assim a saudação
-        // reflete o nome atual do perfil, mesmo se a aba já foi visitada antes.
-        //
-        // Detecção: procurar qualquer filho que NÃO seja `.as-welcome`. Se
-        // existir, o usuário já conversou — preserva o histórico. Se só tem
-        // boas-vindas (ou está vazio), re-renderiza com o nome fresco.
+        // Re-renderiza boas-vindas só se a conversa está zerada.
         window.asInicializarAba = function() {
             const container = document.getElementById('chatAssistente');
             if (!container) return;
@@ -17247,12 +17126,6 @@ const inputDesc = document.getElementById('descricao');
             }
         };
 
-        // 🎯 Atualiza o texto do card "Gastos do mês" no Assistente quando o
-        //    mês muda no header. Sem isso, o subtítulo ficava cravado no mês
-        //    em que a aba foi aberta — e só se atualizava ao limpar a conversa
-        //    (ou sair e voltar da aba). Idempotente e seguro: se o card não
-        //    existe (aba ainda não renderizada ou com conversa em andamento),
-        //    sai silenciosamente.
         window.asAtualizarMesAtualCard = function() {
             const el = document.getElementById('asSubGastosMes');
             if (!el) return;
@@ -17260,17 +17133,7 @@ const inputDesc = document.getElementById('descricao');
             el.textContent = `"Quanto gastei em ${mesAtualLower}?"`;
         };
 
-        // 🎯 Sincroniza a saudação da Assistente com o nome atual do perfil.
-        //    Chamada pelo `btnSalvarPerfil` (ao salvar Configurações).
-        //
-        //    Regra:
-        //      • Se a aba está só com boas-vindas (sem conversa), re-renderiza
-        //        para refletir o novo nome imediatamente.
-        //      • Se já há conversa em andamento, NÃO apaga o histórico — só
-        //        o header do app muda. A saudação antiga fica visível porque
-        //        está ancorada no log; a próxima limpeza (lixeira) regenera.
-        //
-        //    Idempotente e segura: se a aba ainda nem foi aberta, não faz nada.
+        // Se só há boas-vindas, regenera para refletir o novo nome do perfil.
         window.asAtualizarSaudacaoPerfil = function() {
             const container = document.getElementById('chatAssistente');
             if (!container) return;
@@ -17282,44 +17145,16 @@ const inputDesc = document.getElementById('descricao');
             }
         };
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎈 FAB ARRASTÁVEL — Assistente Flutuante (mobile)
-        // ═══════════════════════════════════════════════════════════════
-        // Substitui o antigo botão de Assistente no header mobile.
-        //
-        // Comportamento:
-        //   • Sempre visível em telas <768px (`md:hidden` no HTML).
-        //   • Toque curto (< 2px de movimento) → abre a aba Assistente.
-        //   • Qualquer arraste (> 2px) → move o botão livremente; ao
-        //     soltar, encaixa na lateral mais próxima (esquerda/direita).
-        //   • Posição persiste via localStorage.
-        //   • Ao girar / redimensionar, a posição é revalidada.
-        //
-        // Por que `transform: translate3d()` em vez de `left`/`top`:
-        //   • `left`/`top` forçam o navegador a refazer LAYOUT da página
-        //     inteira a cada frame do arraste. Em celular, isso derruba
-        //     para 30-40fps — é a sensação "travada".
-        //   • `transform` é resolvido na camada de composição (GPU), sem
-        //     tocar em layout. O movimento fica a 60fps em qualquer
-        //     aparelho.
-        //
-        // Por que pointer events (e não touch + mouse separados):
-        //   • Uma API só cobre mouse, toque e caneta.
-        //   • `setPointerCapture` garante que o FAB continua recebendo
-        //     `pointermove` mesmo quando o dedo passa por cima de
-        //     outros elementos.
+        // FAB arrastável: tap abre Assistente; arraste move e encaixa na lateral.
         (function() {
             const fab = document.getElementById('fabAssistente');
             if (!fab) return;
 
             const BTN_SIZE = 48;    // w-12 (48px) — precisa casar com o HTML
             const MARGEM = 12;      // respiro em relação às bordas
-            // 🎯 Limite MUITO baixo — qualquer micro-gesto já caracteriza
-            // arraste e dispara o snap lateral. Abaixo disso, é tap puro
-            // (abre a aba Assistente).
+            // Limite que separa tap de arraste.
             const LIMITE_TOQUE = 2;
-            // 🎯 `easeOutQuint` (0.22, 1, 0.36, 1): desacelera tarde e
-            // dá a sensação de "deslizar até parar". Duração 420ms.
+            // Easing com desaceleração tardia (sensação de "deslizar até parar").
             const TRANSICAO = 'transform 0.42s cubic-bezier(0.22, 1, 0.36, 1)';
 
             let posX = 0, posY = 0;
