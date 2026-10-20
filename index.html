@@ -9098,8 +9098,20 @@ const chkCompoe = document.getElementById('chkCompoeSaldo');
                 .reduce((s, d) => s + (isRec(d) ? valorFloat(d.valor) : -valorFloat(d.valor)), 0);
             
             // 🎯 Override de Salário desativado. O card sempre mostra o cálculo automático.
-            const saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
-            const overrideDetalhes = null;
+            // Override: se o usuário fixou manualmente o saldo do Salário, respeita.
+            const overrideSalvo = saldoBaseMensalGlobal[chave]?.overrideSalario;
+            let saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
+            let overrideDetalhes = null;
+            if (overrideSalvo) {
+                if (typeof overrideSalvo === 'object' && overrideSalvo.valor !== undefined) {
+                    saldoSalario = parseFloat(overrideSalvo.valor);
+                    overrideDetalhes = overrideSalvo;
+                } else {
+                    // Formato legado: valor numérico direto, sem metadados.
+                    saldoSalario = parseFloat(overrideSalvo);
+                    overrideDetalhes = { valor: saldoSalario, data: null, _legado: true };
+                }
+            }
 
             const saldoVale = baseVale + receitaVale - gastoVale + ajusteVale;
             // 🎯 O Saldo Total é SEMPRE a soma dos dois buckets — em
