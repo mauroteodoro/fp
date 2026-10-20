@@ -13474,13 +13474,23 @@ const inputDesc = document.getElementById('descricao');
             const receitaVale = visiveis.filter(d => isRec(d) && !d.isAjuste && alvoComposicao(d) === 'Vale').reduce((s, d) => s + valorFloat(d.valor), 0);
             const ajusteVale = visiveis.filter(d => d.isAjuste && alvoComposicao(d) === 'Vale').reduce((s, d) => s + (isRec(d) ? valorFloat(d.valor) : -valorFloat(d.valor)), 0);
 
-            const saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
-            const temOverrideSal = false;
-            const overrideSal = null;
+            // Override: se o usuário fixou manualmente o saldo do Salário neste mês, respeita.
+            let saldoSalario = baseSalario + receitaSalario - gastoSalario + ajusteSalario;
+            let overrideDetalhes = null;
+            if (bmes && bmes.overrideSalario) {
+                const ov = bmes.overrideSalario;
+                if (typeof ov === 'object' && ov.valor !== undefined) {
+                    saldoSalario = parseFloat(ov.valor);
+                    overrideDetalhes = ov;
+                } else {
+                    saldoSalario = parseFloat(ov);
+                    overrideDetalhes = { valor: saldoSalario, data: null, _legado: true };
+                }
+            }
             const saldoVale = baseVale + receitaVale - gastoVale + ajusteVale;
             const saldoTotal = saldoSalario + saldoVale;
 
-            if (bucket === 'Salário') return { base: baseSalario, rec: receitaSalario, desp: gastoSalario, ajuste: ajusteSalario, total: saldoSalario, override: temOverrideSal ? overrideSal : null, _baseEstimada };
+            if (bucket === 'Salário') return { base: baseSalario, rec: receitaSalario, desp: gastoSalario, ajuste: ajusteSalario, total: saldoSalario, override: overrideDetalhes, _baseEstimada };
             if (bucket === 'Vale') return { base: baseVale, rec: receitaVale, desp: gastoVale, ajuste: ajusteVale, total: saldoVale, _baseEstimada };
             return {
                 base: baseSalario + baseVale,
