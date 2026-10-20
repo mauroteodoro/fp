@@ -13391,26 +13391,9 @@ const inputDesc = document.getElementById('descricao');
 
         function asCalcularSaldoBucket(mes, ano, bucket) {
             const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
-            const alvoNum = ano * 100 + (mes + 1);
 
-            // 1) Filtra despesas do mês (mesma regra do extrato/cards)
-            const despesasFiltradas = bancoDeDados.filter(despesa => {
-                if (!despesa.vencimento && !despesa.vencimentoOriginal && !despesa.dataLancamento) return false;
-                if (despesa.isRecorrente) {
-                    const p = despesa.vencimentoOriginal.split('/');
-                    const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (inicioNum > alvoNum) return false;
-                    if (despesa.encerradoEm && alvoNum >= despesa.encerradoEm) return false;
-                    if (despesa.mesesOcultos && despesa.mesesOcultos.includes(alvoNum)) return false;
-                    return true;
-                }
-                if (despesa.totalParcelas > 1) {
-                    const dv = despesa.vencimento || '';
-                    return dv.substring(3) === chave;
-                }
-                const dataRef = despesa.vencimento || despesa.vencimentoOriginal || despesa.dataLancamento;
-                return dataRef && dataRef.substring(3) === chave;
-            });
+            // Filtra despesas do mês (mesma regra do Extrato/cards).
+            const despesasFiltradas = bancoDeDados.filter(d => itemPertenceAoMes(d, mes, ano));
 
             // 2) Bases (mesma regra do 13º por mês — nov→Vale, dez→Salário)
             let baseVale = 0, baseSalario = 0;
@@ -13718,8 +13701,6 @@ const inputDesc = document.getElementById('descricao');
         }
 
         function asRespExtremosGasto(mes, ano, tipo = 'maior') {
-            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
-            const alvoNum = ano * 100 + (mes + 1);
             const nome = nomeMeses[mes];
             const itens = [];
 
@@ -13914,8 +13895,6 @@ const inputDesc = document.getElementById('descricao');
         // 🎯 Gastos de uma categoria específica num mês
         function asRespGastosCategoria(mes, ano, catNome) {
             let total = 0, pago = 0, pendente = 0;
-            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
-            const alvoNum = ano * 100 + (mes + 1);
 
             bancoDeDados.forEach(d => {
                 if (d.isAjuste) return;
@@ -13948,8 +13927,6 @@ const inputDesc = document.getElementById('descricao');
         // 🎯 Receitas de um bucket num mês (espelho do asRespProjecaoBucket)
         function asRespReceitaBucket(mes, ano, bucket) {
             let total = 0, pago = 0, pendente = 0;
-            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
-            const alvoNum = ano * 100 + (mes + 1);
 
             bancoDeDados.forEach(d => {
                 if (d.isAjuste) return;
