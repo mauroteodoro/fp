@@ -13547,24 +13547,6 @@ const inputDesc = document.getElementById('descricao');
         function asExtrairMesAno(texto) {
             const t = texto.toLowerCase();
 
-            // 🎯 Nome do mês ancorado com `\b` dos DOIS lados.
-            //
-            //    O bug anterior: `t.includes(nome)` fazia match em QUALQUER
-            //    substring. "maio" está contido em "maiores", "março" em
-            //    "março" (ok, mas por sorte) — e a assistente respondia
-            //    Maio/2026 quando o usuário perguntava "quais os maiores
-            //    gastos do mês?".
-            //
-            //    Com `\bmaio\b`, só casa "maio" como PALAVRA ISOLADA —
-            //    precedida e seguida por fronteira de palavra (espaço,
-            //    pontuação, início/fim de string). "Maiores" passa a não
-            //    casar mais, porque depois de "maio" vem "r" (word char).
-            //
-            //    Cuidados verificados:
-            //      • "maiores", "maioria"  → não casam mais "maio" ✅
-            //      • "maiúsculo"           → não casa mais "mai"  ✅
-            //      • "em outubro"          → casa "outubro"       ✅
-            //      • "out/2026"            → casa "out"           ✅
             for (let i = 0; i < 12; i++) {
                 const nome = mesesLower[i];
                 const abrev = nome.substring(0, 3);
@@ -13770,23 +13752,12 @@ const inputDesc = document.getElementById('descricao');
         // ---------- BUILDERS DE RESPOSTA ----------
 
         function asRespAjuda() {
-            // 🎯 Ajuda organizada em CATEGORIAS — cada grupo tem título e
-            //    botões clicáveis. É o "cardápio completo" da assistente,
-            //    num só lugar. Substitui os antigos chips horizontais que
-            //    ficavam acima do input.
-            //
-            //    Cada botão usa o mesmo motor (`data-q` + `asPerguntar`).
-            //    Adicionar um novo comando = adicionar uma linha em um
-            //    dos grupos abaixo.
             const grupos = [
                 {
                     titulo: '💰 Salário e recebimentos',
                     itens: [
                         { txt: 'Quando cai meu salário?',        q: 'Quando cai meu salário?' },
                         { txt: 'Qual será meu salário?',         q: 'Qual será meu salário?' },
-                        // 🎯 "Quanto vou receber de vale?" só aparece se o
-                        //    usuário realmente recebe vale. Sem isso, o item
-                        //    ficava no cardápio mesmo em PJ ou CLT-sem-vale.
                         ...(asTemVale() ? [{ txt: 'Quanto vou receber de vale?', q: 'Quanto vou receber de vale?' }] : []),
                         { txt: 'Quanto vou receber de 13º?',     q: 'Quanto vou receber de 13º?' },
                         { txt: 'Quais meus descontos?',          q: 'Quais meus descontos?' }
@@ -13842,10 +13813,6 @@ const inputDesc = document.getElementById('descricao');
                 {
                     titulo: '🎯 Metas e planejamento',
                     itens: [
-                        // 🎯 txt e q SEMPRE idênticos. Se forem diferentes, o
-                        // botão exibe uma frase mas envia outra — e o usuário
-                        // vê o texto "mudar" no chat. Cada item abaixo tem
-                        // exatamente a mesma string nos dois campos.
                         { txt: 'Quero juntar R$ 5.000 até dezembro',         q: 'Quero juntar R$ 5.000 até dezembro' },
                         { txt: 'Preciso juntar R$ 10.000 até março de 2027', q: 'Preciso juntar R$ 10.000 até março de 2027' },
                         { txt: 'Quero juntar R$ 5.000 mantendo R$ 400/mês',  q: 'Quero juntar R$ 5.000 mantendo R$ 400/mês' }
@@ -14229,10 +14196,6 @@ const inputDesc = document.getElementById('descricao');
                 avisoEstimado = `<p class="text-[11px] text-amber-600 dark:text-amber-400 mt-2 leading-snug">⚠️ Valor estimado a partir do seu perfil — não há simulação salva para ${nome}/${ano}. Abra o Simulador e salve para precisão total.</p>`;
             }
 
-            // Sugestões contextuais — incluem "E o total?" / "E o vale?" para
-            // aproveitar o contexto de follow-up recém-criado.
-            // 🎯 Sugestões filtradas pelo perfil: quem não tem vale
-            //    não vê "E o vale?" (que só levaria a uma resposta vazia).
             const sug = [];
             const temValeSug = asTemVale();
             if (bucket === 'Salário') {
@@ -14520,22 +14483,9 @@ const inputDesc = document.getElementById('descricao');
         }
 
         function asRespDataSalario(mes, ano) {
-            // 🎯 Aceita mes/ano do parser. Sem eles, cai no mês visualizado.
-            //    O bug anterior: o parser extraía "outubro" mas a função
-            //    ignorava e sempre respondia com dataFiltro.
             if (mes === undefined || mes === null) mes = dataFiltro.getMonth();
             if (ano === undefined || ano === null) ano = dataFiltro.getFullYear();
 
-            // 🎯 Calcula as datas DIRETO — não lê do DOM.
-            //    Os labels `lblDataSalario`/`lblDataVale` do Simulador só são
-            //    populados quando a aba Simulador é visitada (via
-            //    `calcularMotorFolha`). Se o usuário vai direto para o
-            //    Assistente, eles estão vazios ("--/--/----") e a resposta
-            //    fica inútil. Aqui replicamos exatamente a mesma lógica do
-            //    simulador, sem depender de estado de outra aba.
-            //
-            //    • Salário → 5º dia útil do mês visualizado
-            //    • Vale    → sempre dia 20 do mês visualizado
             const qDia = getQuintoDiaUtil(ano, mes);
             const dValeObj = getDiaValeEfetivo(ano, mes);
             const diaSalarioStr = `${String(qDia.getDate()).padStart(2,'0')}/${String(mes+1).padStart(2,'0')}/${ano}`;
@@ -14546,10 +14496,6 @@ const inputDesc = document.getElementById('descricao');
             const diaSemanaSal = diasSemana[qDia.getDay()];
             const diaSemanaVale = diasSemana[dValeObj.getDay()];
 
-            // 🎯 Motivo da antecipação do vale — só aparece quando o dia 20
-            //    não é útil. Reaproveita `getMotivoValeEfetivo`, a mesma
-            //    função que alimenta o Simulador. Coerência total entre as
-            //    duas telas.
             const motivoVale = getMotivoValeEfetivo(ano, mes);
             const motivoHtml = motivoVale
                 ? `<p class="text-[11px] text-amber-600 dark:text-amber-400 mt-2 leading-snug">${motivoVale}</p>`
@@ -14578,14 +14524,6 @@ const inputDesc = document.getElementById('descricao');
             `;
         }
 
-        // 🎯 Filtra despesas de um ciclo específico (Salário ou Vale)
-        //    de um mês. Usa exatamente a MESMA regra de determinação de
-        //    origem do resto do app (`determinarOrigem`) — sem inventar.
-        //
-        //    Retorna 3 números:
-        //      • total   — soma de tudo (pago + pendente)
-        //      • pago    — só o que já foi efetivado
-        //      • pendente— o que ainda vai sair
         function asCalcularGastosBucket(mes, ano, bucket) {
             let total = 0, pago = 0, pendente = 0;
             const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
@@ -14614,8 +14552,6 @@ const inputDesc = document.getElementById('descricao');
                 }
                 if (!noMes) return;
 
-                // 🎯 Origem: chip manual respeitado, senão deriva da data —
-                //    mesma regra de `atualizarCardsSaldo`.
                 let origem = d.origem;
                 if (origem !== 'Vale' && origem !== 'Salário') {
                     origem = determinarOrigem(dataRef, d.natureza || 'Despesa', null);
@@ -16070,7 +16006,6 @@ const inputDesc = document.getElementById('descricao');
             const mesBase = dataFiltro.getMonth();
             const anoBase = dataFiltro.getFullYear();
 
-            // Número total de meses = distância entre o mês atual e o mês alvo (inclusive)
             const distancia = (anoAlvo - anoBase) * 12 + (mesAlvo - mesBase);
             const totalMeses = Math.max(1, distancia + 1);
 
@@ -16094,9 +16029,6 @@ const inputDesc = document.getElementById('descricao');
             const valorUniforme = totalMeses > 0 ? falta / totalMeses : 0;
             const uniformeViavel = meses.every(m => m.capacidade >= valorUniforme - 0.01);
 
-            // Plano proporcional: aloca mais onde há mais sobra.
-            // Algoritmo guloso simples — distribui pesos pela capacidade,
-            // depois remove iterativamente os meses que estouraram.
             let planoProporcional = null;
             if (falta > 0 && capacidadeTotal >= falta - 0.01) {
                 const alocacao = new Array(meses.length).fill(0);
@@ -16169,30 +16101,8 @@ const inputDesc = document.getElementById('descricao');
                 const diferenca = p.falta - p.capacidadeTotal;
                 const sugestaoPiso = Math.max(0, pisoMensal - diferenca / p.totalMeses);
 
-                // ═══════════════════════════════════════════════════════
-                // 🎯 SUGESTÃO DE "MESES EXTRAS" — só quando faz sentido
-                // ═══════════════════════════════════════════════════════
-                // Antes: `Math.ceil(diferenca / Math.max(1, capacidadeMedia))`.
-                // Se a capacidade média era 0 (meses futuros sem saldo
-                // estimado), a divisão caía no `max(1, 0) = 1` e a sugestão
-                // virava "8800 meses" — absurdo.
-                //
-                // Agora: só sugere meses extras se a capacidade média for
-                // significativa (> R$ 10/mês). Senão, omite a linha.
                 const capacidadeMedia = p.capacidadeTotal / p.totalMeses;
 
-                // ═══════════════════════════════════════════════════════
-                // 🎯 TETO DE 3 MESES PARA "ESTENDER O PRAZO"
-                // ═══════════════════════════════════════════════════════
-                // Antes: `Math.ceil(diferenca / capacidadeMedia)` dava
-                // valores como "106 meses" (R$ 4.939 de falta a R$ 46/mês
-                // de capacidade média). Ninguém com meta datada vai
-                // esperar 8 anos — a sugestão era inútil.
-                //
-                // Regra nova: só sugere extensão se couber em ATÉ 3 MESES.
-                // Acima disso, o problema não é o prazo — é a falta de
-                // folga estrutural. A resposta então aponta só para
-                // reduzir meta/reserva, que são as alavancas reais.
                 const MESES_EXTRAS_MAX = 3;
                 const mesesExtrasBruto = capacidadeMedia > 10
                     ? Math.ceil(diferenca / capacidadeMedia)
@@ -16207,17 +16117,6 @@ const inputDesc = document.getElementById('descricao');
                     ? `Nos ${p.totalMeses} meses até o prazo, você conseguiria juntar <strong>${formatMoeda(p.capacidadeTotal)}</strong> — faltam <strong>${formatMoeda(diferenca)}</strong> para a meta.`
                     : `Seu orçamento está comprometido nos próximos ${p.totalMeses} meses — sem folga para poupar.`;
 
-                // ═══════════════════════════════════════════════════════
-                // 📊 BREAKDOWN POR MÊS — quanto cada mês pode aportar
-                // ═══════════════════════════════════════════════════════
-                // Cada linha mostra o valor que AQUELE mês consegue
-                // destinar à meta, já descontando o piso mensal. Os
-                // marcadores contextuais ("inclui 13º", "mês negativo")
-                // explicam visualmente os meses fora do padrão — sem
-                // precisar o usuário deduzir sozinho.
-                //
-                // Ordem: cronológica (Set→Out→Nov...). O usuário lê a
-                // sequência como ela vai acontecer de verdade.
                 const mesesComCap = p.meses.filter(m => m.capacidade > 0.01);
                 const mesesBreakdown = mesesComCap.map(m => {
                     const chave = `${String(m.mes+1).padStart(2,'0')}/${m.ano}`;
@@ -16268,9 +16167,6 @@ const inputDesc = document.getElementById('descricao');
                 const ativos = p.planoProporcional.filter(m => m.alocacao > 0.01);
                 const amostra = ativos.slice(0, 12);
 
-                // 🎯 Identifica o mês MAIS e o MENOS exigido para dar contexto
-                //    humano ao plano. Ajuda o usuário a entender de imediato
-                //    onde precisa guardar mais.
                 let mesTopo = null, mesBase = null;
                 for (const m of ativos) {
                     if (!mesTopo || m.alocacao > mesTopo.alocacao) mesTopo = m;
@@ -16307,19 +16203,6 @@ const inputDesc = document.getElementById('descricao');
                 html += `<p class="text-[10px] text-amber-600 dark:text-amber-400 mt-2 leading-snug">⚠️ Meses sem simulação salva usam o perfil como estimativa. Salve cada mês no Simulador para valores exatos.</p>`;
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 SUGESTÕES DE REFINAMENTO
-            // ═══════════════════════════════════════════════════════════
-            // Antes, os chips eram genéricos ("Comprar algo parcelado",
-            // "Ver saldo projetado") e não convidavam o usuário a explorar
-            // variações da MESMA meta. Agora, cada chip é um follow-up
-            // que o parser responde na hora, graças ao branch novo no
-            // handler de refinamento.
-            //
-            // A primeira sugestão é dinâmica: "+3 meses" a partir do
-            // alvo atual. Se a meta é março/2027, sugere junho/2027.
-            // Caso o +3 cruze o ano (ex: nov/2027 + 3 = fev/2028), a
-            // matemática com módulo e floor ajusta o ano sozinha.
             const mesMais3 = (mesAlvo + 3) % 12;
             const anoMais3 = anoAlvo + Math.floor((mesAlvo + 3) / 12);
             const nomeMais3 = nomeMeses[mesMais3];
@@ -16336,24 +16219,6 @@ const inputDesc = document.getElementById('descricao');
             return html;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🚨 CONTAS ATRASADAS — lançamentos pendentes com vencimento passado
-        // ═══════════════════════════════════════════════════════════════
-        // Percorre o `bancoDeDados` inteiro (não limitado a um mês) e
-        // coleta tudo que atende:
-        //   • é Despesa (não Receita)
-        //   • não está efetivado (nem `pago`, nem `pagamentos[anoMes]`)
-        //   • o vencimento já passou (data < hoje, dia zerado)
-        //   • não é ajuste nem transferência oculta
-        //
-        // Recorrentes ganham tratamento especial: o `pago` do mês vem de
-        // `pagamentos[anoMesStr]`, então precisamos reconstruir esse
-        // status para saber se AQUELA ocorrência está em atraso.
-        //
-        // O retorno inclui `diasAtraso` — ordenamos do mais crítico ao
-        // menos crítico, porque um boleto com 45 dias de atraso merece
-        // mais visibilidade que um com 1 dia.
-
         function asCalcularContasAtrasadas() {
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
@@ -16369,10 +16234,6 @@ const inputDesc = document.getElementById('descricao');
                 const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
                 if (!dataRef || dataRef.length !== 10) return;
 
-                // Status de pagamento:
-                //   • Recorrente → `pagamentos[anoMesStr]` decide (uma
-                //     ocorrência pode estar paga em março e aberta em abril)
-                //   • Não-recorrente → `d.pago` direto
                 let pago;
                 if (d.isRecorrente) {
                     const p = dataRef.split('/');
@@ -16384,9 +16245,6 @@ const inputDesc = document.getElementById('descricao');
                 }
                 if (pago) return;
 
-                // 🎯 Mesmo fix do `_alertasVencimentoColetar`: recorrentes
-                // apagadas no mês (`mesesOcultos`) ou encerradas
-                // (`encerradoEm`) não podem ser listadas como atrasadas.
                 const partes = dataRef.split('/');
                 const anoMesNum = parseInt(partes[2]) * 100 + parseInt(partes[1]);
                 if (d.mesesOcultos && d.mesesOcultos.includes(anoMesNum)) return;
@@ -16464,24 +16322,7 @@ const inputDesc = document.getElementById('descricao');
             `;
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 💰 ORÇAMENTO — status por categoria com teto definido
-        // ═══════════════════════════════════════════════════════════════
-        // Motor que cruza `orcamentosGlobais` (tetos definidos pelo usuário)
-        // com `asCalcularTotaisMes` (gastos reais do mês). Devolve um item
-        // por categoria COM teto — categorias sem orçamento são ignoradas.
-        //
-        // Modo de leitura (`modo`):
-        //   • 'todos'  → inclui pendentes (foto do "como vou fechar")
-        //   • 'pago'   → só o efetivado (foto do "o que já saiu")
-        //
-        // O default é 'todos' porque a pergunta típica ("como está meu
-        // orçamento?") quer saber o comprometimento TOTAL, não só o
-        // já liquidado.
-        //
-        // Ordenação: pct DESC. A categoria mais crítica (próxima de
-        // estourar ou já estourada) fica no topo — assim o usuário
-        // vê primeiro o que precisa de ação.
+        // modo: 'todos' (inclui pendentes) | 'pago' (só efetivadas).
         function asCalcularStatusOrcamentos(modo) {
             modo = modo || 'todos';
             const catsComOrc = Object.keys(orcamentosGlobais).filter(k => orcamentosGlobais[k] > 0.005);
@@ -16615,34 +16456,12 @@ const inputDesc = document.getElementById('descricao');
             `;
         }
 
-        // 🎯 FÉRIAS — início, duração, fim, volta ao trabalho e valor líquido
         function asRespFerias(mes, ano, foco) {
-            // 🎯 `foco` determina o RECORTE da resposta:
-            //   • 'datas'   → "Quando tiro férias?" — datas em destaque
-            //   • 'dias'    → "Quantos dias?" — número grande, datas resumidas
-            //   • 'valores' → "Quanto vou receber?" — breakdown financeiro
-            //   • undefined → cai em 'datas' (comportamento anterior)
             foco = foco || 'datas';
             const nome = nomeMeses[mes];
             const chaveAlvo = `${String(mes+1).padStart(2,'0')}/${ano}`;
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 FÉRIAS SÃO DO ANO, NÃO DO MÊS
-            // ═══════════════════════════════════════════════════════════
-            // O usuário pergunta "quando tiro férias?" pensando no ANO.
-            // Se ele está vendo Setembro mas as férias foram cadastradas
-            // em Dezembro, a resposta útil é mostrar Dezembro — não dizer
-            // "não há férias em Setembro".
-            //
-            // Estratégia: tenta o mês pedido; se não tem, varre o ANO
-            // INTEIRO (Janeiro a Dezembro) buscando qualquer mês com
-            // `temFerias: true`. Ao encontrar, redireciona a resposta
-            // para esse mês, com um aviso sutil no topo.
-            //
-            // Comportamento resultante:
-            //   • Mês atual TEM férias → resposta direta
-            //   • Outro mês do ano tem férias → resposta com aviso
-            //   • Nenhum mês do ano tem → mensagem genérica
+            // Se o mês pedido não tem férias, busca qualquer mês do mesmo ano com férias.
             let chaveFinal = chaveAlvo;
             let mesFinal = mes;
             let anoFinal = ano;
@@ -16691,20 +16510,6 @@ const inputDesc = document.getElementById('descricao');
                 ? `<p class="text-[11px] text-slate-400 dark:text-gray-500 mb-2 leading-snug">Férias de <strong class="text-slate-600 dark:text-gray-300">${nomeAlvo}/${anoFinal}</strong> — você está visualizando <strong>${nome}/${ano}</strong>.</p>`
                 : '';
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 RECORTE POR FOCO — cada pergunta vê o que pediu
-            // ═══════════════════════════════════════════════════════════
-            // Antes: TODAS as perguntas de férias devolviam o mesmo card
-            // completo (datas + dias + valores). Redundante e ruidoso.
-            //
-            // Agora, três visões distintas:
-            //   datas   → "Quando tiro férias?" (o QUANDO)
-            //   dias    → "Quantos dias de férias?" (o QUANTO DE TEMPO)
-            //   valores → "Quanto vou receber de férias?" (o QUANTO DE $)
-            //
-            // As sugestões do rodapé EXCLUEM a pergunta que o usuário
-            // acabou de fazer — evita oferecer o mesmo tema de novo. Cada
-            // foco mostra só os outros dois caminhos possíveis.
             const todasSugestoes = {
                 datas:   { txt: 'Quando tiro férias?',       q: 'Quando tiro férias?' },
                 dias:    { txt: 'Quantos dias de férias?',   q: 'Quantos dias de férias?' },
@@ -16785,17 +16590,7 @@ const inputDesc = document.getElementById('descricao');
             const cfgAtual = configHoleriteGlobal[`${String(mes+1).padStart(2,'0')}/${ano}`];
             let bruto = parseFloat(cfgAtual?.bruto) || 0;
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 O 13º É DO ANO, NÃO DO MÊS
-            // ═══════════════════════════════════════════════════════════
-            // Se o mês pedido não tem config salva (ou tem bruto zerado),
-            // busca o config MAIS RECENTE do ano com `bruto` válido. Assim,
-            // se o usuário atualizou o salário em outubro, o 13º do ano
-            // reflete o novo valor — em vez de cair no perfil como fallback.
-            //
-            // Ordem de preferência: nov (10) → dez (11) → out (9) → ...
-            // Os meses do 13º vêm primeiro para que uma config salva
-            // especificamente em nov/dez seja sempre priorizada.
+            // Busca a config mais recente do ano com bruto válido (fallback do perfil).
             if (bruto <= 0) {
                 const ordem = [10, 11, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
                 for (const m of ordem) {
