@@ -16847,15 +16847,6 @@ const inputDesc = document.getElementById('descricao');
         function asInterpretar(texto) {
             const t = texto.toLowerCase().trim();
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 CAMADA 0 — CORTESIA (Pacote A)
-            // ═══════════════════════════════════════════════════════════
-            // Antes de qualquer intent, detectar saudações, agradecimentos
-            // e despedidas. As regexes são ancoradas em `^...$` quando é
-            // "frase inteira" — assim "bom dia, quanto gastei?" NÃO cai
-            // como saudação pura (é pergunta). E "valeu a pena?" também
-            // não é tratado como agradecimento.
-
             // Saudações puras
             if (/^(oi+|ol[áa]|e a[ií]|opa|hey|hello|hi)\s*[!.?,]*\s*$/.test(t)) return asRespSaudacao();
             if (/^bom dia\s*[!.?,]*\s*$/.test(t)) return asRespSaudacao();
@@ -16873,21 +16864,9 @@ const inputDesc = document.getElementById('descricao');
             // Identidade ("quem é você?", "seu nome")
             if (/^(quem [ée] voc[êe]|seu nome|o que voc[êe] [ée])/.test(t)) return asRespQuem();
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0. FOLLOW-UP: pergunta encadeada ("E no vale?", "E em dez?")
-            // ═══════════════════════════════════════════════════════════
-            // Se a pergunta começa com "e " (típico de continuação) e temos
-            // contexto da resposta anterior, herdamos o mês/ano e só trocamos
-            // o bucket (salário ↔ vale) conforme mencionado.
+            // Follow-up encadeado ("E no vale?", "E em dez?"): herda contexto anterior.
             const ehFollowUp = /^\s*e\s+/i.test(t);
             if (ehFollowUp && asUltimoContexto) {
-                // 🎯 Herda o tipo do contexto anterior e ajusta só o que mudou:
-                //    • Bucket → mantém bucket (ou troca se a nova pergunta citar)
-                //    • Despesa-mês → mantém tipo, troca mês
-                //    • Receita-mês → idem
-                //    • Categoria → mantém categoria, troca mês
-                //
-                //    Se a nova pergunta NÃO citar mês, mantém o mês antigo.
                 const info = asExtrairMesAno(t) || { mes: asUltimoContexto.mes, ano: asUltimoContexto.ano };
 
                 if (asUltimoContexto.tipo === 'bucket') {
@@ -16951,33 +16930,7 @@ const inputDesc = document.getElementById('descricao');
                     asUltimoContexto = { tipo: 'transferencia-mes', modo, mes: info.mes, ano: info.ano };
                     return asRespTransferenciasMes(info.mes, info.ano, modo);
                 }
-                // ═══════════════════════════════════════════════════════
-                // 🎯 PLANEJAR META — refinamento de uma meta anterior
-                // ═══════════════════════════════════════════════════════
-                // Bug: o handler de follow-up não tinha branch para
-                // `planejar-meta`, então perguntas como "E se a data
-                // de meta for até fevereiro de 2027?" escapavam daqui
-                // e caíam no KB — que devolvia o cartão de exemplo
-                // ("Diga algo como 'Quero juntar...'"). Resultado: o
-                // usuário pedia um refinamento e recebia um tutorial.
-                //
-                // Correção: herda os valores do contexto e substitui
-                // APENAS o que a nova mensagem menciona:
-                //
-                //   • Data  → `asExtrairMesAlvo` (com rollover de ano)
-                //   • Meta  → `asExtrairMetaValor` (só com verbo explícito)
-                //   • Reserva → `asExtrairPisoMensal`
-                //   • Já tenho → `asExtrairMetaAtual`
-                //
-                // O que não for mencionado herda do plano anterior.
-                // Ex: "E até dezembro?" muda só a data, mantém o resto.
-                //
-                // Guarda contra falsos positivos: se a mensagem tem
-                // sinal claro de OUTRA intent (gastos, saldo, férias,
-                // 13º, etc.), não intercepta — deixa o parser seguir
-                // para a intent correta. Isso é o que impede que um
-                // "E quanto gastei este mês?" vire refinamento de meta
-                // por engano (porque "este mês" também é uma data válida).
+                // Refinamento de meta: herda contexto, substitui só o que mudou.
                 if (asUltimoContexto.tipo === 'planejar-meta') {
                     const ehClaramenteOutro = /este m[êe]s|esse m[êe]s|m[êe]s atual|m[êe]s corrente|gast|despes|receb|receit|ganh|saldo|transfer|paguei|atrasad|or[çc]amento|limite|f[ée]rias|13[ºo°]|d[ée]cimo|desconto/i.test(t);
 
@@ -17004,83 +16957,17 @@ const inputDesc = document.getElementById('descricao');
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.3 DÚVIDAS SOBRE O APP — "O que é X?", "Como faço Y?"
-            // ═══════════════════════════════════════════════════════════
-            // Detecta gatilhos de dúvida conceitual. Se algum aparece,
-            // consulta a base de conhecimento. Se a busca casa com um
-            // tópico, devolve a explicação. Se não casa, NÃO cai no
-            // fallback — deixa o fluxo normal continuar (o usuário pode
-            // estar perguntando algo factual com "como" no meio).
-            //
-            // Ordem: vem ANTES da calculadora de compra porque "Como faço
-            // para comprar X?" deve ir para a explicação, não para a
-            // análise de compra.
             const temGatilhoDuvida = /\b(o que (?:[ée]|s[ãa]o|significa|quer dizer|faz|fazem)|como (?:fa[çc]o|fazer|funciona|funcionam|usar|criar|editar|apagar|lan[çc]ar|configur|mudar|vejo|encontro|zero|salvo|importo|exporto|adiciono|reordeno|encerro|oculto|compartilho|imprimo|marco|quitar|adianto|pulo|removo|limpo|filtro)|para que serve|pra que serve|me explica|explica (?:sobre|como|a|o|as|os)|ensina (?:sobre|como)|onde (?:fica|ficam|encontro|vejo|est[áa])|o que significa|qual a diferen[çc]a|diferen[çc]a entre|me diz (?:o que|como|quando)|quero (?:entender|saber)|preciso (?:entender|saber)|tenho d[úu]vida|ajuda com|explica[çc][ãa]o|o que tem|o que ainda|novidades|roadmap)\b/i;
 
-            // 🎯 Exceção: perguntas que começam com "quanto/quantos/quantas/quando"
-            //    pedem SEMPRE um DADO do usuário, não um conceito.
-            //
-            //    • Quanto/quantos/quantas → valor numérico
-            //       "Quanto vou receber de 13º?", "Quantos dias de férias?"
-            //    • Quando                 → data/hora real
-            //       "Quando tiro férias?", "Quando cai meu salário?"
-            //
-            //    Sem esta guarda, a pergunta caía no tópico CONCEITUAL
-            //    da base de conhecimento — que explica como a feature
-            //    funciona, mas não mostra o dado específico do usuário.
-            //    A pergunta era factual; a resposta era genérica. Errado.
-            //
-            //    Com a guarda, a pergunta segue para as intents de DADOS
-            //    (13º, VALOR BASE, TOTAL MÊS, FÉRIAS, DATA SALÁRIO, etc)
-            //    que consultam `configHoleriteGlobal`, `bancoDeDados` e
-            //    `contasGlobais` — e devolvem o número concreto.
-            //
-            //    Não incluo "onde" aqui de propósito: "onde fica X?" é
-            //    uma pergunta de LOCALIZAÇÃO na interface (conceito), e
-            //    a base cobre bem ("onde encontro os relatórios?").
+            // Perguntas "quanto/quantos/quando..." pedem DADO, não conceito.
             const ehPedidoDeDado = /^\s*(quanto|quantos|quantas|quando)\b/i.test(t);
 
-            // 🎯 Tarefas que exigem CÁLCULO — não passam pela base conceitual.
-            // Se o usuário está tentando FAZER uma meta (e citou um número),
-            // a resposta certa é o PLANO calculado, não a explicação de como
-            // fazer. Sem esta guarda, a base captura "guardar 10000" pela
-            // chave "guardar" e devolve o card "Diga algo como…" — em loop.
             const ehTarefaDeMeta = /\b(juntar|guardar|poupar|economizar|atingir|alcan[çc]ar|chegar\s+em)\s+(?:r\$\s*)?[\d.,]+/i.test(t);
 
-            // 🎯 Tarefas de COMPRA — mesma lógica da meta.
-            // "Consigo comprar um celular de 2000?" é uma TAREFA: o usuário
-            // quer o CÁLCULO (cabe? quando? quantas parcelas?), não uma
-            // explicação do que a feature faz.
-            //
-            // Sem esta guarda, a chave "consigo comprar" da base intercepta
-            // a pergunta e devolve o card "Pergunte algo como…" — em vez de
-            // rodar o motor. Mesmo problema do `ehTarefaDeMeta`, mesma
-            // solução.
-            //
-            // Detecta a assinatura de qualquer pergunta de compra:
-            //   • verbo de compra   → comprar, adquirir, gastar em, pegar
-            //   • verbo modal       → consigo, conseguirei, posso, poderei,
-            //                         vou, dá pra, vale a pena, é possível
-            //
-            // Os dois precisam coexistir para caracterizar tarefa. Assim
-            // "Como comprar com segurança?" continua indo para a base
-            // (só tem o verbo comprar, sem modal), enquanto "Consigo
-            // comprar X?" é capturado pelo motor de compra.
+            // Perguntas de compra com modal ("consigo/posso comprar X?") pedem CÁLCULO.
             const ehTarefaDeCompra = /\b(comprar|adquirir|gastar em|investir em|pegar)\b/i.test(t)
                                   && /\b(consigo|consegui(?:r|rei|ria|u|ndo)?|posso|poderei|poderia|vou\s+(?:conseguir|comprar|pegar)|d[áa]\s*(?:pra|para)?|vale a pena|é poss[íi]vel)\b/i.test(t);
 
-            // 🎯 Tarefas de ORÇAMENTO — perguntas sobre o status dos limites
-            //    definidos pelo usuário NÃO podem passar pela base de
-            //    conhecimento. Sem esta guarda, "Quais categorias estão no
-            //    limite?" era capturado pela chave "categorias" do KB e
-            //    devolvia a explicação de "o que é categoria" — em vez do
-            //    status de verdade.
-            //
-            //    A regra detecta 3 famílias:
-            //      • Menção direta: "orçamento(s)"
-            //      • Referência a limites: "meus limites", "no limite"
-            //      • Verbos de estouro: "estourei", "ultrapassei", "excedi"
             const ehTarefaDeOrcamento = /\bor[çc]amentos?\b|\bmeus?\s+limites?\b|\bestourei\b|\bultrapassei\b|\bexcedi\b|\bestourou\b|\bultrapassou\b|\bno\s+limite\b|\bchegando\s+no\s+(?:teto|limite)\b|\bcategorias?\s+(?:no|em)\s+limite\b/i.test(t);
 
             if (temGatilhoDuvida && !ehPedidoDeDado && !ehTarefaDeMeta && !ehTarefaDeCompra && !ehTarefaDeOrcamento) {
@@ -17088,25 +16975,7 @@ const inputDesc = document.getElementById('descricao');
                 if (kbItem) return asRenderRespostaKB(kbItem);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.4 CALCULADORA DE COMPRA — "Consigo comprar X?"
-            // ═══════════════════════════════════════════════════════════
-            // Detecta verbos de decisão (consigo, posso, dá, vale a pena)
-            // combinados com verbo de compra. Quando o valor é extraído,
-            // roda a análise. Quando não é, devolve um cartão com exemplos
-            // clicáveis para o usuário completar a pergunta.
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.34 RESPOSTA À PERGUNTA DE RESERVA
-            // ═══════════════════════════════════════════════════════════
-            // Quando o usuário cadastra uma meta SEM mencionar reserva
-            // mensal, a Assistente pergunta: "quer manter quanto de reserva?".
-            // A PRÓXIMA mensagem do usuário cai aqui — capturamos o valor
-            // (ou a negativa) e rodamos o cálculo com o piso correto.
-            //
-            // Aceita:
-            //   • "não", "sem", "nenhum", "zero", "0" → piso 0
-            //   • "500", "R$ 500", "500 reais", "sobrando 500" → piso 500
-            //   • Se nada for reconhecido → assume piso 0 e segue
+            // Captura a resposta de reserva mensal após o cadastro da meta.
             if (asUltimoContexto && asUltimoContexto.tipo === 'meta-aguardando-reserva') {
                 const ctx = asUltimoContexto;
                 let piso = 0;
@@ -17124,20 +16993,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespPlanejarMeta(ctx.valorMeta, ctx.valorAtual, ctx.mesAlvo, ctx.anoAlvo, piso);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🚨 CONTAS ATRASADAS — "Tenho contas atrasadas?"
-            // ═══════════════════════════════════════════════════════════
-            // Gatilhos cobertos:
-            //   • "atrasada(s)" / "atrasado(s)" — qualquer variação
-            //   • "vencida(s)" / "vencido(s)"
-            //   • "em atraso" / "passou do vencimento" / "já venceu"
-            //   • "não pag(a|uei|as|os)" — combinado com "conta(s)",
-            //     "boleto", "fatura" ou "pendente" no texto, para não
-            //     capturar frases soltas
-            //
-            // Passa antes de KB e de qualquer análise numérica — a
-            // pergunta é conceitualmente simples e o usuário espera
-            // uma lista direta, não uma explicação.
+            // Contas atrasadas ("atrasada", "vencida", "não paguei...").
             const temAtraso = /\b(atrasad[ao]s?|vencid[ao]s?|em atraso|passou do vencimento|j[áa] venceu)\b/i.test(t);
             const temNaoPago = /\bn[ãa]o\s+(?:paguei|pagas?|pagou|foram? pag)/i.test(t)
                             && /\b(contas?|boletos?|faturas?|pendentes?|d[íi]vidas?)\b/i.test(t);
@@ -17145,22 +17001,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespContasAtrasadas();
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 💰 ORÇAMENTO — status por categoria
-            // ═══════════════════════════════════════════════════════════
-            // Detecta perguntas sobre o ORÇAMENTO do mês. Cobre 3 famílias:
-            //
-            //   1. Menções diretas: "orçamento", "meus limites"
-            //   2. Verbos de excesso: "estourei", "ultrapassei", "excedi"
-            //   3. Comparativos de limite: "no limite", "chegando no teto"
-            //
-            // Modo:
-            //   • "já paguei / gasto / efetivado" → 'pago' (só efetivadas)
-            //   • resto → 'todos' (inclui pendentes — visão padrão)
-            //
-            // Vem ANTES de KB e comparação, porque "orçamento" é um
-            // conceito que já tem dono (as duas fases anteriores) e o
-            // usuário espera status, não explicação.
+            // Orçamento: detecta "orçamento", "limites", "estourei", "no limite".
             const temOrcamento = /\bor[çc]amentos?\b/i.test(t)
                               || /\bmeus?\s+limites?\b/i.test(t)
                               || /\bestourei\b|\bultrapassei\b|\bexcedi\b|\bestourou\b|\bultrapassou\b/i.test(t)
@@ -17173,14 +17014,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespOrcamentos(modo);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.34b COMPARAÇÃO ENTRE MESES — "Compare outubro com setembro"
-            // ═══════════════════════════════════════════════════════════
-            // Detecta o verbo comparativo e extrai DOIS meses da frase.
-            // Se os dois meses foram reconhecidos, devolve o card de
-            // comparação com variação percentual. Se só um (ou nenhum)
-            // foi reconhecido, deixa o fluxo seguir — pode ser outra
-            // intenção com "comparar" no meio ("comparar preço", etc.).
+            // Comparação entre meses ("compare outubro com setembro").
             if (/\b(compar[ae]r?|versus|vs\.?)\b/i.test(t)) {
                 const par = asExtrairDoisMeses(t);
                 if (par) {
@@ -17188,19 +17022,7 @@ const inputDesc = document.getElementById('descricao');
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.35 PLANEJAR META — "Quero juntar X até Y"
-            // ═══════════════════════════════════════════════════════════
-            // Detecta verbos de poupança (juntar, guardar, poupar,
-            // economizar, atingir, alcançar) ou "meta de". Exige valor.
-            // A data alvo vem de `asExtrairMesAlvo` — se ausente, assume
-            // dezembro do ano corrente.
-            //
-            // Se o usuário NÃO mencionar valor atual, assume 0 (não soma).
-            // Se NÃO mencionar piso mensal, assume 0.
-            //
-            // Refinamentos encadeados (contexto 'planejar-meta'):
-            //   • Novo valor, nova data, novo piso, ou novo atual
+            // Planejar meta ("quero juntar X até Y").
             if (/\b(juntar|guardar|poupar|economizar|atingir|alcan[çc]ar)\b/i.test(t)
                 || /\bmeta\s+(?:de|é)\b/i.test(t)
                 || /\bobjetivo\s+(?:de|é)\b/i.test(t)) {
@@ -17213,18 +17035,7 @@ const inputDesc = document.getElementById('descricao');
                 let vPiso = asExtrairPisoMensal(t);
                 let dtAlvo = asExtrairMesAlvo(t);
 
-                // ═══════════════════════════════════════════════════════
-                // 🎯 RESOLVE O "JÁ TENHO" EM 3 NÍVEIS DE PRIORIDADE
-                // ═══════════════════════════════════════════════════════
-                //   1. "usar 200 do Cofrinho"  → usa SÓ 200 (entrada parcial)
-                //   2. "tenho 1200 no Cofrinho" → usa 1200 (declarado)
-                //   3. "tenho no Cofrinho"      → lê o saldo REAL da conta
-                //   4. Nada → 0
-                //
-                // O nível 3 é o pulo do gato: o usuário não precisa lembrar
-                // o saldo exato — a Assistente lê direto do `bancoDeDados`,
-                // que já tem o Cofrinho com saldo real (incluindo
-                // transferências pagas).
+                // Prioridade: entrada parcial > valor declarado > saldo real da conta > 0.
                 const entrada = asExtrairEntrada(t);
                 if (entrada) {
                     // Nível 1: entrada parcial explícita
@@ -17268,17 +17079,6 @@ const inputDesc = document.getElementById('descricao');
                 }
 
                 if (vMeta > 0 && dtAlvo) {
-                    // ═══════════════════════════════════════════════════════
-                    // 🎯 PERGUNTA SOBRE RESERVA — só na primeira interação
-                    // ═══════════════════════════════════════════════════════
-                    // Se o usuário mencionou a reserva ("sobrando X", "mantendo
-                    // X"), vai direto para o cálculo. Se NÃO mencionou (caso
-                    // comum), a Assistente pergunta antes — assim ela não
-                    // assume um piso arbitrário nem ignora esse dado
-                    // importante.
-                    //
-                    // Contexto 'meta-aguardando-reserva' guarda os dados e
-                    // o parser captura a resposta na próxima mensagem.
                     const mencionouReserva = vPiso > 0 || /sobrando|mantendo|manter|guardar\s+(?:ao\s+menos\s+)?[\d.,]|reserva\s+de|n[ãa]o\s+gastar\s+mais/i.test(t);
 
                     if (!mencionouReserva) {
@@ -17308,21 +17108,6 @@ const inputDesc = document.getElementById('descricao');
                 }
             }
 
-            // 🎯 Refinamento de análise de compra: consolidado no bloco
-            // único "0.4b" mais abaixo — evita duplicação de lógica.
-            // (o antigo `pareceRefinamento` foi removido por sobreposição
-            // com o bloco consolidado, que já cobre parcelas + valor +
-            // reserva com o flag `mudou`.)
-
-            // 🎯 Gatilho aceita presente E futuro do verbo:
-            //    • "consigo" / "posso" / "dá pra" / "vale a pena" → presente
-            //    • "conseguirei" / "poderei" / "vou conseguir"       → futuro
-            //       (a forma mais natural para "Quando conseguirei comprar X?")
-            //    • "conseguir" / "conseguiria" / "conseguiu"          → outras
-            //       flexões que aparecem em linguagem natural
-            //
-            //    A regex `consegui(?:r|rei|ria|u|ndo)?` cobre todas as
-            //    conjugações do verbo "conseguir" sem precisar listá-las.
             if (/\b(comprar|adquirir|gastar em|investir em|pegar)\b/i.test(t)
                 && /\b(consigo|consegui(?:r|rei|ria|u|ndo)?|posso|poderei|poderia|vou\s+(?:conseguir|comprar|pegar)|d[áa]\s*(?:pra|para)?|vale a pena|é poss[íi]vel)\b/i.test(t)) {
                 const valor = asExtrairValorCompra(t);
@@ -17352,20 +17137,7 @@ const inputDesc = document.getElementById('descricao');
                 `;
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.4b REFINAMENTO DE COMPRA — "E se eu parcelar em 10x?"
-            // ═══════════════════════════════════════════════════════════
-            // Quando o usuário está no meio de uma análise de compra,
-            // permite ajustar PARCELAS, VALOR ou RESERVA sem repetir o
-            // item. Ex.: "Consigo comprar um notebook de 4000 sobrando
-            // 400?" → "E em 10x?" → "E se fosse 5000?" tudo encadeia.
-            //
-            // Detecta 3 tipos de ajuste, cada um opcional:
-            //   1. Parcelas → "em Nx", "N vezes", "parcelado" (assume 12x)
-            //   2. Valor    → "fosse N", "por N", "custando N"
-            //   3. Reserva  → "sobrando N", "guardar N", "manter N"
-            //
-            // O que não for mencionado, herda do contexto anterior.
+            // Refinamento de compra ("E se eu parcelar em 10x?", "E se fosse 5000?").
             if (asUltimoContexto && asUltimoContexto.tipo === 'analise-compra') {
                 let novoValor = asUltimoContexto.valor;
                 let novasParcelas = asUltimoContexto.parcelasMaximas;
@@ -17409,16 +17181,7 @@ const inputDesc = document.getElementById('descricao');
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 0.5 TRANSFERÊNCIAS — perguntas sobre transferências
-            // ═══════════════════════════════════════════════════════════
-            // Detecta a palavra-chave em qualquer forma (transferência,
-            // transferi, transferiu, transferindo). Cobre 4 intenções:
-            //   1. Pendentes → lista as que aguardam efetivação
-            //   2. Conta específica mencionada → extrato da conta
-            //   3. Total/listagem do mês → lista completa com soma
-            // A conta é priorizada sobre o total — se o usuário mencionar
-            // "Itaú", ele quer saber do Itaú, não do todo.
+            // Transferências (pendentes / conta específica / total do mês).
             if (/transfer[êe]ncia|transferi|transferiu|transferindo/i.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
 
@@ -17444,9 +17207,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespAjuda();
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 2. GASTOS POR CATEGORIA ("quanto gastei com alimentação?")
-            // ═══════════════════════════════════════════════════════════
+            // Gastos por categoria ("quanto gastei com alimentação?").
             const temVerboGasto2 = /gast|despes|pag(uei|o|ar)/.test(t);
             const catMencionada = categoriasGlobais.find(c => t.includes(c.nome.toLowerCase()));
             if (catMencionada && temVerboGasto2) {
@@ -17457,9 +17218,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespGastosCategoria(info.mes, info.ano, catMencionada.nome);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 3. RECEITAS POR BUCKET ("quanto recebi no salário/vale?")
-            // ═══════════════════════════════════════════════════════════
+            // Receitas por bucket ("quanto recebi no salário/vale?").
             const temBucketReceita = /no sal[áa]rio|do sal[áa]rio|sal[áa]rio de|sal[áa]rio em|no vale|do vale|vale de|vale em/.test(t);
             const temVerboReceita = /receb|ganh|entrou|entraram|caiu|ca[ií]ram/.test(t);
             if (temBucketReceita && temVerboReceita) {
@@ -17468,23 +17227,13 @@ const inputDesc = document.getElementById('descricao');
                 return asRespReceitaBucket(info.mes, info.ano, bucket);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 13º SALÁRIO (antes de salário — "quando cai" casa nos dois)
-            // ═══════════════════════════════════════════════════════════
+            // 13º salário.
             if (/13[ºo°]|d[ée]cimo.?terceiro|13\s*sal[áa]rio/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: 10, ano: dataFiltro.getFullYear() };
                 return asRespDecimo(info.mes, info.ano);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 FÉRIAS
-            // ═══════════════════════════════════════════════════════════
-            // Detecta o FOCO da pergunta para dar a resposta no recorte
-            // certo. Sem isso, todas as perguntas sobre férias devolviam
-            // o mesmo cardão completo — redundante e ruidoso.
-            //   • "quanto vou receber/ganhar" → valores
-            //   • "quantos dias/duração"      → dias
-            //   • "quando tiro/começo/volto"  → datas (default)
+            // Férias — foco em datas, dias ou valores conforme a pergunta.
             if (/f[ée]rias|quando.*tir[oa]|volta ao trabalho|volto.*trabalho|minhas f[ée]rias|meu descanso/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 let foco = 'datas';
@@ -17496,17 +17245,13 @@ const inputDesc = document.getElementById('descricao');
                 return asRespFerias(info.mes, info.ano, foco);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 DESCONTOS
-            // ═══════════════════════════════════════════════════════════
+            // Descontos.
             if (/descontos?|conv[êe]nio|fretado|o que (me )?desconta|descontam/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 return asRespDescontos(info.mes, info.ano);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 DATA DO SALÁRIO / VALE (com mês dinâmico)
-            // ═══════════════════════════════════════════════════════════
+            // Data do salário / vale (mês dinâmico).
             if (/quando.*cai|data.*sal[áa]rio|data.*pagamento|quando.*recebo|quando cai|data.*vale|quando.*vale/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 return asRespDataSalario(info.mes, info.ano);
@@ -17533,23 +17278,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespSaldoConta(contaMencionada);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 SALDO POR BUCKET (Salário/Vale) — ANTES do genérico
-            // ═══════════════════════════════════════════════════════════
-            // "Qual meu saldo do salário?" precisa cair AQUI, não em
-            // `asRespSaldoReal()`. O regex genérico abaixo
-            // (`qual.*(meu )?saldo`) casaria com essa frase e devolveria
-            // o saldo das contas — que é a resposta para "quanto tenho
-            // hoje", não para "quanto sobra do salário este mês".
-            //
-            // A ordem de intents garante a prioridade correta: o parser
-            // retorna na primeira regex que casa, então esta precisa vir
-            // antes do bloco de "saldo total".
-            // 🎯 Regex amplo:
-            //   • "saldo do/da/de salário|vale|total"
-            //   • "salário|vale ... saldo" (ordem invertida)
-            //   • "quanto (tenho|tem|sobra|sobrou) no/do salário|vale"
-            //   • "saldo projetado" ou "projeção (do|de)"
+            // Saldo por bucket (Salário / Vale / Total) — antes do genérico.
             if (/saldo.*(sal[áa]rio|vale|total|projetad)|(sal[áa]rio|vale).*saldo|quanto.*(tenho|tem|sobra|sobrou).*(no|do|de|d[oa]) (sal[áa]rio|vale)|proje[cç][ãa]o.*(sal[áa]rio|vale|total)/.test(t)) {
                 // Detecta bucket — ordem de prioridade: Total > Salário > Vale > (fallback Salário)
                 let bucket = 'Salário';
@@ -17582,17 +17311,13 @@ const inputDesc = document.getElementById('descricao');
                 return asRespUltimosMeses(n);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 6.5 FATURAMENTO (PJ) — atalho dedicado, antes do genérico
-            // ═══════════════════════════════════════════════════════════
+            // Faturamento (PJ).
             if (/\bfaturamento\b|\bfaturei\b|\bfaturou\b|quanto (eu )?faturei/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 return asRespValorBase('Salário', info.mes, info.ano);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 6.6 VALOR BASE CLT (líquido a receber / vale) — ANTES de "receb"
-            // ═══════════════════════════════════════════════════════════
+            // Valor base (líquido a receber / vale) — antes de "receb".
             if (/qual (ser[áa]|vai ser|é) (meu |o )?(sal[áa]rio|vale)|(quanto|qual).*(vou|vai) (receber|ganhar).*(sal[áa]rio|vale)|sal[áa]rio l[íi]quido|quanto (é|vale) (meu |o )?sal[áa]rio|l[íi]quido a receber|quanto.*(vou|vai) cair.*(sal[áa]rio|vale)/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 const bucket = /vale/.test(t) ? 'Vale' : 'Salário';
@@ -17600,13 +17325,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespValorBase(bucket, info.mes, info.ano);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 6.6 GASTOS EXTREMOS (maiores/menores lançamentos)
-            // ═══════════════════════════════════════════════════════════
-            // Cobre: "maiores gastos", "gastos mais altos", "menores
-            // gastos", "gastos mais baixos", "quais os maiores
-            // lançamentos". Não conflita com `asRespMaiorGasto` (que é
-            // por CATEGORIA, disparado por "onde gastei mais").
+            // Gastos extremos (maiores/menores lançamentos individuais).
             if (/(maior|menor|mais alt[oa]s?|mais baix[oa]s?).*(gasto|despesa|lan[çc]amento|paguei)|quais (os|as) (maior|menor|mais alt|mais baix)/.test(t)) {
                 // Se menciona "categoria", deixa `asRespMaiorGasto` tratar
                 // (a intenção é sobre o agregado, não o lançamento individual)
@@ -17618,11 +17337,7 @@ const inputDesc = document.getElementById('descricao');
                 }
             }
 
-            // 7. Total gasto no mês — com modo (futuro vs passado)
-            //    🎯 Detecta TENSE:
-            //      • futuro  → "vou gastar", "vai gastar", "a pagar", "pendente"
-            //      • passado → "gastei", "paguei", "já paguei", "foi pago"
-            //      • neutro  → "gastos", "despesas" (ambos os modos)
+            // Total gasto no mês (futuro / passado / neutro pelo verbo).
             if (/gast|despes|pag(uei|o|ar|amos|ou)/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 const futuro = /vou (gastar|pagar)|vai (gastar|pagar)|ainda (vou|vai|tenho que)|falt(a|am).*(pagar)|a (pagar)|pendent/.test(t);
@@ -17632,7 +17347,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespTotalMes(info.mes, info.ano, 'despesa', modo);
             }
 
-            // 8. Total recebido no mês — com modo (futuro vs passado)
+            // Total recebido no mês (futuro / passado / neutro pelo verbo).
             if (/receb|receit|ganh|entrou|entraram|caiu|ca[ií]ram/.test(t)) {
                 const info = asExtrairMesAno(t) || { mes: dataFiltro.getMonth(), ano: dataFiltro.getFullYear() };
                 const futuro = /vou (receber|ganhar)|vai (receber|ganhar)|ainda (vou|vai).*(receber|ganhar)|a receber/.test(t);
@@ -17642,12 +17357,7 @@ const inputDesc = document.getElementById('descricao');
                 return asRespTotalMes(info.mes, info.ano, 'receita', modo);
             }
 
-            // ═══════════════════════════════════════════════════════════
-            // 🎯 CAMADA FINAL — AMBIGUIDADE (Pacote A)
-            // ═══════════════════════════════════════════════════════════
-            // Se nada acima casou mas a pergunta é muito curta/genérica
-            // ("salário", "vale", "mês"), devolve botões de desambiguação
-            // em vez de cair no "não entendi".
+            // Último recurso: botões de desambiguação se a pergunta for genérica.
             const amb = asDetectarAmbiguidade(t);
             if (amb) return amb;
 
