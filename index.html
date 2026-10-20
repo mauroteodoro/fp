@@ -13725,26 +13725,11 @@ const inputDesc = document.getElementById('descricao');
 
             bancoDeDados.forEach(d => {
                 if (d.isAjuste || d.ocultoExtrato) return;
-                // 🎯 Próprio continua fora (não é "gasto" real); terceiro entra.
+                // Próprio fica fora (não é "gasto" real); terceiro entra.
                 if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (isR) return;
-
-                const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
-                if (!dataRef) return;
-
-                let noMes = false;
-                if (d.isRecorrente) {
-                    const p = d.vencimentoOriginal.split('/');
-                    const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (inicioNum > alvoNum) return;
-                    if (d.encerradoEm && alvoNum >= d.encerradoEm) return;
-                    if (d.mesesOcultos && d.mesesOcultos.includes(alvoNum)) return;
-                    noMes = true;
-                } else {
-                    noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
-                }
-                if (!noMes) return;
+                if (!itemPertenceAoMes(d, mes, ano)) return;
 
                 itens.push({
                     nome: d.descricaoOriginal || d.descricao || '—',
@@ -13885,32 +13870,16 @@ const inputDesc = document.getElementById('descricao');
 
         function asCalcularGastosBucket(mes, ano, bucket) {
             let total = 0, pago = 0, pendente = 0;
-            const chave = `${String(mes+1).padStart(2,'0')}/${ano}`;
-            const alvoNum = ano * 100 + (mes + 1);
 
             bancoDeDados.forEach(d => {
                 if (d.isAjuste) return;
-                // 🎯 Terceiro conta; próprio fica fora.
+                // Terceiro conta; próprio fica fora.
                 if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (isR) return;
+                if (!itemPertenceAoMes(d, mes, ano)) return;
 
                 const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
-                if (!dataRef) return;
-
-                let noMes = false;
-                if (d.isRecorrente) {
-                    const p = d.vencimentoOriginal.split('/');
-                    const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (inicioNum > alvoNum) return;
-                    if (d.encerradoEm && alvoNum >= d.encerradoEm) return;
-                    if (d.mesesOcultos && d.mesesOcultos.includes(alvoNum)) return;
-                    noMes = true;
-                } else {
-                    noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
-                }
-                if (!noMes) return;
-
                 let origem = d.origem;
                 if (origem !== 'Vale' && origem !== 'Salário') {
                     origem = determinarOrigem(dataRef, d.natureza || 'Despesa', null);
@@ -13950,26 +13919,12 @@ const inputDesc = document.getElementById('descricao');
 
             bancoDeDados.forEach(d => {
                 if (d.isAjuste) return;
-                // 🎯 Terceiro conta; próprio fica fora.
+                // Terceiro conta; próprio fica fora.
                 if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (isR) return;
                 if (d.categoria !== catNome) return;
-
-                const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
-                if (!dataRef) return;
-                let noMes = false;
-                if (d.isRecorrente) {
-                    const p = d.vencimentoOriginal.split('/');
-                    const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (inicioNum > alvoNum) return;
-                    if (d.encerradoEm && alvoNum >= d.encerradoEm) return;
-                    if (d.mesesOcultos && d.mesesOcultos.includes(alvoNum)) return;
-                    noMes = true;
-                } else {
-                    noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
-                }
-                if (!noMes) return;
+                if (!itemPertenceAoMes(d, mes, ano)) return;
 
                 const val = valorFloat(d.valor);
                 total += val;
@@ -13998,26 +13953,13 @@ const inputDesc = document.getElementById('descricao');
 
             bancoDeDados.forEach(d => {
                 if (d.isAjuste) return;
-                // 🎯 Terceiro conta; próprio fica fora.
+                // Terceiro conta; próprio fica fora.
                 if (d.isTransferencia && !d.isTerceiro) return;
                 const isR = d.tipo === 'Receita' || d.natureza === 'Receita';
                 if (!isR) return;
+                if (!itemPertenceAoMes(d, mes, ano)) return;
 
                 const dataRef = d.vencimento || d.vencimentoOriginal || d.dataLancamento;
-                if (!dataRef) return;
-                let noMes = false;
-                if (d.isRecorrente) {
-                    const p = d.vencimentoOriginal.split('/');
-                    const inicioNum = parseInt(p[2]) * 100 + parseInt(p[1]);
-                    if (inicioNum > alvoNum) return;
-                    if (d.encerradoEm && alvoNum >= d.encerradoEm) return;
-                    if (d.mesesOcultos && d.mesesOcultos.includes(alvoNum)) return;
-                    noMes = true;
-                } else {
-                    noMes = dataRef.length === 10 && dataRef.substring(3) === chave;
-                }
-                if (!noMes) return;
-
                 let origem = d.origem;
                 if (origem !== 'Vale' && origem !== 'Salário') {
                     origem = determinarOrigem(dataRef, d.natureza || 'Receita', null);
