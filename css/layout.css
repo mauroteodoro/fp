@@ -1,0 +1,209 @@
+/* Layout: header, menu lateral, conteúdo, mobile */
+
+/* Mobile optimization pack (iPhone / Safari / Android). */
+
+/* 1. Safe Area Variables (notch, Dynamic Island, home indicator) */
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    /* Header mobile tem 2 linhas compactas (identidade + botões). */
+    --header-h: 6rem;
+    --drag-card-bg: #F8FAFC;
+}
+html.dark { --drag-card-bg: rgb(var(--noite-800)); }
+@media (min-width: 640px) {
+    /* No desktop volta a 1 linha compacta. */
+    :root { --header-h: 5rem; }
+}
+/* 🎯 Alinhamento vertical real do conteúdo é resolvido em
+   `alinharConteudoComMenu()` (ver JS) — mede a altura PINTADA
+   do header, imune a fontes que carregam depois, zoom do SO
+   ou wrapping do flexbox. */
+
+/* 2. Anti-zoom automático + anti-tap-highlight */
+html { 
+    -webkit-text-size-adjust: 100%; 
+    text-size-adjust: 100%; 
+    scroll-behavior: smooth;
+    /* 🎯 Reserva o espaço da barra de rolagem MESMO quando ela
+       não está visível. Sem isso, abrir um modal (que aplica
+       `overflow: hidden` no body) removia a barra, devolvia
+       ~15-17px ao conteúdo, e o layout inteiro "esticava" para
+       a direita. Ao fechar, voltava. Efeito colateral:
+       a "engasgada" visual que o usuário notou.
+       Em Mac/iOS (barras overlay) e mobile (sem barra), é no-op. */
+    scrollbar-gutter: stable;
+}
+* { 
+    -webkit-tap-highlight-color: transparent; 
+    -webkit-tap-highlight-color: rgba(0,0,0,0); 
+}
+
+/* 3. Bloqueia seleção de texto acidental em botões/nav (mas libera em inputs) */
+button, [role="button"], a, nav, header, label, .card-tilt, .tab-transition {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+input, textarea, select, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+}
+
+/* 4. Font smoothing + altura real do viewport em iOS */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+    min-height: 100dvh;
+    /* 🎯 Mesmo reforço no body — o `overflow-y-scroll` do Tailwind
+       garante barra sempre visível, mas quando o modal troca para
+       `overflow: hidden`, é o gutter que segura o layout. */
+    scrollbar-gutter: stable;
+}
+@supports not (min-height: 100dvh) {
+    body { min-height: 100vh; }
+}
+
+/* 5. Remove o delay de 300ms ao tocar */
+button, a, input, select, textarea, [role="button"], .card-tilt {
+    touch-action: manipulation;
+}
+
+/* 6. Hover só existe em quem tem mouse de verdade */
+@media (hover: none), (pointer: coarse) {
+    .card-tilt:hover {
+        transform: none !important;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.04) !important;
+    }
+    .hover-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+/* 7. Header respeitando o notch / Dynamic Island.
+   O padding lateral SOMA a safe-area (notch) com um respiro fixo,
+   para que os botões nunca colem na borda — nem no mobile, nem no desktop. */
+#mainHeader {
+    min-height: calc(var(--header-h) + var(--safe-top)) !important;
+    padding-top: var(--safe-top) !important;
+    padding-left: calc(var(--safe-left) + 1rem) !important;   /* 16px de respiro */
+    padding-right: calc(var(--safe-right) + 1rem) !important;
+}
+@media (min-width: 640px) {
+    #mainHeader {
+        padding-left: calc(var(--safe-left) + 2rem) !important;   /* 32px */
+        padding-right: calc(var(--safe-right) + 2rem) !important;
+    }
+}
+@media (min-width: 1024px) {
+    #mainHeader {
+        padding-left: calc(var(--safe-left) + 2.5rem) !important; /* 40px */
+        padding-right: calc(var(--safe-right) + 2.5rem) !important;
+    }
+}
+/* 8. Conteúdo abaixo do header — offset dinâmico.
+   Usamos padding-top generoso o suficiente para acomodar o header mesmo
+   quando ele cresce para 2 linhas em nomes maiores. */
+   header#mainHeader + div {
+    /* Mobile: cola o conteúdo logo abaixo do header, sem "1rem" extra. */
+    padding-top: calc(var(--header-h) + var(--safe-top)) !important;
+    padding-bottom: calc(2rem + var(--safe-bottom)) !important;
+}
+@media (min-width: 640px) {
+    header#mainHeader + div {
+        padding-top: calc(var(--header-h) + var(--safe-top) + 2rem) !important;
+    }
+}
+
+/* Respiro interno do menu lateral (usado também pelo conteúdo). */
+:root { --aside-pad-top: 1.5rem; }
+
+@media (min-width: 640px) {
+    /* Conteúdo principal — mesmo offset vertical do aside */
+    #conteudoPrincipal.conteudo-principal {
+        padding-top: calc(var(--header-h) + var(--safe-top) + var(--aside-pad-top)) !important;
+    }
+    /* Aside — neutraliza o conflito `md:p-3` × `md:pt-6` do Tailwind
+       e passa a ler a mesma variável que o conteúdo usa. */
+    #conteudoPrincipal > aside {
+        padding-top: var(--aside-pad-top) !important;
+    }
+}
+
+/* 9. Modais: safe area + momentum scroll + bloqueio do overscroll */
+[id^="modal"].fixed.inset-0,
+#telaLogin.fixed.inset-0 {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+[id^="modal"] .overflow-y-auto,
+[id^="modal"].overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* 10. Anti-zoom no foco do input (iOS Safari) */
+@media (max-width: 767px) {
+    @supports (-webkit-touch-callout: none) {
+        input:not([class*="text-4xl"]):not([class*="text-3xl"]):not([class*="text-2xl"]):not([type="checkbox"]):not([type="radio"]),
+        select, 
+        textarea {
+            font-size: 16px !important;
+        }
+    }
+}
+
+/* 11. Toasts respeitam safe area */
+#toast-container { 
+    padding-top: calc(var(--safe-top) + 0.25rem);
+    padding-right: var(--safe-right);
+}
+#toast-obs-container { 
+    padding-bottom: calc(var(--safe-bottom) + 0.25rem);
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+}
+
+/* 12. Botão "+" e ações do header — alvos de toque maiores no mobile */
+@media (pointer: coarse) {
+    #btnAcaoPrincipal {
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
+
+/* 13. Momentum scroll nos carrosséis horizontais */
+#containerContas,
+[class*="overflow-x-auto"] {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+}
+
+/* 14. Acessibilidade — respeita quem prefere menos animação */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    /* Exceção: spinners e loader continuam animando (feedback). */
+    .spinner,
+    .spinner::before,
+    .spinner::after,
+    .animate-spin,
+    .piggy-svg,
+    .coin {
+        animation-duration: 1s !important;
+        animation-iteration-count: infinite !important;
+    }
+}
+
+/* 15. Impede "flash" branco ao tocar em links no iOS */
+a, button { 
+    -webkit-tap-highlight-color: transparent; 
+}

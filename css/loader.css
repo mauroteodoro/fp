@@ -1,0 +1,86 @@
+/* Tela de carregamento (porquinho) */
+
+/* Loader inicial: porquinho SVG com moedas caindo. */
+.piggy-loader {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.piggy-svg {
+    width: 110px;
+    height: 110px;
+    filter: drop-shadow(0 10px 20px rgb(var(--azul-500) / 0.25));
+    animation: piggy-wiggle 2.1s ease-in-out infinite;
+}
+@keyframes piggy-wiggle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-3px) rotate(-2deg); }
+}
+.coin {
+    position: absolute;
+    left: 58%;
+    top: -8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFE45E 0%, #FFB800 60%, #D4A017 100%);
+    color: #7C4A00;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 3px 8px rgba(255, 184, 0, 0.45),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.15),
+        inset 0 2px 3px rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.5);
+    animation: coin-drop 2.1s ease-in infinite;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+.coin-1 { animation-delay: 0s; }
+.coin-2 { animation-delay: 0.7s; }
+.coin-3 { animation-delay: 1.4s; }
+@keyframes coin-drop {
+    0%   { transform: translate(-50%, 0)     scale(0.5) rotate(-15deg); opacity: 0; }
+    15%  { transform: translate(-50%, 0)     scale(1)   rotate(0deg);   opacity: 1; }
+    70%  { transform: translate(-50%, 0)     scale(1)   rotate(0deg);   opacity: 1; }
+    85%  { transform: translate(-50%, 40px)  scale(0.9) rotate(0deg);   opacity: 0.9; }
+    100% { transform: translate(-50%, 50px)  scale(0.5) rotate(10deg);  opacity: 0; }
+}
+.loader-titulo {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0F172A;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    animation: loader-text-pulse 2s ease-in-out infinite;
+}
+html.dark .loader-titulo { color: #f3f4f6; }
+.loader-subtitulo {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #94A3B8;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+html.dark .loader-subtitulo { color: #6b7280; }
+@keyframes loader-text-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.65; }
+}
+
+/* 📱 Em telas pequenas, o porquinho encolhe para não dominar a tela */
+@media (max-width: 400px) {
+    .piggy-loader { width: 100px; height: 100px; margin-bottom: 22px; }
+    .piggy-svg { width: 92px; height: 92px; }
+    .coin { width: 18px; height: 18px; font-size: 11px; }
+    .loader-titulo { font-size: 1rem; }
+}

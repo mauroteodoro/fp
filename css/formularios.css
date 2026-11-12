@@ -1,0 +1,32 @@
+/* Foco e aparência dos campos */
+
+/* Foco discreto nos campos (transição suave). */
+input, button, textarea, select, .focus-within\:ring-\[\#003366\] {
+    transition: all 0.3s ease !important;
+}
+
+input:focus, input:focus-visible, 
+button:focus, button:focus-visible, 
+textarea:focus, textarea:focus-visible, 
+select:focus, select:focus-visible {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+        /* Foco Light: Linha inferior ganha o indigo premium */
+        .focus\:border-slate-900:focus {
+    border-color: rgb(var(--azul-500)) !important; 
+    background-color: transparent !important; 
+    box-shadow: 0 1px 0 0 rgb(var(--azul-500)) !important;
+}
+
+/* 🎯 Foco Dark: minimalista — sem contorno colorido, sem anel, sem glow.
+   A borda mantém o tom neutro do repouso. O foco se percebe pelo cursor
+   e pela leve mudança de fundo, sem "acender" nada. */
+.dark .dark\:focus\:ring-cyan-500:focus,
+.dark .focus\:border-slate-900:focus,
+.dark .dark\:focus-within\:ring-cyan-500:focus-within { 
+    border-color: rgb(var(--noite-700)) !important; 
+    background-color: transparent !important; 
+    box-shadow: none !important;
+}

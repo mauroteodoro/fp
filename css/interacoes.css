@@ -1,0 +1,133 @@
+/* Hover (desktop) e active (toque) */
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 🖱️ DESKTOP — Efeitos de HOVER (só mouse de verdade)          */
+/* ═══════════════════════════════════════════════════════════ */
+@media (hover: hover) and (pointer: fine) {
+
+    /* Fix 9A — Chips do Extrato */
+    button[data-chip-extrato]:hover {
+        transform: translateY(-1px);
+    }
+    button[data-chip-extrato][class*="bg-slate-100"]:hover {
+        box-shadow: 0 6px 12px -5px rgba(15, 23, 42, 0.20);
+    }
+
+    /* Fix 9A — Menu lateral */
+    button[id^="btnMenu"]:hover,
+    #btnTabProjecao:hover {
+        transform: translateY(-1px);
+    }
+    button[id^="btnMenu"]:not([class*="bg-[#4D6BFE]"]):hover,
+    #btnTabProjecao:not([class*="bg-[#4D6BFE]"]):hover {
+        box-shadow: 0 5px 12px -5px rgba(15, 23, 42, 0.16);
+    }
+
+    /* Fix 11A — Botões do modal de Configurações */
+    #btnTemaClaro:hover:not(:active),
+    #btnTemaEscuro:hover:not(:active),
+    #modalPerfil button[onclick="abrirModalBackups()"]:hover:not(:active),
+    #modalPerfil button[onclick="abrirModalReset()"]:hover:not(:active),
+    #modalPerfil button[onclick="fazerLogout()"]:hover:not(:active) {
+        transform: translateY(-1px);
+    }
+    #btnTemaClaro:hover:not(:active):not([class*="bg-[#4D6BFE]"]),
+    #btnTemaEscuro:hover:not(:active):not([class*="bg-[#4D6BFE]"]),
+    #modalPerfil button[onclick="abrirModalBackups()"]:hover:not(:active),
+    #modalPerfil button[onclick="abrirModalReset()"]:hover:not(:active),
+    #modalPerfil button[onclick="fazerLogout()"]:hover:not(:active) {
+        box-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.20);
+    }
+
+    /* Fix 12A — Botões do modal de Ajuste de Saldo */
+    #btnRestaurarAjusteSalario:hover:not(:active) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.20);
+    }
+    #btnToggleSinal:hover:not(:active) {
+        transform: scale(1.08);
+        box-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.25);
+    }
+
+    /* Fix 13A — Lixeira vermelha do Simulador */
+    #abaProjecao button[onclick="zerarProjecaoMes()"]:hover:not(:active) {
+        transform: scale(1.10);
+        box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.35);
+        border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    /* Fix 15A — Regra global para os botões restantes.
+       `:where()` mantém especificidade zero, então os
+       fixes acima continuam vencendo.                    */
+    :where(button):where(:not(.check-anim)):where(:not(.no-inflate)):where(:not(:disabled)):where(:not(.card-tilt)):where(:hover):where(:not(:active)) {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 12px -5px rgba(15, 23, 42, 0.16);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* 📱 MOBILE — Efeitos de ACTIVE (feedback por toque)           */
+/* ═══════════════════════════════════════════════════════════ */
+@media (hover: none), (pointer: coarse) {
+
+    /* Fix 9A — Chips + Menu */
+    button[data-chip-extrato]:active {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 12px -5px rgba(15, 23, 42, 0.20);
+    }
+    button[id^="btnMenu"]:active,
+    #btnTabProjecao:active {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 12px -5px rgba(15, 23, 42, 0.16);
+    }
+
+    /* Fix 11A — Configurações */
+    #btnTemaClaro:active,
+    #btnTemaEscuro:active,
+    #modalPerfil button[onclick="abrirModalBackups()"]:active,
+    #modalPerfil button[onclick="abrirModalReset()"]:active,
+    #modalPerfil button[onclick="fazerLogout()"]:active {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.20);
+    }
+
+    /* Fix 12A — Ajuste de Saldo */
+    #btnRestaurarAjusteSalario:active {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.20);
+    }
+    #btnToggleSinal:active {
+        transform: scale(1.08);
+        box-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.25);
+    }
+
+    /* Fix 13A — Lixeira vermelha */
+    #abaProjecao button[onclick="zerarProjecaoMes()"]:active {
+        transform: scale(1.10);
+        box-shadow: 0 6px 14px -6px rgba(239, 68, 68, 0.35);
+        border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    /* Fix 15A — Regra global (mesmo critério de especificidade) */
+    :where(button):where(:not(.check-anim)):where(:not(.no-inflate)):where(:not(:disabled)):where(:not(.card-tilt)):where(:active) {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 12px -5px rgba(15, 23, 42, 0.16);
+    }
+}
+
+/* Reduz `letter-spacing` alto em rótulos para valores legíveis. */
+[class*="tracking-[0.22em]"] {
+    letter-spacing: 0.08em !important;
+}
+[class*="tracking-[0.15em]"] {
+    letter-spacing: 0.05em !important;
+}
+.tracking-widest {
+    letter-spacing: 0.05em !important;
+}
+.tracking-wider {
+    letter-spacing: 0.03em !important;
+}
+.loader-subtitulo {
+    letter-spacing: 0.06em !important;
+}

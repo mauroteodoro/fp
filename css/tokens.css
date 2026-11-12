@@ -1,0 +1,103 @@
+/* ==========================================================================
+   DESIGN TOKENS — a base da interface visual
+   --------------------------------------------------------------------------
+   Dois níveis:
+
+   1. PALETA (primitivos) — cores brutas, iguais nos dois temas.
+      Use só para DEFINIR os tokens semânticos (ou para manter um valor
+      exato que já existia).
+
+   2. SEMÂNTICOS — o que a cor SIGNIFICA (fundo, superfície, texto, marca…).
+      Mudam entre claro e escuro. É isso que componentes novos devem usar.
+
+   As cores ficam no formato "R G B" (sem rgb()) para permitir opacidade:
+       color: rgb(var(--cor-texto));
+       background: rgb(var(--cor-marca) / 0.12);
+
+   Classes prontas com estes tokens estão em css/utilitarios.css:
+       bg-superficie, text-texto-suave, border-borda, bg-marca-suave, rounded-card…
+
+   Para redesenhar o app, altere ESTE arquivo: os tokens mudam o visual
+   inteiro de uma vez, sem caçar cores espalhadas pelo HTML.
+   ========================================================================== */
+
+:root {
+    /* ── 1. Paleta ─────────────────────────────────────────────────────── */
+    --azul-400: 107 133 255;   /* #6B85FF */
+    --azul-500: 77 107 254;    /* #4D6BFE — cor da marca */
+    --azul-600: 58 86 224;     /* #3A56E0 */
+    --azul-pwa: 0 97 242;      /* #0061F2 — theme-color do PWA */
+    --indigo-700: 67 56 202;   /* #4338CA */
+
+    --cinza-50: 248 250 252;   /* #F8FAFC */
+    --cinza-100: 241 242 246;  /* #F1F2F6 — fundo claro */
+    --cinza-200: 226 232 240;  /* #E2E8F0 */
+    --cinza-500: 100 116 139;  /* #64748B */
+    --cinza-400: 148 163 184;  /* #94A3B8 */
+    --cinza-900: 15 23 42;     /* #0F172A */
+
+    --noite-500: 58 72 96;     /* #3A4860 */
+    --noite-600: 42 56 80;     /* #2A3850 — bordas no escuro */
+    --noite-700: 30 42 64;     /* #1E2A40 */
+    --noite-800: 26 38 57;     /* #1A2639 */
+    --noite-850: 18 27 43;     /* #121B2B — superfície escura */
+    --noite-900: 17 26 44;     /* #111A2C */
+    --noite-950: 11 17 32;     /* #0B1120 — fundo escuro */
+
+    --verde-600: 5 150 105;    /* #059669 */
+    --verde-700: 4 120 87;     /* #047857 */
+    --rosa-600: 225 29 72;     /* #E11D48 */
+    --rosa-700: 190 18 60;     /* #BE123C */
+    --ambar-600: 217 119 6;    /* #D97706 */
+    --ambar-700: 180 83 9;     /* #B45309 */
+
+    /* ── 2. Semânticos — tema CLARO ────────────────────────────────────── */
+    --cor-fundo: var(--cinza-100);
+    --cor-superficie: 255 255 255;
+    --cor-superficie-elevada: 255 255 255;
+    --cor-superficie-sutil: var(--cinza-50);
+    --cor-borda: var(--cinza-200);
+    --cor-texto: var(--cinza-900);
+    --cor-texto-suave: var(--cinza-500);
+
+    --cor-marca: var(--azul-500);
+    --cor-marca-forte: var(--azul-600);
+    --cor-marca-suave: var(--azul-400);
+
+    --cor-sucesso: var(--verde-600);   /* receitas, pago */
+    --cor-perigo: var(--rosa-600);     /* despesas, erros */
+    --cor-alerta: var(--ambar-600);    /* vencimentos, transferências */
+
+    /* ── Tipografia ────────────────────────────────────────────────────── */
+    --fonte-base: 'Figtree', sans-serif;
+    --fonte-titulo: 'Figtree', sans-serif;
+    --titulo-espacamento: -0.02em;
+
+    /* ── Forma ─────────────────────────────────────────────────────────── */
+    --raio-sm: 0.5rem;     /*  8px — chips, inputs pequenos */
+    --raio-md: 0.75rem;    /* 12px — botões, campos */
+    --raio-lg: 1rem;       /* 16px — cards */
+    --raio-xl: 1.5rem;     /* 24px — modais, painéis */
+
+    /* ── Profundidade ──────────────────────────────────────────────────── */
+    --sombra-card: 0 4px 16px -4px rgb(var(--cinza-900) / 0.08);
+    --sombra-elevada: 0 20px 40px -10px rgb(var(--cinza-900) / 0.10), 0 10px 20px -5px rgb(var(--cinza-900) / 0.05);
+
+    /* ── Movimento ─────────────────────────────────────────────────────── */
+    --duracao-rapida: 150ms;
+    --duracao-media: 250ms;
+    --curva-suave: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ── 2. Semânticos — tema ESCURO (o app usa a classe .dark no <html>) ──── */
+.dark {
+    --cor-fundo: var(--noite-950);
+    --cor-superficie: var(--noite-850);
+    --cor-superficie-elevada: var(--noite-800);
+    --cor-superficie-sutil: var(--noite-900);
+    --cor-borda: var(--noite-600);
+    --cor-texto: 243 244 246;      /* #F3F4F6 */
+    --cor-texto-suave: var(--cinza-400);
+
+    --sombra-card: 0 8px 24px -8px rgb(0 0 0 / 0.5);
+}

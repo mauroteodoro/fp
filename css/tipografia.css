@@ -1,0 +1,48 @@
+/* Hierarquia de pesos de fonte */
+
+/* ========================================================== */
+/* Objetivo: aproximar o visual do app de referências de banco */
+/* digital (Itaú, Nubank, Inter), onde o negrito é um ACENTO   */
+/* raro — reservado para números-chave e títulos de tela — e   */
+/* não o estado padrão de rótulos, subtítulos e textos médios. */
+/*                                                              */
+/* O app original usava `font-bold` em praticamente todo        */
+/* elemento de destaque. Isso anula a hierarquia: quando tudo   */
+/* é bold, nada é bold. A regra abaixo rebaixa cada tier em um  */
+/* nível e reintroduz um tier "reservado" para o que precisa    */
+/* ficar visivelmente mais forte.                                */
+/*                                                              */
+/* Escala:                                                       */
+/*   font-extrabold → 600 (era 800 faux / 700)                  */
+/*   font-bold      → 500 (era 700 / 600)                        */
+/*   font-semibold  → 500 (era 600)                              */
+/*   font-medium    → 500 (intocado)                             */
+/*                                                              */
+/* Exceções mantidas:                                            */
+/*   • h1/h2/h3 com `.font-bold` → 600 (títulos estruturais)    */
+/*   • `.valor-sensivel`          → 700 (todo número em R$)     */
+/*   • IDs de líquidos            → 700 (hero numbers)           */
+/*                                                              */
+/* O `!important` é necessário contra o CDN do Tailwind, que    */
+/* injeta os utilitários depois do nosso <style>.                */
+/* ========================================================== */
+
+/* ─── Base — rebaixamento global ─── */
+.font-bold      { font-weight: 500 !important; }
+.font-semibold  { font-weight: 500 !important; }
+.font-extrabold { font-weight: 600 !important; }
+
+/* ─── Títulos estruturais — 600 ─── */
+h1.font-bold, h2.font-bold, h3.font-bold {
+    font-weight: 600 !important;
+}
+
+/* ─── Números-chave em R$ — 700 ─── */
+.valor-sensivel,
+.valor-sensivel.font-bold,
+.valor-sensivel.font-semibold,
+.valor-sensivel.font-extrabold,
+.valor-sensivel.font-montserrat,
+#liqReceber, #totProv, #totDesc {
+    font-weight: 700 !important;
+}

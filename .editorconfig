@@ -1,0 +1,10 @@
+root = true
+
+# UTF-8 sem BOM: caracteres BOM antes do <!DOCTYPE> colocavam o app em "quirks mode".
+[*]
+charset = utf-8
+insert_final_newline = true
+indent_style = space
+
+[*.{html,css,js,mjs,json,md}]
+indent_size = 4

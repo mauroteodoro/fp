@@ -1,0 +1,98 @@
+/* Ajustes finos: alinhamento, marca, logos, transferências */
+
+/* Respiro entre header e primeiro item do menu/conteúdo. */
+:root { --gap-menu-conteudo: 24px; }
+
+@media (min-width: 768px) {
+    /* 1) Aside — neutraliza `md:p-3 md:pt-6` do Tailwind.       */
+    /*    Ao ler a mesma variável, o menu nunca mais               */
+    /*    desalinha por mudança de ordem de carregamento.          */
+    #conteudoPrincipal > aside {
+        padding-top: var(--gap-menu-conteudo) !important;
+    }
+    /* 2) Conteúdo — offset = header + gap. Equivale ao Y exato   */
+    /*    do primeiro botão do menu.                               */
+    #conteudoPrincipal.conteudo-principal {
+        padding-top: calc(var(--header-h) + var(--safe-top) + var(--gap-menu-conteudo)) !important;
+    }
+}
+/* Em desktop, o padding-top real é calculado por alinharConteudoComMenu(). */
+@media (min-width: 768px) {
+    #conteudoPrincipal.conteudo-principal { padding-top: 0 !important; }
+}
+
+/* Bottom nav ativo + ícone da Assistente sempre em #4D6BFE. */
+.bottom-nav-btn.is-active-bottom,
+.bottom-nav-btn.is-active-bottom svg,
+.bottom-nav-btn.is-active-bottom span,
+#mainHeader button[title="Assistente"],
+#mainHeader button[title="Assistente"] svg {
+    color: rgb(var(--azul-500)) !important;
+}
+        /* Logos escuros ganham inversão no light (flag `logoEscuro`). */
+.logo-invert-light {
+    filter: invert(1);
+}
+html.dark .logo-invert-light {
+    filter: none;
+}
+
+/* Wrapper ganha fundo sólido apenas no dark (bancos escuros). */
+.banco-bg-fixo-dark {
+    background-color: transparent;
+}
+html.dark .banco-bg-fixo-dark {
+    background-color: var(--bg-fixo-cor, #ffffff);
+}
+
+/* Substitui cyan por roxo-marca (#4D6BFE) em classes dark:*cyan*. */
+html.dark [class*="dark:text-cyan-400"],
+html.dark [class*="dark:text-cyan-500"],
+html.dark [class*="dark:hover:text-cyan-400"]:hover,
+html.dark [class*="dark:hover:text-cyan-500"]:hover,
+html.dark [class*="dark:active:text-cyan-400"]:active,
+html.dark [class*="dark:active:text-cyan-500"]:active {
+    color: rgb(var(--azul-500)) !important;
+}
+
+/* 2) Cor de BORDA */
+html.dark [class*="dark:border-cyan-400"],
+html.dark [class*="dark:border-cyan-500"] {
+    border-color: rgb(var(--azul-500)) !important;
+}
+
+/* 3) Cor de FUNDO com alpha (ícone selecionado na grade de categorias) */
+html.dark [class*="dark:bg-cyan-500/10"],
+html.dark [class*="dark:bg-cyan-500/20"] {
+    background-color: rgb(var(--azul-500) / 0.12) !important;
+}
+/* Transferências: destaque âmbar na linha do Extrato. */
+.linha-extrato.transferencia-row {
+    border-left: 3px solid #F59E0B;
+    background-color: rgba(245, 158, 11, 0.05) !important;
+}
+html.dark .linha-extrato.transferencia-row {
+    background-color: rgba(245, 158, 11, 0.08) !important;
+}
+.linha-extrato.transferencia-row:hover {
+    background-color: rgba(245, 158, 11, 0.11) !important;
+}
+html.dark .linha-extrato.transferencia-row:hover {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+/* Mobile: um card por página no carrossel de contas. */
+@media (max-width: 767px) {
+    #containerContas {
+        scroll-snap-type: x mandatory !important;
+    }
+    #containerContas > [data-conta-id] {
+        scroll-snap-align: start !important;
+        scroll-snap-stop: always !important;
+        flex: 0 0 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* 🪶 SUAVIZAÇÃO DE PESOS v2 — calibração fina                 */
