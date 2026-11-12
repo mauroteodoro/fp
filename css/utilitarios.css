@@ -1,0 +1,66 @@
+/* ==========================================================================
+   CLASSES DOS TOKENS — para a nova interface
+   --------------------------------------------------------------------------
+   Classes prontas que usam os tokens de css/tokens.css. Funcionam nos temas
+   claro e escuro sozinhas, sem precisar de `dark:`.
+
+       <div class="bg-superficie border border-borda rounded-card shadow-card">
+         <p class="text-texto">Saldo</p>
+         <p class="text-texto-suave">Atualizado agora</p>
+       </div>
+
+   Por que CSS puro e não tailwind.config? O Tailwind via CDN muda a ordem das
+   regras quando a configuração muda, e isso altera o visual atual. Quando o
+   Tailwind passar a ser compilado (Tailwind CLI), estas classes podem virar
+   `theme.extend` e ganhar variantes (`hover:`, `md:`, `/50`…) de graça.
+
+   Este arquivo é carregado por último: estas classes vencem os empates.
+   ========================================================================== */
+
+/* ── Fundos ──────────────────────────────────────────────────────────────── */
+.bg-fundo              { background-color: rgb(var(--cor-fundo)); }
+.bg-superficie         { background-color: rgb(var(--cor-superficie)); }
+.bg-superficie-elevada { background-color: rgb(var(--cor-superficie-elevada)); }
+.bg-superficie-sutil   { background-color: rgb(var(--cor-superficie-sutil)); }
+.bg-marca              { background-color: rgb(var(--cor-marca)); }
+.bg-marca-suave        { background-color: rgb(var(--cor-marca) / 0.1); }
+.bg-sucesso-suave      { background-color: rgb(var(--cor-sucesso) / 0.1); }
+.bg-perigo-suave       { background-color: rgb(var(--cor-perigo) / 0.1); }
+.bg-alerta-suave       { background-color: rgb(var(--cor-alerta) / 0.1); }
+
+/* ── Textos ──────────────────────────────────────────────────────────────── */
+.text-texto            { color: rgb(var(--cor-texto)); }
+.text-texto-suave      { color: rgb(var(--cor-texto-suave)); }
+.text-marca            { color: rgb(var(--cor-marca)); }
+.text-sucesso          { color: rgb(var(--cor-sucesso)); }
+.text-perigo           { color: rgb(var(--cor-perigo)); }
+.text-alerta           { color: rgb(var(--cor-alerta)); }
+.text-sobre-marca      { color: #fff; }
+
+/* ── Bordas ──────────────────────────────────────────────────────────────── */
+.border-borda          { border-color: rgb(var(--cor-borda)); }
+.border-marca          { border-color: rgb(var(--cor-marca)); }
+
+/* ── Forma e profundidade ────────────────────────────────────────────────── */
+.rounded-sm-app        { border-radius: var(--raio-sm); }
+.rounded-md-app        { border-radius: var(--raio-md); }
+.rounded-card          { border-radius: var(--raio-lg); }
+.rounded-painel        { border-radius: var(--raio-xl); }
+.shadow-card           { box-shadow: var(--sombra-card); }
+.shadow-elevada        { box-shadow: var(--sombra-elevada); }
+
+/* ── Tipografia ──────────────────────────────────────────────────────────── */
+.font-app              { font-family: var(--fonte-base); }
+.font-titulo           { font-family: var(--fonte-titulo); letter-spacing: var(--titulo-espacamento); }
+
+/* ── Interação ───────────────────────────────────────────────────────────── */
+.transicao-suave {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: var(--duracao-media);
+    transition-timing-function: var(--curva-suave);
+}
+@media (hover: hover) and (pointer: fine) {
+    .hover\:bg-marca-forte:hover      { background-color: rgb(var(--cor-marca-forte)); }
+    .hover\:bg-superficie-sutil:hover { background-color: rgb(var(--cor-superficie-sutil)); }
+    .hover\:text-marca:hover          { color: rgb(var(--cor-marca)); }
+}

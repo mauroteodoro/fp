@@ -1,0 +1,209 @@
+/* Tema escuro (rede de segurança além do Tailwind) */
+
+/* Dark mode como rede de segurança (não depende do Tailwind CDN). */
+html.dark { color-scheme: dark; }
+html.dark body { background-color: rgb(var(--noite-950)) !important; color: #e5e7eb !important; }
+html.dark header#mainHeader { background-color: rgb(var(--noite-850)) !important; border-bottom-color: rgb(var(--noite-700)) !important; }
+html.dark aside { background-color: rgb(var(--noite-850)) !important; border-color: rgb(var(--noite-700)) !important; }
+html.dark .bg-white { background-color: rgb(var(--noite-850)) !important; }
+html.dark .bg-slate-50 { background-color: rgb(var(--noite-950)) !important; }
+html.dark .bg-slate-100 { background-color: rgb(var(--noite-800)) !important; }
+html.dark .bg-slate-200 { background-color: rgb(var(--noite-600)) !important; }
+html.dark .bg-slate-50\/80 { background-color: rgba(11,17,32,0.8) !important; }
+html.dark .text-slate-900 { color: #f3f4f6 !important; }
+html.dark .text-slate-800 { color: #e5e7eb !important; }
+html.dark .text-slate-700 { color: #d1d5db !important; }
+html.dark .text-slate-600 { color: #9ca3af !important; }
+html.dark .text-slate-500 { color: #9ca3af !important; }
+html.dark .text-slate-400 { color: #6b7280 !important; }
+html.dark .border-slate-100 { border-color: rgb(var(--noite-700)) !important; }
+html.dark .border-slate-200 { border-color: rgb(var(--noite-700)) !important; }
+html.dark .border-slate-300 { border-color: rgb(var(--noite-600)) !important; }
+html.dark .divide-slate-100 > * + * { border-color: rgb(var(--noite-700)) !important; }
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover { background-color: rgb(var(--noite-800)) !important; }
+html.dark .hover\:bg-slate-200:hover { background-color: rgb(var(--noite-600)) !important; }
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: rgb(var(--noite-950)) !important;
+    border-color: rgb(var(--noite-700)) !important;
+    color: #f3f4f6 !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #6b7280 !important; }
+/* Foco neutro no dark — mantém a mesma borda do repouso. */
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus { border-color: rgb(var(--noite-700)) !important; }
+
+/* 🎯 Labels dos campos do modal de lançamento ganham respiro */
+/*    para não encostarem no topo do campo arredondado.       */
+label.block.text-\[11px\] { margin-bottom: 6px !important; }
+
+/* 🎯 Exceção: labels dentro de um wrapper flex (ex: "Categoria"
+   que compartilha a linha com o botão "Gerenciar").
+   Motivo: nesse contexto, o `margin-bottom` do label não cria
+   gap depois do wrapper — só o faz flutuar mais alto dentro
+   dele. E o `mb-1.5` do wrapper já fornece o gap correto (6px).
+   Sem esta regra, o gap ficaria duplicado (12px) e o campo da
+   direita desceria ~6px em relação ao da esquerda, fazendo
+   o desalinhamento se acumular a cada linha. */
+.flex > label.block.text-\[11px\] { margin-bottom: 0 !important; }
+
+/* Dark mode: sistema unificado de bordas neutras (#2a3850). */
+html.dark button[class*="dark:bg-[#1a2639]"],
+html.dark button[class*="dark:bg-[#2a3850]"],
+html.dark a[class*="dark:bg-[#1a2639]"],
+html.dark [role="button"][class*="dark:bg-[#1a2639]"] {
+    border-color: transparent !important;
+}
+
+/* 🎯 Campos (inputs, selects, textareas) e filtros que os     */
+/*    imitam: fundo mais profundo + borda sólida neutra.        */
+/*    Resultado: são visivelmente campos, sem parecerem caixas. */
+html.dark input.border,
+html.dark select.border,
+html.dark textarea.border,
+html.dark #abaRelatorios button[id^="btnFiltro"] {
+    background-color: rgb(var(--noite-950)) !important;
+    border-color: rgb(var(--noite-600)) !important;
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.25) !important;
+}
+html.dark input.border:hover,
+html.dark select.border:hover,
+html.dark textarea.border:hover,
+html.dark #abaRelatorios button[id^="btnFiltro"]:hover {
+    border-color: rgb(var(--noite-500)) !important;
+}
+/* 🎯 Foco neutro: mantém o inset shadow de profundidade, mas remove
+   o anel azul (glow) que "acendia" o campo. A borda fica igual ao hover. */
+html.dark input.border:focus,
+html.dark select.border:focus,
+html.dark textarea.border:focus,
+html.dark #abaRelatorios button[id^="btnFiltro"]:focus {
+    border-color: rgb(var(--noite-600)) !important;
+    box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 🎯 Cards e painéis informativos — mesma família, tom um     */
+/*    pouco mais escuro porque a superfície já é menor.         */
+/*    Cobre: Recibo de Pagamento, cards do Filtro do Simulador, */
+/*    painéis "Férias no Período", datas de crédito, cards dos  */
+/*    totais em Relatórios, etc.                                */
+html.dark div[class*="dark:bg-[#0b1120]"],
+html.dark div[class*="dark:from-[#0b1120]"],
+html.dark div[class*="bg-blue-50/50"],
+html.dark div.bg-slate-50.border {
+    border-color: rgb(var(--noite-700)) !important;
+}
+
+/* Fade suave ao trocar de tema (400ms). */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+    transition: background-color 0.35s ease,
+                border-color 0.35s ease,
+                color 0.35s ease,
+                box-shadow 0.35s ease !important;
+}
+/* 🎯 Exceção: modais e a tela de login trocam de tema INSTANTANEAMENTE.
+   Sem isso, cada campo do modal interpola lentamente entre claro e
+   escuro — e com o `backdrop-blur-sm` por cima, o resultado é aquele
+   "flash lavado" momentâneo. Como o modal já está no topo do fade
+   global, o pulo de cor é imperceptível ao olho. */
+html.theme-transitioning [id^="modal"],
+html.theme-transitioning [id^="modal"] *,
+html.theme-transitioning [id^="modal"] *::before,
+html.theme-transitioning [id^="modal"] *::after,
+html.theme-transitioning #telaLogin,
+html.theme-transitioning #telaLogin *,
+html.theme-transitioning #telaLogin *::before,
+html.theme-transitioning #telaLogin *::after {
+    transition: none !important;
+}
+
+/* 🎯 Troca INSTANTÂNEA GLOBAL — usada quando há modal aberto.
+   Motivo: o body (e outros elementos de fundo) têm transição
+   própria (`transition-colors duration-300` do Tailwind). Sem
+   esta classe, durante o fade global o body demora ~300ms para
+   clarear/escurecer — mas o modal (exceção acima) troca na hora.
+   O resultado é o "flash preto": um modal claro flutuando sobre
+   um body ainda escuro. Esta classe mata TODA transição, sincro-
+   nizando a troca de tema em 100% dos elementos. */
+html.theme-transitioning-instant,
+html.theme-transitioning-instant *,
+html.theme-transitioning-instant *::before,
+html.theme-transitioning-instant *::after {
+    transition: none !important;
+}
+
+/* Busca: linguagem visual neutra, sem glow. */
+html.dark #buscaExtrato {
+    background-color: rgb(var(--noite-950)) !important;
+    border-color: rgb(var(--noite-700)) !important;
+    box-shadow: none !important;
+}
+html.dark #buscaExtrato:focus {
+    background-color: rgb(var(--noite-950)) !important;
+    border-color: rgb(var(--noite-700)) !important;
+    box-shadow: none !important;
+}
+/* 🎯 Campo de busca do modal — sem fundo próprio para se fundir
+   com o card do modal. Antes tinha uma "faixa" escura que destoava. */
+html.dark #inputBuscaGlobal {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: #f3f4f6 !important;
+}
+html.dark #inputBuscaGlobal:focus {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Glow + scale no hover dos botões primários (sem sticky hover no mobile). */
+button[class*="bg-[#4D6BFE]"]:not(#btnAcaoPrincipal):not(:disabled),
+a[class*="bg-[#4D6BFE]"]:not(:disabled) {
+    transition: box-shadow 0.25s ease,
+                transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                background-color 0.2s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+    button[class*="bg-[#4D6BFE]"]:not(#btnAcaoPrincipal):not(:disabled):hover,
+    a[class*="bg-[#4D6BFE]"]:not(:disabled):hover {
+        box-shadow: 0 20px 25px -5px rgb(var(--azul-500) / 0.35),
+                    0 8px 10px -6px rgb(var(--azul-500) / 0.25);
+        transform: scale(1.03);
+    }
+}
+/* 🎯 Em mobile, o feedback vem no :active (toque). */
+@media (hover: none), (pointer: coarse) {
+    button[class*="bg-[#4D6BFE]"]:not(#btnAcaoPrincipal):not(:disabled):active,
+    a[class*="bg-[#4D6BFE]"]:not(:disabled):active {
+        box-shadow: 0 20px 25px -5px rgb(var(--azul-500) / 0.35),
+                    0 8px 10px -6px rgb(var(--azul-500) / 0.25);
+        transform: scale(1.03);
+    }
+}
+
+/* Hover (desktop) e active (touch) unificados para botões do app. */
+button[data-chip-extrato],
+button[id^="btnMenu"],
+#btnTabProjecao,
+#btnTemaClaro,
+#btnTemaEscuro,
+#modalPerfil button[onclick="abrirModalBackups()"],
+#modalPerfil button[onclick="abrirModalReset()"],
+#modalPerfil button[onclick="fazerLogout()"],
+#btnRestaurarAjusteSalario,
+#btnToggleSinal,
+#abaProjecao button[onclick="zerarProjecaoMes()"] {
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.25s ease,
+                background-color 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease;
+}

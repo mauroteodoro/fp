@@ -1,0 +1,157 @@
+/* Base: fontes, campos, cards, animações e barra de rolagem */
+
+body, input, button, select, textarea { font-family: 'Figtree', sans-serif; }
+
+/* Compatibilidade: até a refatoração o app rodava em "quirks mode" (havia
+   caracteres BOM antes do <!DOCTYPE>), e nesse modo o navegador dá 1em de
+   margem inferior a todo <form>. Mantido para o layout não mudar.
+   Na nova interface, pode ser removido junto com o ajuste dos formulários. */
+form { margin-block-end: 1em; }
+
+/* Compatibilidade: os mesmos caracteres invisíveis viravam uma linha de
+   texto de 24px no topo do <body>, empurrando o conteúdo para baixo (no
+   mobile isso aparece como o respiro entre o header e o conteúdo). Esta
+   linha reproduz esse espaço. Na nova interface, remova e ajuste o
+   espaçamento do conteúdo diretamente. */
+body::before { content: ""; display: block; height: 24px; }
+/* Tipografia unificada em Figtree — mesma família em títulos e corpo,
+   como no Gemini. Mantemos o `letter-spacing` negativo para títulos
+   (dá o ar "premium" que a Plus Jakarta trazia). */
+h1, h2, h3, .font-montserrat { font-family: 'Figtree', sans-serif; letter-spacing: -0.02em; }
+
+.card-shadow { box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.08); }
+.dark .card-shadow { box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5); }
+
+
+input:disabled, select:disabled { cursor: not-allowed; opacity: 0.7; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+/* Classe Inteligente para as Datas */
+.date-input-smart { text-align: center; }
+.date-input-smart:focus,
+.date-input-smart:not(:placeholder-shown) { text-align: left; }
+
+.card-tilt { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease; transform-style: preserve-3d; will-change: transform; }
+.card-tilt:hover { box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.10), 0 10px 20px -5px rgba(15, 23, 42, 0.05); transform: translateY(-4px); }
+
+@keyframes popIn { from { opacity: 0; transform: translate(-50%, -10px) scale(0.95); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+.popover-anim { animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes fadeDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.dropdown-anim { animation: fadeDown 0.15s ease-out forwards; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.anim-fade-up { animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.anim-fade-in { animation: fadeIn 0.25s ease-out both; }
+
+/* ⚠️ Pulso do botão "Salvar Projeção" quando há alterações não salvas.
+   Um "respirar" suave de glow roxo — chama atenção sem ser agressivo. */
+@keyframes pulseSave {
+    0%, 100% { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05), 0 4px 14px -6px rgb(var(--azul-500) / 0.35); }
+    50%      { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05), 0 4px 20px -2px rgb(var(--azul-500) / 0.75), 0 0 0 5px rgb(var(--azul-500) / 0.10); }
+}
+.anim-pulse-save {
+    animation: pulseSave 2s ease-in-out infinite;
+}
+
+/* Stagger — cada filho entra com delay progressivo */
+.stagger-cards > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-cards > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-cards > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-cards > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-cards > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-cards > *:nth-child(6) { animation-delay: 300ms; }
+
+/* Fade do conteúdo ao trocar de mês */
+.trocando-mes { opacity: 0.5; transition: opacity 0.2s ease-out; }
+
+/* Barras de consumo: animadas só por WAAPI (ver JS). */
+#barraConsumoSalario, #barraConsumoVale {
+    background-color: transparent; /* nenhuma transition */
+}
+
+.barra-saldo { position: relative; overflow: hidden; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease; }
+.barra-saldo::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 55%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+    animation: shimmerMove 2.4s ease-in-out infinite;
+}
+@keyframes shimmerMove { 0% { left: -60%; } 100% { left: 110%; } }
+
+@keyframes auroraFloat { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px, 25px) scale(1.08); } }
+.aurora-blob { animation: auroraFloat 14s ease-in-out infinite; }
+
+.tab-transition { transition: all 0.3s ease; }
+.toggle-checkbox:checked { right: 0; border-color: rgb(var(--azul-500)); }
+.toggle-checkbox:checked + .toggle-label { background-color: rgb(var(--azul-500)); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Scroll padrão do navegador */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.dark ::-webkit-scrollbar-thumb { background: #2a374a; }
+
+/* Nova Barra de Rolagem Discreta (Sumiço quando não há hover) */
+.hover-scrollbar { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.hover-scrollbar:hover { scrollbar-color: #cbd5e1 transparent; }
+.dark .hover-scrollbar:hover { scrollbar-color: #475569 transparent; }
+
+.hover-scrollbar::-webkit-scrollbar { width: 5px; }
+.hover-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.hover-scrollbar::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s; }
+.hover-scrollbar:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
+.dark .hover-scrollbar:hover::-webkit-scrollbar-thumb { background: #475569; }
+
+/* 🎯 Quando a coluna direita está `.invisible` (painel "Mais opções"
+   aberto), matamos TODA transição dentro dela. Sem isso, o
+   `transition: all 0.3s` global dos botões faz o "+ Nova" e os
+   inputs demorarem 0.3s pra desaparecer. */
+#colunaDireitaForm.invisible,
+#colunaDireitaForm.invisible *,
+#colunaDireitaForm.invisible *::before,
+#colunaDireitaForm.invisible *::after {
+    transition: none !important;
+}
+
+/* 🎯 Ocultação de Valores Sensíveis — máscara de bolinhas
+   Em vez de borrar o texto (que ainda revela tamanho e
+   ordem de grandeza), o conteúdo é substituído por bolinhas
+   (•) via JS. É o padrão de apps financeiros (Nubank, Inter,
+   etc): comunica "valor protegido" sem vazar informação.
+   A classe abaixo é só o estado "estou oculto" — a máscara
+   em si é injetada pelo JS em `aplicarMascaraValores()`. */
+.valor-borrado {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: default;
+    /* 🎯 Cor NEUTRA — as bolinhas não devem sugerir se o saldo é
+       positivo (verde) ou negativo (vermelho). O `!important` é
+       necessário porque o JS aplica `style.color` inline nos
+       cards (verde/vermelho), e inline vence classe CSS.
+       • Light: preto puro (`#000000`) — máximo contraste sobre
+         card branco, sem sugerir semântica.
+       • Dark:  branco puro (`#ffffff`) — máxima neutralidade. */
+    color: #000000 !important;
+}
+html.dark .valor-borrado {
+    color: #ffffff !important;
+}
+
+.check-anim { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+.check-anim:hover:not(:disabled) { transform: scale(1.1); }
+.check-anim:active:not(:disabled) { transform: scale(0.9); }
+
+.spinner { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top-color: rgb(var(--azul-500)); animation: spin 1s ease-in-out infinite; width: 24px; height: 24px; }
+@keyframes spin { to { transform: rotate(360deg); } }
